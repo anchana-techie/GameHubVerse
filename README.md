@@ -38,18 +38,23 @@ Guess a secret number in turns.
 - **Settings:** rounds, drawing time (30 sec – 3 min), one random word or pick from 3, letter hints on/off, built-in words or your own comma-separated list.
 - If the drawer leaves or stays offline for 8 seconds the turn is skipped. A player who refreshes mid-turn gets the drawing back.
 
-### ♟️ Chess (1–4 players)
-The board follows the number of players in the room.
-- **1 player** – classic 8×8 vs the **computer** (Easy / Medium / Hard, choose your colour) or **pass-and-play** on one device.
-- **2 players** – classic chess: castling, en passant, promotion (choose the piece), stalemate, insufficient material, 50-move and threefold-repetition draws, resign and offer/accept draw.
-- **3 players** – hexagon board (96 squares, files A–L, ranks 1–12; White → Black → Red, clockwise). Bishops, queens and kings may pass through the centre point. **Last king standing wins**; a checkmated (or stalemated) player is out and their pieces are removed. Pawns promote at the end of their file; no en passant.
-- **4 players** – cross board (Yellow → Blue → Red → Green). **Points:** pawn 1, knight 3, bishop 5, rook 5, queen 9 (promoted queen 1), checkmate +20, stalemated player +20. Out players' pieces turn grey and stay as obstacles (capturable for 0). Highest score wins when one player is left or the game is drawn. Pawns promote to a queen on rank 8.
-- Round points: 2P win 2 / draw 1; 3P 3 / 1 / 0 by finishing order; 4P = points scored; vs computer only you score.
-- Settings: rounds, computer / pass-and-play, strength, your colour, random or rotating seats, clock (1–30 min) + increment, legal-move hints. Click a piece, then a highlighted square; 🔄 rotates your view.
-- A player who leaves or is offline for 60 s on their turn is out; running out of time loses.
+### ♟️ Chess (2–4 seats, computer fills empty seats)
+The **host chooses the number of players** (2, 3 or 4). Seats nobody joins are played by the **computer** (Easy / Medium / Hard) – e.g. host picks 4 and only 3 people join, the 4th seat is a computer.
+- **2 seats** – classic chess: castling, en passant, promotion (choose the piece), stalemate, insufficient material, 50-move and threefold-repetition draws, resign and offer/accept draw. Alone you can play the computer (choose your colour) or pass-and-play.
+- **3 seats** – hexagon board (96 squares, files A–L, ranks 1–12; White → Black → Red, clockwise). Bishops, queens and kings may pass through the centre point. **Last king standing wins**; a checkmated (or stalemated) player is out and their pieces are removed. Pawns promote at the end of their file; no en passant.
+- **4 seats** – cross board (Yellow → Blue → Red → Green). **Points:** pawn 1, knight 3, bishop 5, rook 5, queen 9 (promoted queen 1), checkmate +20, stalemated player +20. Out players' pieces turn grey and stay as obstacles (capturable for 0). Highest score wins when one player is left or the game is drawn. Pawns promote to a queen on rank 8.
+- Round points: 2P win 2 / draw 1; 3P 3 / 1 / 0 by finishing order; 4P = points scored; computers never score.
+- Settings: rounds, number of players, computer strength, pass-and-play (2 seats, alone), your colour, random or rotating seats, clock (1–30 min) + increment, legal-move hints.
+- **Controls:** click a piece, then a highlighted square – or **drag and drop** it (touch works too). 🔄 rotates your view.
+- **Look:** a big board in the centre of the page in the hub's space theme, neon piece colours per player, and the **pieces of the player whose turn it is glow** (their card in the right-hand panel glows too). All player timers are on the right.
+- A player who leaves, is kicked, or is offline for 60 s on their turn is out; running out of time loses.
 
 ### 🎄 ChristMom ChristChild / 🪔 Diwali Daddy Diwali Kid
 Secret-Santa style draws. Names and emails are entered, a random matching (nobody gets themselves) is made, and each person is emailed their match. Pairs are never shown on screen.
+
+## Kicking players & too few players
+- The **host** sees a ✖ next to every other player (room header, Scribblio player list, chess seat cards) – in the lobby and **during a game**. A kicked player is sent home with a message, the others see an airlock scene, and the kicked player can join again with the room code (from the lobby).
+- If someone leaves or is kicked mid-game and the game no longer has enough players (Spy 3, Raja Rani 3, Scribblio 2), everyone sees an ejection-style **"Less players than required – taking you to the room"** scene and is returned to the room lobby. Chess keeps going with computer seats and only stops if no human is left.
 
 ## Look & feel
 The whole hub has a space theme: a twinkling starfield behind every screen, and on the home page a spinning Saturn with tilted rings, a rotating Earth with the Moon orbiting it, a rocket, a UFO, shooting stars, and astronauts hopping on the lunar surface around a planted flag. The game cards are glass panels that glow in each game's colour on hover. All motion is switched off automatically for visitors who have "reduce motion" enabled in their system settings.
