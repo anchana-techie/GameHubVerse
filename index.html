@@ -335,7 +335,11 @@
   .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;--gc:var(--accent2)}
   .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset}
   .ch-seat.out{opacity:.5}
-  .ch-seat .rt{display:flex;gap:6px;align-items:center}
+  .ch-seat{min-height:62px;contain:layout}                      /* fixed-size cards: a ticking clock must never re-wrap text and push the board around */
+  .ch-seat .nm{min-width:0}
+  .ch-seat .nm,.ch-seat .nm>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ch-seat .rt{display:flex;gap:6px;align-items:center;justify-content:flex-end;min-width:104px}
+  .ch-seat .chip.timer,.ch-seat .ch-clk{display:inline-block;min-width:94px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
   .ch-seat .cp{grid-column:2 / 4;font-size:1.05rem;letter-spacing:1px;min-height:0;color:var(--muted)}
   .ch-seat .chip.timer,.ch-seat .ch-clk{font-size:1.15rem;font-weight:800;padding:5px 14px;font-variant-numeric:tabular-nums}
   .ch-seat .ch-clk{background:var(--panel2);border:1px solid var(--border);border-radius:999px;color:var(--text)}
@@ -3082,7 +3086,7 @@ function chSeatsHTML(v){
     const pl=chP(v,i), act=g.phase==="play"&&g.turn===i&&g.alive[i], out=!g.alive[i];
     let ck="";
     if(g.rem&&!s.bot){
-      ck=act?`<span class="chip timer" data-dl="${g.tAt+g.rem[i]}">⏱ …</span>`:`<span class="ch-clk">⏱ ${chFmt(g.rem[i])}</span>`;
+      ck=act?`<span class="chip timer" data-dl="${g.tAt+g.rem[i]}" data-dlmode="clk">${"⏱ "+chFmt(g.tAt+g.rem[i]-(Date.now()+S.off))}</span>`:`<span class="ch-clk">⏱ ${chFmt(g.rem[i])}</span>`;
     }
     const kick=v.me===v.hostPid&&g.phase==="play"&&!s.bot&&s.pid&&s.pid!==v.hostPid&&!NET.local?`<button class="ch-kick" data-a="kick" data-pid="${esc(s.pid)}" title="Remove this player from the room">✖ Kick</button>`:"";
     h+=`<div class="ch-seat ${act?"act":""} ${out?"out":""}" style="--gc:${pl.fill}"><span class="ch-dot" style="background:${pl.fill};border-color:${pl.stroke};color:${pl.fill}"></span>
@@ -3813,7 +3817,7 @@ function startApp(){
   if(!ticker) ticker=setInterval(()=>{
     document.querySelectorAll("[data-dl]").forEach(el=>{
       const s=Math.max(0,Math.ceil((+el.dataset.dl-(Date.now()+S.off))/1000));
-      el.textContent=el.dataset.dlmode==="s"?String(s):"⏱ "+(s>=60?Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):s+"s");
+      el.textContent=el.dataset.dlmode==="s"?String(s):el.dataset.dlmode==="clk"?"⏱ "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):"⏱ "+(s>=60?Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):s+"s");
       el.classList.toggle("low",s<=5);
     });
   },250);
