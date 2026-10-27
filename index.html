@@ -13,6 +13,7 @@
     --accent:#6c7bff; --accent2:#46d6a4; --warn:#ffcc66; --err:#ff6b81; --border:#2c3256;
   }
   *{box-sizing:border-box}
+  html{scrollbar-gutter:stable;overflow-anchor:none}   /* no width jump when the scrollbar appears, no browser "scroll anchoring" nudges when the page is redrawn */
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
   button,input,select{font:inherit}
   .btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600}
@@ -968,7 +969,7 @@ function kickPlayer(R,pid){
 function viewFor(R,pid){
   return {
     now:Date.now(), ev:R.ev||null, deal:R.deal||0, code:R.code, game:R.game, phase:R.phase, hostPid:R.hostPid, me:pid,
-    round:R.round, settings:R.settings, msg:R.msg, scores:R.scores,
+    round:R.round, settings:R.settings, msg:R.msg, scores:R.scores, base:R.base||{}, hist:R.hist||[],
     players:R.players.map(p=>({pid:p.pid,name:p.name,av:p.av,connected:p.connected,left:p.left})),
     g:R.g?gameView(R,pid):null
   };
@@ -1034,11 +1035,22 @@ function doAct(R,pid,m){
     case "settings": if(host&&R.phase==="lobby") setSetting(R,m.k,m.v); return;
     case "kick": if(host) kickPlayer(R,String(m.pid||"")); return;
     case "start": if(host&&R.phase==="lobby") startGame(R,m); return;
+    case "newgame":
+      // Same room, same settings, straight into a fresh game. Scores keep adding up; the finished game is logged in R.hist.
+      if(host&&R.phase==="end"){
+        R.players=R.players.filter(p=>!p.left&&(p.connected||p.pid===R.hostPid));
+        const act=R.players.filter(p=>!p.left);
+        if(act.length<MINP[R.game]) return tell(R,R.hostPid,`Need at least ${MINP[R.game]} player(s) to start a new game (${act.length} in the room).`);
+        const base=R.base||{}, d={}; Object.keys(R.scores).forEach(k=>{ d[k]=(R.scores[k]||0)-(base[k]||0); });
+        (R.hist=R.hist||[]).push({n:R.hist.length+1,pts:d,names:Object.fromEntries(R.players.map(p=>[p.pid,p.name]))});
+        R.base=Object.assign({},R.scores); R.round=1; R.msg=null; R.phase="play"; deal(R);
+      }
+      return;
     case "tolobby":
       // Host leaves the running game (or the final screen) but everyone stays in the room.
       if(host&&R.phase!=="lobby"){
         const wasPlaying=R.phase==="play";
-        R.phase="lobby"; R.g=null; R.round=0; R.scores={};
+        R.phase="lobby"; R.g=null; R.round=0; R.scores={}; R.base={}; R.hist=[];
         R.msg=wasPlaying?"The host exited the game. You are back in the lobby – the room is still open and the host can change settings.":null;
         R.players=R.players.filter(p=>!p.left&&(p.connected||p.pid===R.hostPid));
       }
@@ -1088,7 +1100,7 @@ function startGame(R,m){
     if(words.length<need) return tell(R,R.hostPid,`Please enter at least ${need} custom word${need>1?"s":""}, separated by commas (you entered ${words.length}).`);
     R.custom={words};
   }
-  R.round=1; R.scores={}; R.msg=null; R.phase="play"; deal(R);
+  R.round=1; R.scores={}; R.base={}; R.hist=[]; R.msg=null; R.phase="play"; deal(R);
 }
 function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else rrDeal(R); }
 function abort(R,msg,leaver){
@@ -2134,9 +2146,8 @@ function chTick(R,now){
 }
 function chView(R,pid){
   const g=R.g,P=g.P;
-  const myOut=g.seats.some((s,i)=>!s.bot&&s.pid===pid&&!P.alive[i]);            // a player who is out (checkmated, resigned…) may review the game; everyone may once it is over
-  const rw=g.phase==="reveal"||myOut, nowT=Date.now();
-  return {kind:"ch",snaps:rw?g.snaps:null,ghosts:(g.ghosts||[]).filter(x=>nowT-x.at<5600),phase:g.phase,id:g.id,T:Array.from(P.T),O:Array.from(P.O),turn:P.turn,alive:P.alive.slice(),
+  const nowT=Date.now();
+  return {kind:"ch",snaps:g.snaps,ghosts:(g.ghosts||[]).filter(x=>nowT-x.at<5600),phase:g.phase,id:g.id,T:Array.from(P.T),O:Array.from(P.O),turn:P.turn,alive:P.alive.slice(),
     seats:g.seats.map(s=>({pid:s.pid||null,bot:!!s.bot,lvl:s.lvl||0})),local:g.local,
     last:g.last,chk:g.checks.slice(),legal:g.legal.map(m=>[m.f,m.t,m.pr||0]),
     rem:g.clockOn?g.rem.slice():null,tAt:g.tAt,pts:P.pts.slice(),caps:g.caps,
@@ -2517,14 +2528,21 @@ function lobbyHTML(v,host){
   return h;
 }
 function endHTML(v,host){
-  const rows=v.players.map(p=>[p,v.scores[p.pid]||0]), max=Math.max(0,...rows.map(r=>r[1]));
+  const base=v.base||{}, hist=v.hist||[], series=hist.length>0;
+  const rows=v.players.map(p=>[p,(v.scores[p.pid]||0)-(base[p.pid]||0)]), max=Math.max(0,...rows.map(r=>r[1]));      // this game's points
   const winners=rows.filter(r=>r[1]===max&&max>0).map(r=>r[0]);
-  let h=`<h3 style="margin-top:18px">🏁 Game over</h3>`;
+  let h=`<h3 style="margin-top:18px">🏁 Game ${hist.length+1} over</h3>`;
   h+=winners.length
     ?`<div class="msg ok" style="font-size:1.1rem">🏆 ${winners.map(p=>p.av+" <b>"+esc(p.name)+"</b>").join(", ")} ${winners.length>1?"win":"wins"} with ${max} points! 🎉</div>`
     :`<div class="msg info">No points were scored.</div>`;
-  h+=boardHTML({players:v.players,scores:v.scores,g:null});
-  h+=host?`<button class="btn green block" style="margin-top:14px" data-a="act" data-x="tolobby">🔁 Back to lobby (change settings / play again)</button>`
+  h+=boardHTML({players:v.players,scores:Object.fromEntries(rows.map(r=>[r[0].pid,r[1]])),g:null});
+  if(series){
+    const tot=v.players.map(p=>[p,v.scores[p.pid]||0]).sort((a,b)=>b[1]-a[1]);
+    h+=`<h3 style="margin:18px 0 6px">📊 Series total (${hist.length+1} games)</h3><div class="scoreboard">${tot.map(([p,t])=>`<span class="chip">${p.av} ${esc(p.name)}: <b>${t}</b></span>`).join("")}</div>`;
+    h+=`<div class="mut" style="margin-top:8px;font-size:.85rem">Earlier games: ${hist.map(x=>{ const e=Object.entries(x.pts).sort((a,b)=>b[1]-a[1]); const top=e[0]&&e[0][1]>0?esc((x.names&&x.names[e[0][0]])||"?")+" ("+e[0][1]+")":"no points"; return "#"+x.n+" "+top; }).join(" · ")}</div>`;
+  }
+  h+=host?`<button class="btn green block" style="margin-top:14px" data-a="act" data-x="newgame">🎮 New game – same room, scores carry on</button>
+    <button class="btn secondary block" style="margin-top:8px" data-a="act" data-x="tolobby">⚙️ Back to lobby (change settings)</button>`
     :`<div class="msg info" style="margin-top:14px">⏳ Waiting for the host to go back to the lobby…</div>`;
   return h;
 }
@@ -2945,9 +2963,10 @@ function chRwHTML(v){
   const t=cur===0?"Starting position":`Move <b>${cur}</b> / ${len-1} · <span style="color:${pl.fill}">●</span> <b>${esc(sn.x)}</b>`;
   const mySeat=g.seats.findIndex((s,i)=>!s.bot&&s.pid===v.me&&!g.alive[i]);
   let note="";
-  if(idx!=null) note=`🔍 Reviewing an earlier position${g.phase==="play"?" – the game is still going on. Press ⏭ to return to the live board.":"."}`;
+  if(idx!=null) note=`🔍 Reviewing an earlier position${g.phase==="play"?(chMyTurn(v)?" – it is your turn: press ⏭ to go back and move.":" – you return to the live board automatically when the next move is made, or press ⏭."):"."}`;
   else if(mySeat>=0&&g.phase==="play") note=`You are out – use ◀ ▶ (or the ← → keys) to replay the moves and see how it happened.`;
   else if(g.phase==="reveal") note=`Game over – use ◀ ▶ (or the ← → keys) to replay the whole game.`;
+  else note=`Use ◀ ▶ (or the ← → keys) to look back at earlier moves – the board returns to live when anyone moves.`;
   return `<div class="ch-rw ${idx!=null?"on":""}"><button class="btn secondary rwb" data-a="chrw" data-d="first" title="Start" ${cur===0?"disabled":""}>⏮</button>
     <button class="btn secondary rwb" data-a="chrw" data-d="-1" title="Previous move" ${cur===0?"disabled":""}>◀</button>
     <span class="rwt">${t}</span>
@@ -3089,7 +3108,11 @@ function chessGameHTML(v){
     const mated=v.g.elim.find(e=>e.why==="mate"&&v.g.seats[e.seat]&&!v.g.seats[e.seat].bot&&v.g.seats[e.seat].pid===v.me), key=v.round+":"+(mated?mated.seat:"");
     if(mated&&S.ui.chAuto!==key){ S.ui.chAuto=key; const ix=Math.min(mated.ply,v.g.snaps.length-1); S.ui.chRw=ix<v.g.snaps.length-1?ix:null; }
   }
-  if(S.ui.chPly!==g.ply||S.ui.chRound!==v.round){ S.ui.chPly=g.ply; S.ui.chRound=v.round; S.ui.chSel=null; S.ui.chPromo=null; }
+  if(S.ui.chPly!==g.ply||S.ui.chRound!==v.round){
+    const imAlive=g.seats.some((s,i)=>!s.bot&&s.pid===v.me&&g.alive[i]);
+    if(imAlive&&g.phase==="play") S.ui.chRw=null;           // somebody moved: a player still in the game jumps straight back to the live board
+    S.ui.chPly=g.ply; S.ui.chRound=v.round; S.ui.chSel=null; S.ui.chPromo=null;
+  }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
   const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
   let acts=`<div class="ch-actions"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
@@ -3103,7 +3126,7 @@ function chessGameHTML(v){
     }
   }
   acts+=`</div>`;
-  const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in"><div class="pole"></div><div class="flag">It is your turn ! ♟️</div>${astroSVG(chP(v,g.turn).fill,pAv(v,v.me))}</div></div>`:"";
+  const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s"><div class="pole"></div><div class="flag" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s">It is your turn ! ♟️</div>${astroSVG(chP(v,g.turn).fill,pAv(v,v.me))}</div></div>`:"";
   let h=`<div class="ch-wrap"><div class="ch-top">${info}${chStatusHTML(v)}</div>
     <div class="ch-seats">${chSeatsHTML(v)}</div>
     <div class="ch-left">${chBoardSVG(v)}${chRwHTML(v)}</div>
@@ -3205,6 +3228,10 @@ function render(){
 }
 function renderMain(){
   const app=$("app"); if(!app||!S) return;
+  const sx=window.scrollX, sy=window.scrollY;                       // every redraw rebuilds the page – put the scroll position back so nothing jumps
+  try{ renderMain2(app); } finally { if(window.scrollY!==sy||window.scrollX!==sx) window.scrollTo(sx,sy); }
+}
+function renderMain2(app){
   document.body.classList.toggle("home",S.screen==="landing");
   if(skPlayView()){ skRender(app); renderOverlay(); return; }
   const ae=document.activeElement; let keep=null;
