@@ -303,7 +303,7 @@
   /* chess */
   /* board size follows the window height so the whole table fits on screen at 100% zoom (never below 400px, never above 600px) */
   .ch-wrap{--chw:clamp(400px,calc(100vh - 210px),600px);display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px}
-  .ch-top,.ch-seats,.ch-below{width:min(100%,calc(var(--chw) + 70px))}
+  .ch-top,.ch-seats,.ch-below{width:min(100%,max(calc(var(--chw) + 70px),620px))}   /* wide enough for "Computer (Medium)" + clock on one line */
   .ch-top .msg{margin-top:10px}
   .ch-seats{display:flex;gap:10px;flex-wrap:wrap}
   .ch-seats .ch-seat{flex:1 1 200px;margin:0}
@@ -335,11 +335,11 @@
   .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;--gc:var(--accent2)}
   .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset}
   .ch-seat.out{opacity:.5}
-  .ch-seat{min-height:62px;contain:layout}                      /* fixed-size cards: a ticking clock must never re-wrap text and push the board around */
+  .ch-seat{height:62px;box-sizing:border-box;overflow:hidden}   /* wide, fixed-height cards: a ticking clock can never change the card size and push the board around */
   .ch-seat .nm{min-width:0}
   .ch-seat .nm,.ch-seat .nm>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ch-seat .rt{display:flex;gap:6px;align-items:center;justify-content:flex-end;min-width:104px}
-  .ch-seat .chip.timer,.ch-seat .ch-clk{display:inline-block;min-width:94px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .ch-seat .rt{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+  .ch-seat .chip.timer,.ch-seat .ch-clk{display:inline-block;min-width:84px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;padding:5px 10px}
   .ch-seat .cp{grid-column:2 / 4;font-size:1.05rem;letter-spacing:1px;min-height:0;color:var(--muted)}
   .ch-seat .chip.timer,.ch-seat .ch-clk{font-size:1.15rem;font-weight:800;padding:5px 14px;font-variant-numeric:tabular-nums}
   .ch-seat .ch-clk{background:var(--panel2);border:1px solid var(--border);border-radius:999px;color:var(--text)}
