@@ -46,15 +46,15 @@ The **host chooses the number of players** (2, 3 or 4). Seats nobody joins are p
 - Round points: 2P win 2 / draw 1; 3P 3 / 1 / 0 by finishing order; 4P = points scored; computers never score.
 - Settings: rounds, number of players, computer strength, pass-and-play (2 seats, alone), your colour, random or rotating seats, clock (1–30 min) + increment, legal-move hints.
 - **Controls:** click a piece, then a highlighted square – or **drag and drop** it (touch works too). 🔄 rotates your view.
-- **Look:** a big board in the centre of the page in the hub's space theme, neon piece colours per player, and the **pieces of the player whose turn it is glow** (their card in the right-hand panel glows too). All player timers are on the right.
-- A player who leaves, is kicked, or is offline for 60 s on their turn is out; running out of time loses.
+- **Look:** a big, centred board in the hub's space theme with neon piece colours. **All players' timers sit in one row above the board**; the moves list is below it. The last move's start and end squares stay **yellow**. When it is your turn an **astronaut pops up in the bottom-left corner holding a flag: "It is your turn ! ♟️"** and keeps popping until you move.
+- A player who leaves, is kicked, or is offline for 60 s on their turn plays the ejection cutscene and a **computer takes over their pieces**. Once fewer than 2 humans are left (in a game that started with several), everyone sees "Less players than required" and goes back to the room. Running out of time loses.
 
 ### 🎄 ChristMom ChristChild / 🪔 Diwali Daddy Diwali Kid
 Secret-Santa style draws. Names and emails are entered, a random matching (nobody gets themselves) is made, and each person is emailed their match. Pairs are never shown on screen.
 
 ## Kicking players & too few players
 - The **host** sees a ✖ next to every other player (room header, Scribblio player list, chess seat cards) – in the lobby and **during a game**. A kicked player is sent home with a message, the others see an airlock scene, and the kicked player can join again with the room code (from the lobby).
-- If someone leaves or is kicked mid-game and the game no longer has enough players (Spy 3, Raja Rani 3, Scribblio 2), everyone sees an ejection-style **"Less players than required – taking you to the room"** scene and is returned to the room lobby. Chess keeps going with computer seats and only stops if no human is left.
+- If someone leaves or is kicked mid-game and the game no longer has enough players (Spy 3, Raja Rani 3, Scribblio 2), everyone sees an ejection-style **"Less players than required – taking you to the room"** scene and is returned to the room lobby. Chess hands the leaver's seat to the computer and stops once fewer than 2 humans are left.
 
 ## Look & feel
 The whole hub has a space theme: a twinkling starfield behind every screen, and on the home page a spinning Saturn with tilted rings, a rotating Earth with the Moon orbiting it, a rocket, a UFO, shooting stars, and astronauts hopping on the lunar surface around a planted flag. The game cards are glass panels that glow in each game's colour on hover. All motion is switched off automatically for visitors who have "reduce motion" enabled in their system settings.
