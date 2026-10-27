@@ -300,10 +300,14 @@
   @media(prefers-reduced-motion:reduce){#space *,#space{animation:none!important}.game-btn{transition:none}}
 
   /* chess */
-  .ch-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start;margin-top:14px}
-  .ch-side .msg{margin-top:10px}.ch-side .ch-seats{margin-top:10px}
-  .ch-left{min-width:0;display:flex;flex-direction:column;align-items:center}
-  .ch-board{display:block;width:100%;max-width:min(100%,calc(100vh - 150px));min-width:260px;margin:0 auto;border-radius:16px;
+  .ch-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:12px}
+  .ch-top,.ch-seats,.ch-below{width:min(100%,980px)}
+  .ch-top .msg{margin-top:10px}
+  .ch-seats{display:flex;gap:10px;flex-wrap:wrap}
+  .ch-seats .ch-seat{flex:1 1 200px;margin:0}
+  .ch-below{display:flex;flex-direction:column;align-items:stretch}
+  .ch-left{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center}
+  .ch-board{display:block;width:100%;max-width:min(100%,840px);min-width:260px;margin:0 auto;border-radius:16px;
     border:1px solid #3a4390;box-shadow:0 0 0 1px #0a0d22,0 10px 40px #000a,0 0 46px #6c7bff33;
     background:radial-gradient(120% 120% at 50% 0%,#1d2457 0%,#0e1230 62%,#080a1c 100%);
     user-select:none;-webkit-user-select:none;touch-action:none}
@@ -312,13 +316,10 @@
   body.ch-dragging,body.ch-dragging *{cursor:grabbing!important}
   .ch-pc{pointer-events:none;paint-order:stroke;stroke-linejoin:round;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols","DejaVu Sans","Arial Unicode MS",sans-serif}
   .ch-pc.lift{opacity:.22}
-  .ch-halo{pointer-events:none;transform-box:fill-box;transform-origin:center;animation:chPulse 1.5s ease-in-out infinite}
-  @keyframes chPulse{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.12)}}
   .ch-ghost{position:fixed;left:0;top:0;z-index:700;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 6px 10px #000c)}
   .ch-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:12px}
   .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;--gc:var(--accent2)}
-  .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset,0 0 18px -2px var(--gc);animation:chSeatGlow 1.5s ease-in-out infinite}
-  @keyframes chSeatGlow{50%{box-shadow:0 0 0 1px var(--gc) inset,0 0 30px 2px var(--gc)}}
+  .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset}
   .ch-seat.out{opacity:.5}
   .ch-seat .rt{display:flex;gap:6px;align-items:center}
   .ch-seat .cp{grid-column:2 / 4;font-size:1.05rem;letter-spacing:1px;min-height:0;color:var(--muted)}
@@ -335,8 +336,17 @@
   .chip.warn{border-color:var(--warn);color:var(--warn)}
   .kick{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:50%;width:20px;height:20px;line-height:16px;font-size:.8rem;padding:0;margin-left:6px;cursor:pointer;vertical-align:middle}
   .kick:hover{background:var(--err);color:#fff}
-  @media(prefers-reduced-motion:reduce){.ch-halo,.ch-seat.act{animation:none}}
-  @media(max-width:900px){.ch-wrap{grid-template-columns:1fr}.ch-board{max-width:100%}}
+  /* astronaut with a flag: pops up and down in the bottom-left corner while it is your turn */
+  .ch-buddy{position:fixed;left:6px;bottom:0;z-index:60;width:290px;height:190px;overflow:hidden;pointer-events:none}
+  .ch-buddy-in{position:absolute;inset:0;animation:chPop 1.7s ease-in-out infinite}
+  @keyframes chPop{0%,100%{transform:translateY(58%)}40%,60%{transform:translateY(4%)}}
+  .ch-buddy .astro-svg{position:absolute;left:8px;bottom:0;width:92px;height:141px;filter:drop-shadow(0 4px 8px #000a)}
+  .ch-buddy .pole{position:absolute;left:96px;bottom:46px;width:4px;height:128px;border-radius:3px;background:linear-gradient(90deg,#e8ecf6,#8e97b4)}
+  .ch-buddy .flag{position:absolute;left:100px;bottom:104px;width:176px;padding:9px 20px 9px 12px;font-weight:800;font-size:.95rem;line-height:1.15;color:#10142a;
+    background:linear-gradient(135deg,#ffe27a,#ffb347);clip-path:polygon(0 0,100% 0,93% 50%,100% 100%,0 100%);transform-origin:left center;animation:chWave 1.7s ease-in-out infinite}
+  @keyframes chWave{0%,100%{transform:skewY(-2deg)}50%{transform:skewY(2deg)}}
+  @media(max-width:600px){.ch-buddy{transform:scale(.72);transform-origin:left bottom}}
+  @media(prefers-reduced-motion:reduce){.ch-buddy-in{animation:none;transform:translateY(8%)}.ch-buddy .flag{animation:none}}
 
   /* balloons */
   .balloon{position:fixed;bottom:-80px;font-size:42px;animation:rise 4s ease-in forwards;pointer-events:none;z-index:50}
@@ -1069,8 +1079,6 @@ function startGame(R,m){
 function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else rrDeal(R); }
 function abort(R,msg,leaver){
   // "too few players" scene: the player who left is ejected (unless the host kicked them – that scene is already queued), then the room is shown
-  const lp=leaver&&R._kick!==leaver&&R.players.find(x=>x.pid===leaver);
-  if(lp) ejPush(R,ejItem(R,leaver,{eb:"PLAYER LEFT",h:"{n} abandoned ship.",s:"The game cannot continue.",tone:"bad"}));
   ejPush(R,{none:true,eb:"NOT ENOUGH PLAYERS",h:"Less players than required.",s:"Taking you to the room…",tone:"bad",T:7000});
   R.phase="lobby"; R.g=null; R.msg=msg; R.round=0; R.scores={};
   R.players=R.players.filter(p=>!p.left);
@@ -1078,9 +1086,11 @@ function abort(R,msg,leaver){
 function afterLeave(R,pid){
   const g=R.g; if(!g||g.phase==="reveal") return;
   const act=R.players.filter(p=>!p.left);
+  if(R._kick!==pid&&R.players.some(x=>x.pid===pid))       // someone walked out: airlock scene for everyone (a kick queues its own)
+    ejPush(R,ejItem(R,pid,{eb:"PLAYER LEFT",h:"{n} abandoned ship.",s:R.game==="chess"?"A computer takes over their pieces.":"They left the game.",tone:"bad"}));
   if(R.game==="chess"){
-    g.seats.forEach((s,i)=>{ if(s.pid===pid&&!s.bot) chLose(R,i,"left"); });
-    if(act.length<MINP.chess) abort(R,"Everyone left, so the chess game was stopped.",pid);
+    g.seats.forEach((s,i)=>{ if(s.pid===pid&&!s.bot) chTakeover(R,i); });
+    chAbortCheck(R);
   } else if(R.game==="spy"){
     const spiesLeft=g.ids.filter(x=>g.roles[x]==="spy"&&!isLeft(R,x));
     if(act.length<3||!spiesLeft.length) abort(R,"A player left, so the game was stopped (Spy needs at least 3 players and a spy).",pid);
@@ -1907,6 +1917,18 @@ function chBestMulti(P0,level){
 }
 /*CHESS-ENGINE-END*/
 /*CHESS-HOST-START*/
+/* A human who leaves / is kicked / goes offline hands their seat to the computer. When fewer than 2 humans remain in a
+   game that started with several, the game stops: everyone sees the "less players than required" scene and goes back to the room. */
+function chTakeover(R,i){
+  const g=R.g; if(!g||!g.seats[i]||g.seats[i].bot) return;
+  g.seats[i]={bot:true,lvl:R.settings.level||2}; g.rem[i]=0; g.drawBy=null; g.botBusy=false;
+  if(g.P.turn===i) g.tAt=Date.now();
+}
+function chAbortCheck(R){
+  const g=R.g; if(!g||!g.multi||g.phase==="reveal") return false;
+  if(g.seats.filter(s=>!s.bot).length<2){ abort(R,"A player left, so the chess game was stopped (a multiplayer game needs at least 2 people)."); return true; }
+  return false;
+}
 /* ---------- CHESS (host side) ----------
    1 player  -> classic board, vs the computer or pass-and-play      2 players -> classic board
    3 players -> hexagon, last king standing                          4 players -> cross board, points
@@ -1935,7 +1957,7 @@ function chDeal(R){
     if(st.seat==="random") seats=shuffle(seats);
   }
   const P=chPos(id), mins=st.clock||0;
-  R.g={kind:"ch",phase:"play",id,P,seats,local:n===1&&id===2&&st.solo==="local",
+  R.g={kind:"ch",phase:"play",id,P,seats,local:n===1&&id===2&&st.solo==="local",multi:n>=2,
     clockOn:mins>0,rem:seats.map(s=>s.bot?0:mins*60000),inc:(st.inc||0)*1000,tAt:Date.now(),
     last:null,checks:[],legal:[],hist:[],caps:seats.map(()=>[]),elim:[],drawBy:null,res:null,reps:{},lastSeat:-1,botBusy:false,deadline:0};
   if(id===2) R.g.reps[chKey(P)]=1;
@@ -2058,7 +2080,9 @@ function chTick(R,now){
   const P=g.P, p=P.turn, seat=g.seats[p];
   if(seat.bot){ if(now<g.tAt) return false; if(!g.botBusy){ g.botBusy=true; setTimeout(()=>chBotMove(R,g),450); } return false; }
   const pl=R.players.find(x=>x.pid===seat.pid);
-  if(pl&&!pl.connected&&pl.offAt&&now-pl.offAt>60000){ chLose(R,p,"left"); return true; }
+  if(pl&&!pl.connected&&pl.offAt&&now-pl.offAt>60000){
+    ejPush(R,ejItem(R,seat.pid,{eb:"SIGNAL LOST",h:"{n} lost connection.",s:"A computer takes over their pieces.",tone:"bad"}));
+    chTakeover(R,p); chAbortCheck(R); return true; }
   if(g.clockOn&&g.rem[p]-(now-g.tAt)<=0){ g.rem[p]=0; chLose(R,p,"time"); return true; }
   return false;
 }
@@ -2873,13 +2897,13 @@ function chBoardSVG(v){
   const [dk,lt]=CH_PAL[g.id], hints=v.settings.hints!=0, mine=chMyTurn(v), sel=S.ui.chSel;
   const targets=new Map(); if(mine&&sel!=null&&hints) g.legal.forEach(m=>{ if(m[0]===sel) targets.set(m[1],1); });
   const kingHome=new Set(hex?B.players.map(p=>p.back[4]):[]);
-  let h=`<svg class="ch-board" viewBox="${f(x0-pad)} ${f(y0-pad)} ${f(x1-x0+2*pad)} ${f(y1-y0+2*pad)}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="chk"><stop offset="0" stop-color="#ff2d2d" stop-opacity=".95"/><stop offset=".7" stop-color="#ff2d2d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d2d" stop-opacity="0"/></radialGradient>${B.players.map((pl,k)=>`<radialGradient id="chh${k}"><stop offset="0" stop-color="${pl.fill}" stop-opacity=".75"/><stop offset=".55" stop-color="${pl.fill}" stop-opacity=".3"/><stop offset="1" stop-color="${pl.fill}" stop-opacity="0"/></radialGradient><filter id="chf${k}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation=".07" flood-color="${pl.fill}" flood-opacity="1"/><feDropShadow dx="0" dy="0" stdDeviation=".18" flood-color="${pl.fill}" flood-opacity=".9"/></filter>`).join("")}</defs>`;
+  let h=`<svg class="ch-board" viewBox="${f(x0-pad)} ${f(y0-pad)} ${f(x1-x0+2*pad)} ${f(y1-y0+2*pad)}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="chk"><stop offset="0" stop-color="#ff2d2d" stop-opacity=".95"/><stop offset=".7" stop-color="#ff2d2d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d2d" stop-opacity="0"/></radialGradient></defs>`;
   B.cells.forEach((c,i)=>{
     const fill=kingHome.has(i)?"#6a4fd8":(B.col[i]===0?dk:lt), own=mine&&g.T[i]&&g.O[i]===g.turn&&!S.ui.chPromo;
     h+=`<polygon class="sq${own?" mine":""}" data-a="chcell" data-c="${i}" fill="${fill}" stroke="#0a0d2299" stroke-width=".02" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"><title>${c.label}</title></polygon>`;
   });
   const hl=new Set(g.last?[g.last.f,g.last.t]:[]);
-  hl.forEach(i=>{ h+=`<polygon fill="#7fe9ff" fill-opacity=".28" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; });
+  hl.forEach(i=>{ h+=`<polygon fill="#ffd60a" fill-opacity=".72" stroke="#fff3a0" stroke-width=".05" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; });
   g.chk.forEach(s=>{ const kc=g.O.findIndex((o,i)=>o===s&&g.T[i]===6); if(kc>=0) h+=`<circle cx="${f(ctr[kc][0])}" cy="${f(ctr[kc][1])}" r=".95" fill="url(#chk)" pointer-events="none"/>`; });
   if(sel!=null) h+=`<polygon fill="#46d6a4" fill-opacity=".5" stroke="#46d6a4" stroke-width=".07" pointer-events="none" points="${polys[sel].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`;
   // coordinates
@@ -2900,9 +2924,8 @@ function chBoardSVG(v){
   // pieces
   for(let i=0;i<B.N;i++){
     if(!g.T[i]) continue; const o=g.O[i], pl=o===4?{fill:"#9a9a9a",stroke:"#3c3c3c"}:B.players[o];
-    const on=g.phase==="play"&&o===g.turn&&g.alive[o]&&o<B.np, lift=S.ui.chDrag&&S.ui.chDrag.on&&S.ui.chDrag.from===i;   // pieces of the side to move glow
-    if(on) h+=`<circle class="ch-halo" cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".52" fill="url(#chh${o})"/>`;
-    h+=`<text class="ch-pc${lift?" lift":""}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05"${on?` filter="url(#chf${o})"`:""}>${CH_GLYPH[g.T[i]]}</text>`;
+    const lift=S.ui.chDrag&&S.ui.chDrag.on&&S.ui.chDrag.from===i;
+    h+=`<text class="ch-pc${lift?" lift":""}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05">${CH_GLYPH[g.T[i]]}</text>`;
   }
   return h+`</svg>`;
 }
@@ -2946,7 +2969,7 @@ function chSeatsHTML(v){
     }
     const kick=v.me===v.hostPid&&g.phase==="play"&&!s.bot&&s.pid&&s.pid!==v.hostPid&&!NET.local?`<button class="ch-kick" data-a="kick" data-pid="${esc(s.pid)}" title="Remove this player from the room">✖ Kick</button>`:"";
     h+=`<div class="ch-seat ${act?"act":""} ${out?"out":""}" style="--gc:${pl.fill}"><span class="ch-dot" style="background:${pl.fill};border-color:${pl.stroke};color:${pl.fill}"></span>
-      <div class="nm">${chSeatName(v,i)}${!g.local&&s.pid===v.me&&!s.bot?" <span class='mut'>(you)</span>":""}${kick}<div class="mut" style="font-size:.78rem">${pl.name}${out?" · out":""}${g.chk.includes(i)?" · ⚠️ check":""}</div></div>
+      <div class="nm">${chSeatName(v,i)}${!g.local&&s.pid===v.me&&!s.bot?" <span class='mut'>(you)</span>":""}<div class="mut" style="font-size:.78rem">${kick}${pl.name}${out?" · out":""}${g.chk.includes(i)?" · ⚠️ check":""}</div></div>
       <div class="rt">${g.id===4?`<span class="chip">⭐ ${g.pts[i]}</span>`:""}${ck}</div>
       <div class="cp">${g.caps[i].map(t=>`<span>${CH_GLYPH[t]}</span>`).join("")}</div></div>`;
   });
@@ -2966,7 +2989,7 @@ function chessGameHTML(v){
   if(S.ui.chPly!==g.ply||S.ui.chRound!==v.round){ S.ui.chPly=g.ply; S.ui.chRound=v.round; S.ui.chSel=null; S.ui.chPromo=null; }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
   const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
-  let acts=`<div class="ch-actions" style="justify-content:flex-start"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
+  let acts=`<div class="ch-actions"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
   if(g.phase==="play"){
     const mine=g.seats.findIndex(s=>s.pid===v.me&&!s.bot);
     if(mine>=0&&(g.alive[mine]||g.local)) acts+=`<button class="btn secondary" data-a="chresign">🏳️ Resign</button>`;
@@ -2977,8 +3000,11 @@ function chessGameHTML(v){
     }
   }
   acts+=`</div>`;
-  let h=`<div class="ch-wrap"><div class="ch-left">${chBoardSVG(v)}</div>
-    <aside class="ch-side">${info}${chStatusHTML(v)}<div class="ch-seats">${chSeatsHTML(v)}</div>${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></aside></div>`;
+  const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in"><div class="pole"></div><div class="flag">It is your turn ! ♟️</div>${astroSVG(B.players[g.turn].fill,pAv(v,v.me))}</div></div>`:"";
+  let h=`<div class="ch-wrap"><div class="ch-top">${info}${chStatusHTML(v)}</div>
+    <div class="ch-seats">${chSeatsHTML(v)}</div>
+    <div class="ch-left">${chBoardSVG(v)}</div>
+    <div class="ch-below">${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></div></div>${buddy}`;
   if(g.phase==="reveal") h+=boardHTML({players:v.players,scores:v.scores,g:{res:g.res}})+nextControls(v,host);
   return h;
 }
