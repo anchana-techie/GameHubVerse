@@ -300,21 +300,42 @@
   @media(prefers-reduced-motion:reduce){#space *,#space{animation:none!important}.game-btn{transition:none}}
 
   /* chess */
-  .ch-wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start;margin-top:10px}
-  .ch-board{display:block;width:100%;max-width:min(100%,calc(100vh - 190px));min-width:260px;margin:0 auto;border-radius:10px;box-shadow:0 8px 30px #0008;background:#0003;user-select:none;-webkit-user-select:none}
+  .ch-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start;margin-top:14px}
+  .ch-side .msg{margin-top:10px}.ch-side .ch-seats{margin-top:10px}
+  .ch-left{min-width:0;display:flex;flex-direction:column;align-items:center}
+  .ch-board{display:block;width:100%;max-width:min(100%,calc(100vh - 150px));min-width:260px;margin:0 auto;border-radius:16px;
+    border:1px solid #3a4390;box-shadow:0 0 0 1px #0a0d22,0 10px 40px #000a,0 0 46px #6c7bff33;
+    background:radial-gradient(120% 120% at 50% 0%,#1d2457 0%,#0e1230 62%,#080a1c 100%);
+    user-select:none;-webkit-user-select:none;touch-action:none}
   .ch-board .sq{cursor:pointer}
+  .ch-board .sq.mine{cursor:grab}
+  body.ch-dragging,body.ch-dragging *{cursor:grabbing!important}
   .ch-pc{pointer-events:none;paint-order:stroke;stroke-linejoin:round;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols","DejaVu Sans","Arial Unicode MS",sans-serif}
+  .ch-pc.lift{opacity:.22}
+  .ch-halo{pointer-events:none;transform-box:fill-box;transform-origin:center;animation:chPulse 1.5s ease-in-out infinite}
+  @keyframes chPulse{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.12)}}
+  .ch-ghost{position:fixed;left:0;top:0;z-index:700;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 6px 10px #000c)}
   .ch-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:12px}
-  .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px}
-  .ch-seat.act{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset}
+  .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;--gc:var(--accent2)}
+  .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset,0 0 18px -2px var(--gc);animation:chSeatGlow 1.5s ease-in-out infinite}
+  @keyframes chSeatGlow{50%{box-shadow:0 0 0 1px var(--gc) inset,0 0 30px 2px var(--gc)}}
   .ch-seat.out{opacity:.5}
   .ch-seat .rt{display:flex;gap:6px;align-items:center}
   .ch-seat .cp{grid-column:2 / 4;font-size:1.05rem;letter-spacing:1px;min-height:0;color:var(--muted)}
-  .ch-dot{width:18px;height:18px;border-radius:50%;border:2px solid #000}
+  .ch-seat .chip.timer,.ch-seat .ch-clk{font-size:1.15rem;font-weight:800;padding:5px 14px;font-variant-numeric:tabular-nums}
+  .ch-seat .ch-clk{background:var(--panel2);border:1px solid var(--border);border-radius:999px;color:var(--text)}
+  .ch-seat.act .chip.timer{border-color:var(--gc);color:#fff;background:#ffffff14}
+  .ch-seat .chip.timer.low{color:var(--err);border-color:var(--err)}
+  .ch-dot{width:18px;height:18px;border-radius:50%;border:2px solid #000;box-shadow:0 0 10px -1px currentColor}
+  .ch-kick{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:8px;font-size:.75rem;padding:2px 8px;cursor:pointer;margin-left:6px}
+  .ch-kick:hover{background:var(--err);color:#fff}
   .ch-hist{max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-wrap:wrap;gap:4px 6px;align-content:flex-start}
   .ch-no{color:var(--muted);font-size:.8rem;margin-left:4px}
   .ch-mv{font-size:.85rem;padding:1px 7px;border-left:3px solid;background:var(--panel2);border-radius:4px}
   .chip.warn{border-color:var(--warn);color:var(--warn)}
+  .kick{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:50%;width:20px;height:20px;line-height:16px;font-size:.8rem;padding:0;margin-left:6px;cursor:pointer;vertical-align:middle}
+  .kick:hover{background:var(--err);color:#fff}
+  @media(prefers-reduced-motion:reduce){.ch-halo,.ch-seat.act{animation:none}}
   @media(max-width:900px){.ch-wrap{grid-template-columns:1fr}.ch-board{max-width:100%}}
 
   /* balloons */
@@ -641,10 +662,11 @@ const SETTINGS={
   ],
   chess:[
     {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
-    {k:"solo",l:"With 1 player, play against",o:[["computer","The computer"],["local","Pass-and-play (you move both sides)"]],when:n=>n===1},
-    {k:"level",l:"Computer strength",o:[[1,"Easy"],[2,"Medium"],[3,"Hard"]],when:(n,st)=>n===1&&st.solo==="computer"},
-    {k:"side",l:"You play as",o:[["white","White"],["black","Black"],["random","Random"]],when:(n,st)=>n===1&&st.solo==="computer"},
-    {k:"seat",l:"Colours / seats",o:[["random","Random each round"],["order","Join order (host first), rotating each round"]],when:n=>n>=2},
+    {k:"players",l:"Number of players (empty seats are played by the computer)",o:[[2,"2 players – classic 8×8"],[3,"3 players – hexagon board"],[4,"4 players – cross board"]]},
+    {k:"solo",l:"With 1 player on the 2-player board, play against",o:[["computer","The computer"],["local","Pass-and-play (you move both sides)"]],when:(n,st)=>n===1&&st.players==2},
+    {k:"level",l:"Computer strength",o:[[1,"Easy"],[2,"Medium"],[3,"Hard"]],when:(n,st)=>n<st.players&&!(n===1&&st.players==2&&st.solo==="local")},
+    {k:"side",l:"You play as",o:[["white","White"],["black","Black"],["random","Random"]],when:(n,st)=>n===1&&st.players==2&&st.solo==="computer"},
+    {k:"seat",l:"Colours / seats",o:[["random","Random each round"],["order","Join order (host first), rotating each round"]],when:(n,st)=>n>=2||st.players>2},
     {k:"clock",l:"Time per player (whole game)",o:[[0,"No clock"],[1,"1 min"],[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"]]},
     {k:"inc",l:"Bonus time added after each move",o:[[0,"None"],[1,"+1 sec"],[2,"+2 sec"],[3,"+3 sec"],[5,"+5 sec"],[10,"+10 sec"]]},
     {k:"hints",l:"Show legal moves when a piece is selected",o:[[1,"Yes"],[0,"No"]]}
@@ -655,14 +677,14 @@ const DEFAULTS={
   number:{rounds:3,digits:4,turnTime:30,maxAttempts:0},
   raja:{rounds:3,guessTime:60},
   Scribblio:{rounds:3,drawTime:80,wordChoice:1,hints:2,src:"random"},
-  chess:{rounds:1,solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
+  chess:{rounds:1,players:2,solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
 };
 const BLURB={
   spy:"Everyone gets a secret word on their own screen – the spy's word is different (or missing). Players give clues one after another and keep cycling. Anyone who suspects the spy can press “Voting Needed” – most votes is out. Catch the spy to win; if the spy survives until only 2 players are left, the spy wins.",
   number:"One secret number. Guess in turns. N = right digits anywhere, P = right digits in the right place. Faster win = more points.",
   raja:"Secret roles are dealt to each player's screen. The Police must find the Thief – a wrong guess hands the Police's points to the Thief.",
   Scribblio:"Draw & guess! Each turn one player gets a secret word and draws it; everyone else types guesses in the chat. A letter of the word is revealed after ⅓ of the time and another after ⅔. The faster you guess, the more points you score.",
-  chess:"Chess for 1–4 players – the board follows the number of players in the room. 1 player: vs the computer or pass-and-play. 2 players: classic chess. 3 players: hexagon board, last king standing wins. 4 players: cross board, points for captures and checkmates. A checkmated player is out (their pieces are removed on the hexagon, turn grey on the cross board)."
+  chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces are removed on the hexagon, turn grey on the cross board)."
 };
 
 const SK_WORDS=[...new Set(["apple","banana","mango","pizza","burger","sandwich","ice cream","cake","cookie","popcorn","samosa","biryani","dosa","coffee","tea","milk","egg","cheese","bread","carrot","pumpkin","tomato","potato","onion","pineapple","watermelon","strawberry","grapes","lemon","cherry",
@@ -858,6 +880,7 @@ function guestOnMsg(m,fail){
   else if(m.t==="draw"){ skApply(m.d); }
   else if(m.t==="reject"){ fail(m.why||"Could not join."); }
   else if(m.t==="closed"){ cleanup({type:"warn",text:"The host closed the room."}); }
+  else if(m.t==="kicked"){ cleanup({type:"warn",text:"The host removed you from the room. You can join again with the room code."}); }
 }
 
 /* ---- host side ---- */
@@ -879,7 +902,7 @@ function hostOnMsg(conn,m){
       p.connected=true; p.offAt=0;
     } else {
       if(R.phase!=="lobby") return rej("This game has already started. Ask the host to go back to the lobby.");
-      if(R.players.filter(x=>!x.left).length>=MAXP[R.game]) return rej("The room is full.");
+      if(R.players.filter(x=>!x.left).length>=maxPlayers(R)) return rej("The room is full.");
       if(R.players.some(x=>!x.left&&x.name.toLowerCase()===name.toLowerCase())) return rej("That name is already taken in this room.");
       p={pid,name,av,connected:true,left:false}; R.players.push(p);
     }
@@ -907,6 +930,14 @@ function removePlayer(R,pid){
   if(c){ c._pid=null; setTimeout(()=>{ try{ c.close(); }catch(e){} },150); }
   if(R.phase==="play") afterLeave(R,pid);
   pushState();
+}
+
+/* host removes a player from the room (lobby or mid-game). The player is told, their screen goes home, others see an airlock scene. */
+function kickPlayer(R,pid){
+  const p=R.players.find(x=>x.pid===pid&&!x.left); if(!p||pid===R.hostPid) return;
+  const c=NET.conns[pid]; if(c&&c.open){ try{ c.send({t:"kicked"}); }catch(e){} }
+  if(R.phase==="play") ejPush(R,ejItem(R,pid,{eb:"KICKED OUT",h:"{n} {was} kicked out by the host!",s:"The host removed them from the room.",tone:"bad"}));
+  R._kick=pid; try{ removePlayer(R,pid); } finally { R._kick=null; }
 }
 
 /* ---- per-player views: secrets never leave the host ---- */
@@ -977,6 +1008,7 @@ function doAct(R,pid,m){
   const host=pid===R.hostPid;
   switch(m.a){
     case "settings": if(host&&R.phase==="lobby") setSetting(R,m.k,m.v); return;
+    case "kick": if(host) kickPlayer(R,String(m.pid||"")); return;
     case "start": if(host&&R.phase==="lobby") startGame(R,m); return;
     case "tolobby":
       // Host leaves the running game (or the final screen) but everyone stays in the room.
@@ -1001,8 +1033,10 @@ function doAct(R,pid,m){
   else if(R.game==="Scribblio") skAct(R,pid,m);
   else rrAct(R,pid,m);
 }
+const maxPlayers=R=>R.game==="chess"?(+R.settings.players||2):MAXP[R.game];
 function setSetting(R,k,v){
   const f=SETTINGS[R.game].find(x=>x.k===k); if(!f) return;
+  if(R.game==="chess"&&k==="players"){ const n=R.players.filter(p=>!p.left).length; if(+v<n) return tell(R,R.hostPid,`${n} people are already in the room – kick someone first to use fewer seats.`); }
   const opts=(typeof f.o==="function"?f.o(MAXP[R.game]):f.o).map(o=>Array.isArray(o)?o[0]:o);
   const hit=opts.find(o=>String(o)===String(v)); if(hit===undefined) return;
   R.settings[k]=hit;
@@ -1033,7 +1067,11 @@ function startGame(R,m){
   R.round=1; R.scores={}; R.msg=null; R.phase="play"; deal(R);
 }
 function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else rrDeal(R); }
-function abort(R,msg){
+function abort(R,msg,leaver){
+  // "too few players" scene: the player who left is ejected (unless the host kicked them – that scene is already queued), then the room is shown
+  const lp=leaver&&R._kick!==leaver&&R.players.find(x=>x.pid===leaver);
+  if(lp) ejPush(R,ejItem(R,leaver,{eb:"PLAYER LEFT",h:"{n} abandoned ship.",s:"The game cannot continue.",tone:"bad"}));
+  ejPush(R,{none:true,eb:"NOT ENOUGH PLAYERS",h:"Less players than required.",s:"Taking you to the room…",tone:"bad",T:7000});
   R.phase="lobby"; R.g=null; R.msg=msg; R.round=0; R.scores={};
   R.players=R.players.filter(p=>!p.left);
 }
@@ -1042,21 +1080,22 @@ function afterLeave(R,pid){
   const act=R.players.filter(p=>!p.left);
   if(R.game==="chess"){
     g.seats.forEach((s,i)=>{ if(s.pid===pid&&!s.bot) chLose(R,i,"left"); });
+    if(act.length<MINP.chess) abort(R,"Everyone left, so the chess game was stopped.",pid);
   } else if(R.game==="spy"){
     const spiesLeft=g.ids.filter(x=>g.roles[x]==="spy"&&!isLeft(R,x));
-    if(act.length<3||!spiesLeft.length) abort(R,"A player left, so the game was stopped (Spy needs at least 3 players and a spy).");
+    if(act.length<3||!spiesLeft.length) abort(R,"A player left, so the game was stopped (Spy needs at least 3 players and a spy).",pid);
     else if(spyAliveCiv(R)<=spyAliveSpies(R)){ g.last=g.last||null; spyEnd(R,false); }
     else if(g.phase==="vote") spyCheckVotes(R);
     else if(g.phase==="clues"&&g.ids[g.turn]===pid){ spyClueAdd(R,pid,"—",true); spyAdvance(R); }
   } else if(R.game==="number"){
     if(g.phase==="play"&&g.ids[g.turn]===pid) numNext(R);
   } else if(R.game==="Scribblio"){
-    if(act.length<2) abort(R,"A player left, so the game was stopped (Scribblio needs at least 2 players).");
+    if(act.length<2) abort(R,"A player left, so the game was stopped (Scribblio needs at least 2 players).",pid);
     else if(pid===g.drawer) skEndTurn(R,true);
     else skCheckAll(R);
   } else {
     const role=g.roles[pid]!=null?RR_ROLES[g.roles[pid]].key:null;
-    if(act.length<3) abort(R,"A player left, so the game was stopped (Raja Rani needs at least 3 players).");
+    if(act.length<3) abort(R,"A player left, so the game was stopped (Raja Rani needs at least 3 players).",pid);
     else if(role==="police"||role==="thief") rrVoid(R,"The Police or the Thief left, so this round doesn't count.");
   }
 }
@@ -1460,8 +1499,8 @@ function chSpec2(){
   const xs=[0,1,2,3,4,5,6,7];
   return {id:2,kind:"grid",cells,promoTypes:[5,4,3,2],
     players:[
-      {name:"White",fill:"#fdfdfd",stroke:"#161616",side:270,back:xs.map(x=>x),fe0:2,setup:"RNBQKBNR"},
-      {name:"Black",fill:"#2a2a2a",stroke:"#f1f1f1",side:90,back:xs.map(x=>56+7-x),fe0:0,setup:"RNBKQBNR"}]};
+      {name:"White",fill:"#eaf9ff",stroke:"#0b1b4a",side:270,back:xs.map(x=>x),fe0:2,setup:"RNBQKBNR"},
+      {name:"Black",fill:"#b678ff",stroke:"#1c0a3f",side:90,back:xs.map(x=>56+7-x),fe0:0,setup:"RNBKQBNR"}]};
 }
 function chSpec4(){
   const cells=[], at={}, L="abcdefghijklmn";
@@ -1474,10 +1513,10 @@ function chSpec4(){
   return {id:4,kind:"grid",cells,promoTypes:[5],
     promoFn:(p,c)=>{ const q=cells[c]; return p===0?q.gy===7:p===1?q.gx===7:p===2?q.gy===6:q.gx===6; },
     players:[
-      {name:"Yellow",fill:"#f6c928",stroke:"#3a2f00",side:270,back:r8.map(f=>A(3+f,0)),fe0:2,setup:"RNBQKBNR"},
-      {name:"Blue",fill:"#4a8cf0",stroke:"#06204a",side:180,back:r8.map(f=>A(0,10-f)),fe0:1,setup:"RNBQKBNR"},
-      {name:"Red",fill:"#e8464f",stroke:"#400409",side:90,back:r8.map(f=>A(10-f,13)),fe0:0,setup:"RNBQKBNR"},
-      {name:"Green",fill:"#37b866",stroke:"#06310f",side:0,back:r8.map(f=>A(13,3+f)),fe0:3,setup:"RNBQKBNR"}]};
+      {name:"Yellow",fill:"#ffd83d",stroke:"#3a2a00",side:270,back:r8.map(f=>A(3+f,0)),fe0:2,setup:"RNBQKBNR"},
+      {name:"Blue",fill:"#3dc4ff",stroke:"#032a4a",side:180,back:r8.map(f=>A(0,10-f)),fe0:1,setup:"RNBQKBNR"},
+      {name:"Red",fill:"#ff5c82",stroke:"#470419",side:90,back:r8.map(f=>A(10-f,13)),fe0:0,setup:"RNBQKBNR"},
+      {name:"Green",fill:"#4dffa8",stroke:"#05361d",side:0,back:r8.map(f=>A(13,3+f)),fe0:3,setup:"RNBQKBNR"}]};
 }
 function chSpec3(){
   /* Hexagon of 96 cells = 3 regions of 8x4. Each region is a pentagon (two hexagon corners, two side-midpoints and the
@@ -1487,9 +1526,9 @@ function chSpec3(){
   const Tf=f=>f<=4?[M210[0]+(O[0]-M210[0])*f/4, M210[1]+(O[1]-M210[1])*f/4]:[O[0]+(M330[0]-O[0])*(f-4)/4, O[1]+(M330[1]-O[1])*(f-4)/4];
   const Pf=(f,r)=>{ const b=Bf(f), t=Tf(f); return [b[0]+(t[0]-b[0])*r/4, b[1]+(t[1]-b[1])*r/4]; };
   const seats=[
-    {name:"White",ang:-120,side:150,fill:"#fdfdfd",stroke:"#161616",L:["L","K","J","I","D","C","B","A"],rk:r=>8-r},
-    {name:"Black",ang:120,side:30,fill:"#2a2a2a",stroke:"#f1f1f1",L:["H","G","F","E","I","J","K","L"],rk:r=>12-r},
-    {name:"Red",ang:0,side:270,fill:"#e8464f",stroke:"#400409",L:["A","B","C","D","E","F","G","H"],rk:r=>r+1}];
+    {name:"White",ang:-120,side:150,fill:"#eaf9ff",stroke:"#0b1b4a",L:["L","K","J","I","D","C","B","A"],rk:r=>8-r},
+    {name:"Black",ang:120,side:30,fill:"#b678ff",stroke:"#1c0a3f",L:["H","G","F","E","I","J","K","L"],rk:r=>12-r},
+    {name:"Red",ang:0,side:270,fill:"#ff5c82",stroke:"#470419",L:["A","B","C","D","E","F","G","H"],rk:r=>r+1}];
   const cells=[];
   seats.forEach((s,si)=>{
     const a=s.ang*Math.PI/180, co=Math.cos(a), sn=Math.sin(a), rot=p=>[p[0]*co-p[1]*sn, p[0]*sn+p[1]*co];
@@ -1828,6 +1867,44 @@ function chBest(P0,level){
   if(level<=1){ return scored[Math.min(scored.length-1,Math.floor(Math.random()*Math.min(4,scored.length)))][0]; }
   return pool[Math.floor(Math.random()*pool.length)][0];
 }
+/* computer for the 3- and 4-player boards: one-move look-ahead (captures, checks, mates, hanging pieces, development) */
+function chBestMulti(P0,level){
+  const P=chClone(P0), p=P.turn, ms=chLegal(P,p); if(!ms.length) return null;
+  if(level<=1&&Math.random()<0.3) return ms[Math.floor(Math.random()*ms.length)];
+  const hex=P.B.kind==="hex", cx=hex?0:7, noise=level<=1?60:level===2?12:3;
+  const cen=c=>{ const q=P.B.cells[c].poly; let x=0,y=0; for(const a of q){ x+=a[0]; y+=a[1]; } return Math.hypot(x/4-cx,y/4-cx)/(hex?1:7); };
+  let best=null,bs=-1e9;
+  for(const m of ms){
+    const t=P.T[m.f], capT=m.k===2?1:P.T[m.t], capO=m.k===2?P.epO:P.O[m.t];
+    let s=0;
+    if(capT&&capO>=0&&capO<CH_DEAD) s+=CH_V[capT];
+    if(m.pr) s+=CH_V[m.pr]-100;
+    if(m.k===3) s+=15;
+    const u=chMake(P,m), nt=P.T[m.t];
+    for(let q=0;q<P.np;q++){
+      if(q===p||!P.alive[q]||P.kc[q]<0||!chAttacked(P,P.kc[q],q)) continue;
+      s+=25; if(level>=2&&chLegal(P,q).length===0) s+=800;           // check / checkmate
+    }
+    if(level>=2){                                                      // what could the others capture after this move?
+      let worst=0;
+      for(let q=0;q<P.np;q++){
+        if(q===p||!P.alive[q]) continue;
+        for(const r of chPseudo(P,q)){
+          const vt=P.T[r.t]; if(!vt||vt===6||P.O[r.t]!==p) continue;
+          let loss=CH_V[vt]; if(level>=3&&chAttacked(P,r.t,q)) loss=Math.max(0,loss-CH_V[P.T[r.f]]);
+          if(loss>worst) worst=loss;
+        }
+      }
+      s-=worst*0.85;
+    } else if(chAttacked(P,m.t,p)) s-=CH_V[nt]*0.8;
+    if(nt===2||nt===3||nt===1) s+=(1-cen(m.t))*8;
+    if(nt===6&&m.k!==3) s-=5;
+    s+=(Math.random()*2-1)*noise;
+    chUnmake(P,u);
+    if(s>bs){ bs=s; best=m; }
+  }
+  return best||ms[0];
+}
 /*CHESS-ENGINE-END*/
 /*CHESS-HOST-START*/
 /* ---------- CHESS (host side) ----------
@@ -1841,9 +1918,10 @@ function chKey(P){
   return s+P.turn+"|"+Array.from(P.cr).join("")+"|"+P.epT;
 }
 function chDeal(R){
-  const st=R.settings, humans=R.players.filter(p=>!p.left).map(p=>p.pid), n=humans.length, id=n<=2?2:n;
+  const st=R.settings, humans=R.players.filter(p=>!p.left).map(p=>p.pid), n=humans.length;
+  const id=Math.max(2,Math.min(4,Math.max(+st.players||2,n)));        // seats chosen by the host; empty seats are played by the computer
   let seats;
-  if(n===1){
+  if(n===1&&id===2){
     if(st.solo==="local") seats=[{pid:humans[0]},{pid:humans[0]}];
     else {
       const hs=st.side==="white"?0:st.side==="black"?1:Math.floor(Math.random()*2);
@@ -1853,9 +1931,11 @@ function chDeal(R){
     const rot=(R.round-1)%n;
     const order=st.seat==="random"?shuffle(humans):humans.slice(rot).concat(humans.slice(0,rot));
     seats=order.map(pid=>({pid}));
+    while(seats.length<id) seats.push({bot:true,lvl:st.level||2});
+    if(st.seat==="random") seats=shuffle(seats);
   }
   const P=chPos(id), mins=st.clock||0;
-  R.g={kind:"ch",phase:"play",id,P,seats,local:n===1&&st.solo==="local",
+  R.g={kind:"ch",phase:"play",id,P,seats,local:n===1&&id===2&&st.solo==="local",
     clockOn:mins>0,rem:seats.map(s=>s.bot?0:mins*60000),inc:(st.inc||0)*1000,tAt:Date.now(),
     last:null,checks:[],legal:[],hist:[],caps:seats.map(()=>[]),elim:[],drawBy:null,res:null,reps:{},lastSeat:-1,botBusy:false,deadline:0};
   if(id===2) R.g.reps[chKey(P)]=1;
@@ -1874,9 +1954,9 @@ function chEliminate(R,p,why,credit){
     const pl=B.players[p], st=g.seats[p], left=P.alive.filter(Boolean).length;
     const sn=i=>{ const x=g.seats[i]; return x&&x.pid?skPn(R,x.pid):"Computer"; };
     const heads={mate:"{n} {was} checkmated"+(credit!=null&&credit!==p?" by "+sn(credit):"")+"!",stalemate:"{n} {was} stalemated!",time:"{n} ran out of time!",resign:"{n} resigned.",left:"{n} abandoned ship."};
-    ejPush(R,ejItem(R,st.pid,{eb:pl.name.toUpperCase()+" IS OUT",h:heads[why]||"{n} {was} out!",
+    ejPush(R,ejItem(R,st.pid,{...(st.bot?{name:"The "+pl.name+" computer",av:"🤖"}:{}),eb:pl.name.toUpperCase()+" IS OUT",h:heads[why]||"{n} {was} out!",
       s:"Their pieces "+(B.dead?"turn into grey space debris":"vanish into the void")+" – "+left+" player"+(left===1?"":"s")+" left.",
-      col:pl.name==="Black"?"#8d94b0":pl.fill,tone:"neutral"}));
+      col:pl.fill,tone:"neutral"}));
     g.grace=6500;                                                       // the next clock starts after the cutscene
   }
 }
@@ -1968,7 +2048,7 @@ function chBotMove(R,g){
   g.botBusy=false;
   if(R.g!==g||g.phase!=="play"||(typeof NET!=="undefined"&&NET.R!==R)) return;
   const P=g.P, seat=g.seats[P.turn]; if(!seat.bot) return;
-  let mv=null; try{ mv=chBest(P,seat.lvl); }catch(e){ console.error(e); }
+  let mv=null; try{ mv=P.np===2?chBest(P,seat.lvl):chBestMulti(P,seat.lvl); }catch(e){ console.error(e); }
   if(!mv) mv=g.legal[Math.floor(Math.random()*g.legal.length)];
   chApply(R,mv);
   if(typeof pushState==="function") pushState();
@@ -1976,7 +2056,7 @@ function chBotMove(R,g){
 function chTick(R,now){
   const g=R.g; if(g.phase!=="play") return false;
   const P=g.P, p=P.turn, seat=g.seats[p];
-  if(seat.bot){ if(!g.botBusy){ g.botBusy=true; setTimeout(()=>chBotMove(R,g),450); } return false; }
+  if(seat.bot){ if(now<g.tAt) return false; if(!g.botBusy){ g.botBusy=true; setTimeout(()=>chBotMove(R,g),450); } return false; }
   const pl=R.players.find(x=>x.pid===seat.pid);
   if(pl&&!pl.connected&&pl.offAt&&now-pl.offAt>60000){ chLose(R,p,"left"); return true; }
   if(g.clockOn&&g.rem[p]-(now-g.tAt)<=0){ g.rem[p]=0; chLose(R,p,"time"); return true; }
@@ -2014,8 +2094,9 @@ function renderOverlay(){
   _ovModal=!!m;
 }
 function modalYes(){
-  const a=S.modal&&S.modal.act; S.modal=null; renderOverlay();
+  const m=S.modal||{}, a=m.act; S.modal=null; renderOverlay();
   if(a==="exitgame") sendAct({a:"tolobby"});
+  else if(a==="kick"&&m.pid) sendAct({a:"kick",pid:m.pid});
   else if(a==="chresign") sendAct({a:"resign"});
   else if(a==="closeroom") leaveRoom(true);
   else if(a==="leaveroom") leaveRoom(true);
@@ -2323,16 +2404,17 @@ function roomHTML(){
     <button class="btn secondary" data-a="leave">${host?(NET.local?"🏠 Leave game":"✖ Close room"):"🚪 Leave room"}</button></div></div>`;
   h+=`<div class="card2" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
     ${NET.local?`<div><div class="mut" style="font-size:.8rem">Offline game</div><div class="code" style="font-size:1.2rem;letter-spacing:.04em">📴 This device only</div></div>`:`<div><div class="mut" style="font-size:.8rem">Room code</div><div class="code">${esc(v.code)}</div></div>`}
-    <div class="scoreboard" style="margin:0">${v.players.map(p=>`<span class="chip ${p.connected?"":"off"} ${p.left?"gone":""}">${p.av} ${esc(p.name)}${p.pid===v.hostPid?" 👑":""}${p.pid===v.me?" (you)":""}${p.left?" · left":!p.connected?" · offline":""}</span>`).join("")}</div></div>`;
+    <div class="scoreboard" style="margin:0">${v.players.map(p=>`<span class="chip ${p.connected?"":"off"} ${p.left?"gone":""}">${p.av} ${esc(p.name)}${p.pid===v.hostPid?" 👑":""}${p.pid===v.me?" (you)":""}${p.left?" · left":!p.connected?" · offline":""}${kickBtn(v,p)}</span>`).join("")}</div></div>`;
   if(v.phase==="lobby") return h+lobbyHTML(v,host);
   if(v.phase==="end") return h+endHTML(v,host);
   return h+(v.game==="spy"?spyGameHTML(v):v.game==="number"?numGameHTML(v):v.game==="Scribblio"?"":v.game==="chess"?chessGameHTML(v):rrGameHTML(v));
 }
+const kickBtn=(v,p)=>v.me===v.hostPid&&p.pid!==v.hostPid&&!p.left&&!NET.local?`<button type="button" class="kick" data-a="kick" data-pid="${esc(p.pid)}" title="Kick ${esc(p.name)} from the room" aria-label="Kick ${esc(p.name)}">✖</button>`:"";
 function lobbyHTML(v,host){
   const st=v.settings, n=v.players.filter(p=>!p.left).length, fields=SETTINGS[v.game].filter(f=>!f.when||f.when(n,st));
   let h="";
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
-  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${n===1?"1 player – classic board, vs computer or pass-and-play":n===2?"2 players – classic 8×8 chess":n===3?"3 players – hexagon board, last king standing":"4 players – cross board, points for captures and checkmates"}</b><br><span class="mut">The board changes automatically with the number of players in the room.</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
+  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(host){
     h+=`<div class="sgrid">${fields.map(f=>{
       const opts=typeof f.o==="function"?f.o(MAXP[v.game]):f.o;
@@ -2664,7 +2746,7 @@ function skPatch(v){
     const gain=g.gain[p.pid]||0;
     return `<div class="sk-p ${g.guessed[p.pid]?"ok":""} ${p.pid===g.drawer?"drawing":""} ${p.connected?"":"off"} ${p.left?"gone":""}">
       <span class="rk">#${i+1}</span>
-      <div class="nm"><span class="${p.pid===me?"me":""}">${esc(p.name)}${p.pid===me?" (You)":""}${p.pid===v.hostPid?" 👑":""}</span>
+      <div class="nm"><span class="${p.pid===me?"me":""}">${esc(p.name)}${p.pid===me?" (You)":""}${p.pid===v.hostPid?" 👑":""}${kickBtn(v,p)}</span>
         <small>${sc} points${gain>0?` <em>+${gain}</em>`:""}${p.left?" · left":!p.connected?" · offline":""}</small></div>
       <span class="av">${p.av}${p.pid===g.drawer?'<i class="pen" title="Drawing">✏️</i>':""}${g.guessed[p.pid]?'<i class="tick">✓</i>':""}</span></div>`;
   }).join(""));
@@ -2768,7 +2850,7 @@ function buildPad(){
 
 /*CHESS-UI-START*/
 /* ---------- CHESS UI ---------- */
-const CH_PAL={2:["#769656","#eeeed2"],3:["#6f9150","#eeeed2"],4:["#8e9bb0","#e7ebf2"]};
+const CH_PAL={2:["#1f2759","#34428a"],3:["#1f2759","#34428a"],4:["#1f2759","#34428a"]};   // space theme: deep indigo / nebula blue
 const chViewSeat=v=>{ const g=v.g; if(S.ui.chView!=null&&S.ui.chView<g.seats.length) return S.ui.chView; const m=g.seats.findIndex(s=>s.pid===v.me&&!s.bot); return m>=0?m:0; };
 const chMyTurn=v=>{ const g=v.g; if(g.phase!=="play") return false; const s=g.seats[g.turn]; return !s.bot&&s.pid===v.me; };
 function chSeatName(v,i){
@@ -2791,13 +2873,13 @@ function chBoardSVG(v){
   const [dk,lt]=CH_PAL[g.id], hints=v.settings.hints!=0, mine=chMyTurn(v), sel=S.ui.chSel;
   const targets=new Map(); if(mine&&sel!=null&&hints) g.legal.forEach(m=>{ if(m[0]===sel) targets.set(m[1],1); });
   const kingHome=new Set(hex?B.players.map(p=>p.back[4]):[]);
-  let h=`<svg class="ch-board" viewBox="${f(x0-pad)} ${f(y0-pad)} ${f(x1-x0+2*pad)} ${f(y1-y0+2*pad)}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="chk"><stop offset="0" stop-color="#ff2d2d" stop-opacity=".95"/><stop offset=".7" stop-color="#ff2d2d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d2d" stop-opacity="0"/></radialGradient></defs>`;
+  let h=`<svg class="ch-board" viewBox="${f(x0-pad)} ${f(y0-pad)} ${f(x1-x0+2*pad)} ${f(y1-y0+2*pad)}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="chk"><stop offset="0" stop-color="#ff2d2d" stop-opacity=".95"/><stop offset=".7" stop-color="#ff2d2d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d2d" stop-opacity="0"/></radialGradient>${B.players.map((pl,k)=>`<radialGradient id="chh${k}"><stop offset="0" stop-color="${pl.fill}" stop-opacity=".75"/><stop offset=".55" stop-color="${pl.fill}" stop-opacity=".3"/><stop offset="1" stop-color="${pl.fill}" stop-opacity="0"/></radialGradient><filter id="chf${k}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation=".07" flood-color="${pl.fill}" flood-opacity="1"/><feDropShadow dx="0" dy="0" stdDeviation=".18" flood-color="${pl.fill}" flood-opacity=".9"/></filter>`).join("")}</defs>`;
   B.cells.forEach((c,i)=>{
-    const fill=kingHome.has(i)?"#f2c200":(B.col[i]===0?dk:lt);
-    h+=`<polygon class="sq" data-a="chcell" data-c="${i}" fill="${fill}" stroke="#0004" stroke-width=".02" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"><title>${c.label}</title></polygon>`;
+    const fill=kingHome.has(i)?"#6a4fd8":(B.col[i]===0?dk:lt), own=mine&&g.T[i]&&g.O[i]===g.turn&&!S.ui.chPromo;
+    h+=`<polygon class="sq${own?" mine":""}" data-a="chcell" data-c="${i}" fill="${fill}" stroke="#0a0d2299" stroke-width=".02" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"><title>${c.label}</title></polygon>`;
   });
   const hl=new Set(g.last?[g.last.f,g.last.t]:[]);
-  hl.forEach(i=>{ h+=`<polygon fill="#ffe94a" fill-opacity=".42" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; });
+  hl.forEach(i=>{ h+=`<polygon fill="#7fe9ff" fill-opacity=".28" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; });
   g.chk.forEach(s=>{ const kc=g.O.findIndex((o,i)=>o===s&&g.T[i]===6); if(kc>=0) h+=`<circle cx="${f(ctr[kc][0])}" cy="${f(ctr[kc][1])}" r=".95" fill="url(#chk)" pointer-events="none"/>`; });
   if(sel!=null) h+=`<polygon fill="#46d6a4" fill-opacity=".5" stroke="#46d6a4" stroke-width=".07" pointer-events="none" points="${polys[sel].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`;
   // coordinates
@@ -2812,13 +2894,15 @@ function chBoardSVG(v){
   });
   // move hints
   targets.forEach((_,i)=>{
-    if(g.T[i]) h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".46" fill="none" stroke="#2b2b2b" stroke-opacity=".55" stroke-width=".11" pointer-events="none"/>`;
-    else h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".17" fill="#2b2b2b" fill-opacity=".5" pointer-events="none"/>`;
+    if(g.T[i]) h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".46" fill="none" stroke="#46d6a4" stroke-opacity=".85" stroke-width=".09" pointer-events="none"/>`;
+    else h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".17" fill="#46d6a4" fill-opacity=".8" pointer-events="none"/>`;
   });
   // pieces
   for(let i=0;i<B.N;i++){
     if(!g.T[i]) continue; const o=g.O[i], pl=o===4?{fill:"#9a9a9a",stroke:"#3c3c3c"}:B.players[o];
-    h+=`<text class="ch-pc" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05">${CH_GLYPH[g.T[i]]}</text>`;
+    const on=g.phase==="play"&&o===g.turn&&g.alive[o]&&o<B.np, lift=S.ui.chDrag&&S.ui.chDrag.on&&S.ui.chDrag.from===i;   // pieces of the side to move glow
+    if(on) h+=`<circle class="ch-halo" cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".52" fill="url(#chh${o})"/>`;
+    h+=`<text class="ch-pc${lift?" lift":""}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05"${on?` filter="url(#chf${o})"`:""}>${CH_GLYPH[g.T[i]]}</text>`;
   }
   return h+`</svg>`;
 }
@@ -2858,10 +2942,11 @@ function chSeatsHTML(v){
     const pl=B.players[i], act=g.phase==="play"&&g.turn===i&&g.alive[i], out=!g.alive[i];
     let ck="";
     if(g.rem&&!s.bot){
-      ck=act?`<span class="chip timer" data-dl="${g.tAt+g.rem[i]}">⏱ …</span>`:`<span class="chip">⏱ ${chFmt(g.rem[i])}</span>`;
+      ck=act?`<span class="chip timer" data-dl="${g.tAt+g.rem[i]}">⏱ …</span>`:`<span class="ch-clk">⏱ ${chFmt(g.rem[i])}</span>`;
     }
-    h+=`<div class="ch-seat ${act?"act":""} ${out?"out":""}"><span class="ch-dot" style="background:${pl.fill};border-color:${pl.stroke}"></span>
-      <div class="nm">${chSeatName(v,i)}${!g.local&&s.pid===v.me&&!s.bot?" <span class='mut'>(you)</span>":""}<div class="mut" style="font-size:.78rem">${pl.name}${out?" · out":""}${g.chk.includes(i)?" · ⚠️ check":""}</div></div>
+    const kick=v.me===v.hostPid&&g.phase==="play"&&!s.bot&&s.pid&&s.pid!==v.hostPid&&!NET.local?`<button class="ch-kick" data-a="kick" data-pid="${esc(s.pid)}" title="Remove this player from the room">✖ Kick</button>`:"";
+    h+=`<div class="ch-seat ${act?"act":""} ${out?"out":""}" style="--gc:${pl.fill}"><span class="ch-dot" style="background:${pl.fill};border-color:${pl.stroke};color:${pl.fill}"></span>
+      <div class="nm">${chSeatName(v,i)}${!g.local&&s.pid===v.me&&!s.bot?" <span class='mut'>(you)</span>":""}${kick}<div class="mut" style="font-size:.78rem">${pl.name}${out?" · out":""}${g.chk.includes(i)?" · ⚠️ check":""}</div></div>
       <div class="rt">${g.id===4?`<span class="chip">⭐ ${g.pts[i]}</span>`:""}${ck}</div>
       <div class="cp">${g.caps[i].map(t=>`<span>${CH_GLYPH[t]}</span>`).join("")}</div></div>`;
   });
@@ -2880,33 +2965,89 @@ function chessGameHTML(v){
   if(S.ui.chRound!==v.round) S.ui.chView=null;
   if(S.ui.chPly!==g.ply||S.ui.chRound!==v.round){ S.ui.chPly=g.ply; S.ui.chRound=v.round; S.ui.chSel=null; S.ui.chPromo=null; }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
-  let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
-  h+=chStatusHTML(v);
-  h+=`<div class="ch-wrap"><div class="ch-left">${chBoardSVG(v)}
-    <div class="ch-actions"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
+  const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
+  let acts=`<div class="ch-actions" style="justify-content:flex-start"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
   if(g.phase==="play"){
     const mine=g.seats.findIndex(s=>s.pid===v.me&&!s.bot);
-    if(mine>=0&&(g.alive[mine]||g.local)) h+=`<button class="btn secondary" data-a="chresign">🏳️ Resign</button>`;
+    if(mine>=0&&(g.alive[mine]||g.local)) acts+=`<button class="btn secondary" data-a="chresign">🏳️ Resign</button>`;
     if(g.id===2&&!g.local&&!g.seats.some(s=>s.bot)&&mine>=0){
-      if(g.drawBy==null) h+=`<button class="btn secondary" data-a="chdraw">🤝 Offer draw</button>`;
-      else if(g.drawBy===mine) h+=`<span class="chip">🤝 Draw offered…</span>`;
-      else h+=`<span class="chip warn">🤝 Draw offered</span><button class="btn green" data-a="chacc">Accept</button><button class="btn secondary" data-a="chdec">Decline</button>`;
+      if(g.drawBy==null) acts+=`<button class="btn secondary" data-a="chdraw">🤝 Offer draw</button>`;
+      else if(g.drawBy===mine) acts+=`<span class="chip">🤝 Draw offered…</span>`;
+      else acts+=`<span class="chip warn">🤝 Draw offered</span><button class="btn green" data-a="chacc">Accept</button><button class="btn secondary" data-a="chdec">Decline</button>`;
     }
   }
-  h+=`</div></div><aside class="ch-side"><div class="ch-seats">${chSeatsHTML(v)}</div><h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></aside></div>`;
+  acts+=`</div>`;
+  let h=`<div class="ch-wrap"><div class="ch-left">${chBoardSVG(v)}</div>
+    <aside class="ch-side">${info}${chStatusHTML(v)}<div class="ch-seats">${chSeatsHTML(v)}</div>${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></aside></div>`;
   if(g.phase==="reveal") h+=boardHTML({players:v.players,scores:v.scores,g:{res:g.res}})+nextControls(v,host);
   return h;
 }
+function chTryMove(from,to){                         // shared by click and drag-and-drop; returns true if a move was sent / promotion opened
+  const v=S.room; if(!v||!v.g||v.g.kind!=="ch"||!chMyTurn(v)||S.ui.chPromo) return false;
+  const opts=v.g.legal.filter(m=>m[0]===from&&m[1]===to);
+  if(!opts.length) return false;
+  if(opts.length>1){ S.ui.chPromo={f:from,t:to,opts}; render(); return true; }
+  S.ui.chSel=null; sendAct({a:"cmove",f:from,t:to,pr:opts[0][2]}); return true;
+}
 function chClick(c){
   const v=S.room; if(!v||!v.g||v.g.kind!=="ch"||!chMyTurn(v)) return;
+  if(Date.now()<(S.ui.chNoClick||0)) return;         // this click is the tail of a drag
   const g=v.g, sel=S.ui.chSel;
   if(S.ui.chPromo) return;
   if(g.T[c]&&g.O[c]===g.turn){ S.ui.chSel=sel===c?null:c; return render(); }
   if(sel==null) return;
-  const opts=g.legal.filter(m=>m[0]===sel&&m[1]===c);
-  if(!opts.length){ S.ui.chSel=null; return render(); }
-  if(opts.length>1){ S.ui.chPromo={f:sel,t:c,opts}; return render(); }
-  S.ui.chSel=null; sendAct({a:"cmove",f:sel,t:c,pr:opts[0][2]});
+  if(!chTryMove(sel,c)){ S.ui.chSel=null; render(); }
+}
+/* ---- drag and drop: press a piece, drag it onto a square, release. A plain click still works as before. ---- */
+let CHD=null;
+function chPointerDown(e){
+  if(e.button!==undefined&&e.button!==0) return;
+  const el=e.target.closest&&e.target.closest("polygon.sq.mine"); if(!el) return;
+  const v=S.room; if(!v||!v.g||v.g.kind!=="ch"||!chMyTurn(v)||S.ui.chPromo) return;
+  const c=+el.dataset.c, svg=el.ownerSVGElement, vb=svg.viewBox.baseVal, r=svg.getBoundingClientRect();
+  CHD={c,id:e.pointerId,x:e.clientX,y:e.clientY,on:false,size:(r.width/vb.width)*0.95,ghost:null};
+  window.addEventListener("pointermove",chPointerMove);
+  window.addEventListener("pointerup",chPointerUp);
+  window.addEventListener("pointercancel",chPointerUp);
+}
+function chPointerMove(e){
+  const d=CHD; if(!d||e.pointerId!==d.id) return;
+  if(!d.on){
+    if(Math.hypot(e.clientX-d.x,e.clientY-d.y)<6) return;
+    const v=S.room; if(!v||!v.g||!chMyTurn(v)){ return chDragEnd(); }
+    d.on=true; S.ui.chSel=d.c; S.ui.chDrag={on:true,from:d.c};
+    const g=v.g, B=chBoard(g.id), pl=B.players[g.O[d.c]];
+    const gh=document.createElement("div"); gh.className="ch-ghost";
+    gh.innerHTML=`<svg width="${d.size}" height="${d.size}" viewBox="-.5 -.5 1 1"><text x="0" y=".3" font-size=".92" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05" style="paint-order:stroke;stroke-linejoin:round;font-family:'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','DejaVu Sans',sans-serif">${CH_GLYPH[g.T[d.c]]}</text></svg>`;
+    document.body.appendChild(gh); d.ghost=gh; document.body.classList.add("ch-dragging");
+    render();                                          // shows the legal-move hints and dims the lifted piece
+  }
+  e.preventDefault();
+  if(d.ghost){ d.ghost.style.left=e.clientX+"px"; d.ghost.style.top=e.clientY+"px"; }
+}
+function chPointerUp(e){
+  const d=CHD; if(!d||(e.pointerId!==undefined&&e.pointerId!==d.id)) return;
+  const was=d.on; let to=-1;
+  if(was&&e.type==="pointerup"){
+    if(d.ghost) d.ghost.style.display="none";
+    const t=document.elementFromPoint(e.clientX,e.clientY), sq=t&&t.closest?t.closest("polygon.sq"):null;
+    if(sq) to=+sq.dataset.c;
+  }
+  chDragEnd();
+  if(was){
+    S.ui.chNoClick=Date.now()+350;                     // swallow the click the browser fires after the drop
+    if(to>=0&&to!==d.c&&chTryMove(d.c,to)) return;     // legal drop – move sent (or promotion chooser opened)
+    render();                                          // illegal drop / cancelled: the piece snaps back, stays selected
+  }
+}
+function chDragEnd(){
+  const d=CHD; CHD=null;
+  window.removeEventListener("pointermove",chPointerMove);
+  window.removeEventListener("pointerup",chPointerUp);
+  window.removeEventListener("pointercancel",chPointerUp);
+  if(d&&d.ghost) d.ghost.remove();
+  document.body.classList.remove("ch-dragging");
+  if(S.ui) S.ui.chDrag=null;
 }
 function chPromote(pr){ const p=S.ui.chPromo; if(!p) return; S.ui.chPromo=null; S.ui.chSel=null; sendAct({a:"cmove",f:p.f,t:p.t,pr}); }
 /*CHESS-UI-END*/
@@ -3022,6 +3163,7 @@ function onAppClick(e){
     case "exitgame":
       showModal({title:"Exit the game?",text:"Everyone stays in the room. You'll go back to the lobby where you can change the settings and start again.",ok:"Exit game",danger:false,act:"exitgame"});
       break;
+    case "kick": { const v=S.room, p=v&&v.players.find(x=>x.pid===t.dataset.pid); if(p) showModal({title:"Kick "+p.name+"?",text:"They will be removed from the room"+(v.phase==="play"?" and the current game":"")+". They can join again with the room code.",ok:"Kick",danger:true,act:"kick",pid:p.pid}); break; }
     case "chcell": chClick(+t.dataset.c); break;
     case "chpromo": chPromote(+t.dataset.p); break;
     case "chrot": { const v=S.room; S.ui.chView=(chViewSeat(v)+1)%v.g.seats.length; render(); break; }
@@ -3108,7 +3250,7 @@ function ejPlay(items,i,me){
   const you=it.pid&&it.pid===me, fill=s=>String(s==null?"":s).replace(/\{n\}/g,you?"You":it.name).replace(/\{was\}/g,you?"were":"was");
   const head=fill(it.h), sub=fill(it.s), epi=fill(it.e), eb=fill(it.eb);
   const acc=it.col||EJ_COLORS[Math.max(0,EMOJIS.indexOf(it.av))%EJ_COLORS.length];
-  const T=(EJ.reduce?4500:8200)+(epi?1600:0);
+  const T=it.T?(EJ.reduce?Math.min(it.T,5000):it.T):(EJ.reduce?4500:8200)+(epi?1600:0);
   // starfield (random per scene)
   const star=(n,mx)=>{ let a=[]; for(let k=0;k<n;k++) a.push(`${(Math.random()*100).toFixed(1)}vw ${(Math.random()*100).toFixed(1)}vh 0 ${(Math.random()*mx).toFixed(1)}px #fff`); return a.join(","); };
   let vent=""; for(let k=0;k<20;k++){ const a=(Math.random()*1.4-.7), d=14+Math.random()*34; vent+=`<i style="--dx:${(Math.cos(a)*d).toFixed(1)}vmin;--dy:${(Math.sin(a)*d).toFixed(1)}vmin;animation-delay:${(1.7+Math.random()*.25).toFixed(2)}s"></i>`; }
@@ -3502,6 +3644,7 @@ function startApp(){
   buildPad(); buildSkCanvas(); buildSpace();
   const app=$("app");
   app.addEventListener("click",onAppClick);
+  app.addEventListener("pointerdown",chPointerDown);
   app.addEventListener("change",e=>{ onAppInput(e); onAppChange(e); });
   app.addEventListener("input",onAppInput);
   app.addEventListener("keydown",onAppKey);
