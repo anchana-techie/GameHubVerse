@@ -300,14 +300,15 @@
   @media(prefers-reduced-motion:reduce){#space *,#space{animation:none!important}.game-btn{transition:none}}
 
   /* chess */
-  .ch-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:12px}
-  .ch-top,.ch-seats,.ch-below{width:min(100%,980px)}
+  /* board size follows the window height so the whole table fits on screen at 100% zoom (never below 400px, never above 600px) */
+  .ch-wrap{--chw:clamp(400px,calc(100vh - 210px),600px);display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px}
+  .ch-top,.ch-seats,.ch-below{width:min(100%,calc(var(--chw) + 70px))}
   .ch-top .msg{margin-top:10px}
   .ch-seats{display:flex;gap:10px;flex-wrap:wrap}
   .ch-seats .ch-seat{flex:1 1 200px;margin:0}
   .ch-below{display:flex;flex-direction:column;align-items:stretch}
   .ch-left{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center}
-  .ch-board{display:block;width:100%;max-width:min(100%,840px);min-width:260px;margin:0 auto;border-radius:16px;
+  .ch-board{display:block;width:100%;max-width:min(100%,var(--chw));min-width:260px;margin:0 auto;border-radius:16px;
     border:1px solid #3a4390;box-shadow:0 0 0 1px #0a0d22,0 10px 40px #000a,0 0 46px #6c7bff33;
     background:radial-gradient(120% 120% at 50% 0%,#1d2457 0%,#0e1230 62%,#080a1c 100%);
     user-select:none;-webkit-user-select:none;touch-action:none}
@@ -317,6 +318,18 @@
   .ch-pc{pointer-events:none;paint-order:stroke;stroke-linejoin:round;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols","DejaVu Sans","Arial Unicode MS",sans-serif}
   .ch-pc.lift{opacity:.22}
   .ch-ghost{position:fixed;left:0;top:0;z-index:700;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 6px 10px #000c)}
+  @keyframes chFade{from{opacity:1}to{opacity:0}}
+  .ch-fade{animation-name:chFade;animation-timing-function:linear;animation-fill-mode:forwards;pointer-events:none}
+  .ch-rw{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:min(100%,var(--chw));margin:10px auto 0;padding:8px 10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+  .ch-rw.on{border-color:#ffd25e;box-shadow:0 0 0 1px #ffd25e55 inset}
+  .ch-rw .rwb{min-width:44px;font-size:1.15rem;line-height:1;padding:8px 10px}
+  .ch-rw .rwb[disabled]{opacity:.35;cursor:default}
+  .ch-rw .rwt{flex:1 1 130px;text-align:center;font-size:.9rem;min-width:130px}
+  .ch-rw-note{width:min(100%,var(--chw));margin:6px auto 0;font-size:.82rem;text-align:center}
+  .ch-theme-prev{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .ch-theme-prev .bd{display:inline-flex;border-radius:6px;overflow:hidden;border:1px solid #0006}
+  .ch-theme-prev .bd i{width:18px;height:18px;display:block}
+  .ch-theme-prev .pc{width:22px;height:22px;border-radius:50%;border:2px solid;display:inline-block}
   .ch-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:12px}
   .ch-seat{display:grid;grid-template-columns:20px 1fr auto;gap:2px 10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;--gc:var(--accent2)}
   .ch-seat.act{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset}
@@ -673,6 +686,7 @@ const SETTINGS={
   chess:[
     {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
     {k:"players",l:"Number of players (empty seats are played by the computer)",o:[[2,"2 players – classic 8×8"],[3,"3 players – hexagon board"],[4,"4 players – cross board"]]},
+    {k:"theme",l:"Board & piece colours (one set for everyone)",o:[["cosmic","🌌 Cosmic – indigo board · ice, violet, rose, mint"],["forest","🌲 Forest – green board · ivory, amber, coral, sky"],["ocean","🌊 Ocean – blue board · pearl, pink, gold, lime"],["wood","🪵 Classic wood – brown board · white, black, crimson, teal"]]},
     {k:"solo",l:"With 1 player on the 2-player board, play against",o:[["computer","The computer"],["local","Pass-and-play (you move both sides)"]],when:(n,st)=>n===1&&st.players==2},
     {k:"level",l:"Computer strength",o:[[1,"Easy"],[2,"Medium"],[3,"Hard"]],when:(n,st)=>n<st.players&&!(n===1&&st.players==2&&st.solo==="local")},
     {k:"side",l:"You play as",o:[["white","White"],["black","Black"],["random","Random"]],when:(n,st)=>n===1&&st.players==2&&st.solo==="computer"},
@@ -687,14 +701,14 @@ const DEFAULTS={
   number:{rounds:3,digits:4,turnTime:30,maxAttempts:0},
   raja:{rounds:3,guessTime:60},
   Scribblio:{rounds:3,drawTime:80,wordChoice:1,hints:2,src:"random"},
-  chess:{rounds:1,players:2,solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
+  chess:{rounds:1,players:2,theme:"cosmic",solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
 };
 const BLURB={
   spy:"Everyone gets a secret word on their own screen – the spy's word is different (or missing). Players give clues one after another and keep cycling. Anyone who suspects the spy can press “Voting Needed” – most votes is out. Catch the spy to win; if the spy survives until only 2 players are left, the spy wins.",
   number:"One secret number. Guess in turns. N = right digits anywhere, P = right digits in the right place. Faster win = more points.",
   raja:"Secret roles are dealt to each player's screen. The Police must find the Thief – a wrong guess hands the Police's points to the Thief.",
   Scribblio:"Draw & guess! Each turn one player gets a secret word and draws it; everyone else types guesses in the chat. A letter of the word is revealed after ⅓ of the time and another after ⅔. The faster you guess, the more points you score.",
-  chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces are removed on the hexagon, turn grey on the cross board)."
+  chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces slowly fade away on the hexagon, turn grey on the cross board) and can step back through the moves with ◀ ▶ to see how it happened. The host chooses the board and piece colour set."
 };
 
 const SK_WORDS=[...new Set(["apple","banana","mango","pizza","burger","sandwich","ice cream","cake","cookie","popcorn","samosa","biryani","dosa","coffee","tea","milk","egg","cheese","bread","carrot","pumpkin","tomato","potato","onion","pineapple","watermelon","strawberry","grapes","lemon","cherry",
@@ -1500,6 +1514,33 @@ const CH_PTS={1:1,2:3,3:5,4:5,5:9};
 const CH_DEAD=4;
 const CHB={};
 function chBoard(id){ return CHB[id]||(CHB[id]=chBuild(id)); }
+/* ---- colour themes: the host picks ONE set; it holds the board squares and a colour for each of the (up to) 4 seats ---- */
+const CH_THEMES={
+  cosmic:{label:"Cosmic",dk:"#1f2759",lt:"#34428a",kh:"#6a4fd8",p:[
+    {name:"White",fill:"#eaf9ff",stroke:"#0b1b4a"},{name:"Black",fill:"#b678ff",stroke:"#1c0a3f"},
+    {name:"Red",fill:"#ff5c82",stroke:"#470419"},{name:"Green",fill:"#4dffa8",stroke:"#05361d"}]},
+  forest:{label:"Forest",dk:"#1f3b2c",lt:"#3f6b4a",kh:"#6f9a3c",p:[
+    {name:"Ivory",fill:"#fff4d6",stroke:"#2e2a10"},{name:"Amber",fill:"#ffb347",stroke:"#4a2500"},
+    {name:"Coral",fill:"#ff7b6b",stroke:"#4a0f08"},{name:"Sky",fill:"#7fd6ff",stroke:"#08324a"}]},
+  ocean:{label:"Ocean",dk:"#12395a",lt:"#2a6f97",kh:"#1f8fb8",p:[
+    {name:"Pearl",fill:"#f4fbff",stroke:"#06223a"},{name:"Pink",fill:"#ff8fab",stroke:"#4a0620"},
+    {name:"Gold",fill:"#ffd166",stroke:"#4a3000"},{name:"Lime",fill:"#b7f06a",stroke:"#203a00"}]},
+  wood:{label:"Classic wood",dk:"#a9774f",lt:"#ecd5a8",kh:"#c9a45a",p:[
+    {name:"White",fill:"#fffdf5",stroke:"#3b2a14"},{name:"Black",fill:"#2f2a26",stroke:"#e9dcc0"},
+    {name:"Crimson",fill:"#d84a3a",stroke:"#3a0a05"},{name:"Teal",fill:"#2fb3a3",stroke:"#04332e"}]}
+};
+const chTheme=st=>CH_THEMES[st&&st.theme]||CH_THEMES.cosmic;
+const chPl=(B,th,i)=>{ const t=th.p[i]||th.p[0]; return {name:t.name,fill:t.fill,stroke:t.stroke,side:B.players[i]?B.players[i].side:0}; };
+/* ---- position snapshots (one char per cell) – used for the rewind bar and the fade-out of a checkmated player's pieces ---- */
+const chSnapStr=P=>{ let s=""; for(let c=0;c<P.B.N;c++) s+=String.fromCharCode(48+P.T[c]*6+(P.O[c]+1)); return s; };
+const CH_DECODED={};
+function chDecode(s){
+  let d=CH_DECODED[s]; if(d) return d;
+  const T=new Int8Array(s.length), O=new Int8Array(s.length);
+  for(let i=0;i<s.length;i++){ const n=s.charCodeAt(i)-48; T[i]=Math.floor(n/6); O[i]=n%6-1; }
+  d={T,O}; const ks=Object.keys(CH_DECODED); if(ks.length>400) delete CH_DECODED[ks[0]];
+  return CH_DECODED[s]=d;
+}
 
 /* ---- board specifications: cells (polygon, 4 corners, counter-clockwise, y up), players, set-up ---- */
 function chSpec2(){
@@ -1959,13 +2000,15 @@ function chDeal(R){
   const P=chPos(id), mins=st.clock||0;
   R.g={kind:"ch",phase:"play",id,P,seats,local:n===1&&id===2&&st.solo==="local",multi:n>=2,
     clockOn:mins>0,rem:seats.map(s=>s.bot?0:mins*60000),inc:(st.inc||0)*1000,tAt:Date.now(),
-    last:null,checks:[],legal:[],hist:[],caps:seats.map(()=>[]),elim:[],drawBy:null,res:null,reps:{},lastSeat:-1,botBusy:false,deadline:0};
+    last:null,checks:[],legal:[],hist:[],caps:seats.map(()=>[]),elim:[],drawBy:null,res:null,reps:{},lastSeat:-1,botBusy:false,deadline:0,
+    snaps:[{b:chSnapStr(P),f:-1,t:-1,s:-1,x:"Start",ck:[]}],ghosts:[]};
   if(id===2) R.g.reps[chKey(P)]=1;
   chResolve(R);
 }
 function chEliminate(R,p,why,credit){
   const g=R.g,P=g.P,B=P.B; if(!P.alive[p]) return;
   P.alive[p]=false; g.elim.push({seat:p,why,ply:P.ply});
+  if(!B.dead) (g.ghosts=g.ghosts||[]).push({seat:p,b:chSnapStr(P),at:Date.now()});   // hexagon: the pieces fade out slowly instead of vanishing
   if(B.np===4){ if(why==="mate"&&credit!=null&&credit!==p) P.pts[credit]+=20; else if(why==="stalemate") P.pts[p]+=20; }
   for(let c=0;c<B.N;c++) if(P.O[c]===p){ if(B.dead) P.O[c]=CH_DEAD; else { P.T[c]=0; P.O[c]=-1; P.PR[c]=0; } }
   P.kc[p]=-1; P.cr[p]=0;
@@ -1973,13 +2016,13 @@ function chEliminate(R,p,why,credit){
   if(P.turn===p) P.turn=chNextAlive(P,p);
   g.hist.push({s:p,t:{mate:"✖ checkmated",stalemate:"✖ stalemated",time:"✖ out of time",resign:"✖ resigned",left:"✖ left the game"}[why]||"✖ out"});
   if(P.np>=3){                                                          // 3P / 4P: out players get the airlock treatment
-    const pl=B.players[p], st=g.seats[p], left=P.alive.filter(Boolean).length;
+    const pl=chPl(B,chTheme(R.settings),p), st=g.seats[p], left=P.alive.filter(Boolean).length;
     const sn=i=>{ const x=g.seats[i]; return x&&x.pid?skPn(R,x.pid):"Computer"; };
     const heads={mate:"{n} {was} checkmated"+(credit!=null&&credit!==p?" by "+sn(credit):"")+"!",stalemate:"{n} {was} stalemated!",time:"{n} ran out of time!",resign:"{n} resigned.",left:"{n} abandoned ship."};
     ejPush(R,ejItem(R,st.pid,{...(st.bot?{name:"The "+pl.name+" computer",av:"🤖"}:{}),eb:pl.name.toUpperCase()+" IS OUT",h:heads[why]||"{n} {was} out!",
       s:"Their pieces "+(B.dead?"turn into grey space debris":"vanish into the void")+" – "+left+" player"+(left===1?"":"s")+" left.",
-      col:pl.fill,tone:"neutral"}));
-    g.grace=6500;                                                       // the next clock starts after the cutscene
+      col:pl.fill,tone:"neutral",wait:why==="mate"?(B.dead?3500:5200):0}));   // checkmate: let everyone see the final position (pieces fading) BEFORE the airlock scene covers the screen
+    g.grace=6500+(why==="mate"?(B.dead?3500:5200):0);                                                       // the next clock starts after the cutscene
   }
 }
 function chOver(R){
@@ -2039,11 +2082,14 @@ function chApply(R,mv){
   if(capT&&capO>=0&&capO<CH_DEAD){ g.caps[p].push(capT); if(B.np===4) P.pts[p]+=capPR?1:(CH_PTS[capT]||0); }
   P.ply++; g.last={f:mv.f,t:mv.t,s:p}; g.lastSeat=p; g.drawBy=null;
   const hi=g.hist.length; g.hist.push({s:p,t:txt});
+  { const ck=[]; P.alive.forEach((a,i)=>{ if(a&&P.kc[i]>=0&&chAttacked(P,P.kc[i],i)) ck.push(i); });   // kings in check (or mated) right after this move
+    g.snaps.push({b:chSnapStr(P),f:mv.f,t:mv.t,s:p,x:txt,ck}); }
   P.turn=chNextAlive(P,p);
   if(g.id===2){ const k=chKey(P); g.reps[k]=(g.reps[k]||0)+1; }
   chResolve(R);
   const mate=g.elim.some(e=>e.ply===P.ply&&e.why==="mate");
   if(mate) g.hist[hi].t+="#"; else if(g.phase==="play"&&g.checks.some(i=>i!==p)) g.hist[hi].t+="+";
+  g.snaps[g.snaps.length-1].x=g.hist[hi].t;
 }
 function chLose(R,p,why){
   const g=R.g; if(!g||g.phase!=="play"||!g.P.alive[p]) return;
@@ -2088,7 +2134,9 @@ function chTick(R,now){
 }
 function chView(R,pid){
   const g=R.g,P=g.P;
-  return {kind:"ch",phase:g.phase,id:g.id,T:Array.from(P.T),O:Array.from(P.O),turn:P.turn,alive:P.alive.slice(),
+  const myOut=g.seats.some((s,i)=>!s.bot&&s.pid===pid&&!P.alive[i]);            // a player who is out (checkmated, resigned…) may review the game; everyone may once it is over
+  const rw=g.phase==="reveal"||myOut, nowT=Date.now();
+  return {kind:"ch",snaps:rw?g.snaps:null,ghosts:(g.ghosts||[]).filter(x=>nowT-x.at<5600),phase:g.phase,id:g.id,T:Array.from(P.T),O:Array.from(P.O),turn:P.turn,alive:P.alive.slice(),
     seats:g.seats.map(s=>({pid:s.pid||null,bot:!!s.bot,lvl:s.lvl||0})),local:g.local,
     last:g.last,chk:g.checks.slice(),legal:g.legal.map(m=>[m.f,m.t,m.pr||0]),
     rem:g.clockOn?g.rem.slice():null,tAt:g.tAt,pts:P.pts.slice(),caps:g.caps,
@@ -2439,6 +2487,7 @@ function lobbyHTML(v,host){
   let h="";
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
+  if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
   if(host){
     h+=`<div class="sgrid">${fields.map(f=>{
       const opts=typeof f.o==="function"?f.o(MAXP[v.game]):f.o;
@@ -2874,11 +2923,47 @@ function buildPad(){
 
 /*CHESS-UI-START*/
 /* ---------- CHESS UI ---------- */
-const CH_PAL={2:["#1f2759","#34428a"],3:["#1f2759","#34428a"],4:["#1f2759","#34428a"]};   // space theme: deep indigo / nebula blue
+const chP=(v,i)=>chPl(chBoard(v.g.id),chTheme(v.settings),i);
+function chThemePreviewHTML(id,n){
+  const th=CH_THEMES[id]||CH_THEMES.cosmic, np=n==4?4:n==3?3:2;
+  return `<div class="ch-theme-prev"><span class="bd"><i style="background:${th.dk}"></i><i style="background:${th.lt}"></i><i style="background:${th.dk}"></i><i style="background:${th.lt}"></i></span>`+
+    th.p.slice(0,np).map(p=>`<span class="pc" title="${p.name}" style="background:${p.fill};border-color:${p.stroke}"></span><span class="mut" style="font-size:.8rem">${p.name}</span>`).join("")+`</div>`;
+}
+/* ---- rewind (◀ ▶): S.ui.chRw = null (live board) or an index into g.snaps ---- */
+const chRwOK=v=>!!(v.g&&v.g.snaps&&v.g.snaps.length>1);
+function chRwIdx(v){ const g=v.g; if(!chRwOK(v)||S.ui.chRw==null) return null; return Math.max(0,Math.min(g.snaps.length-1,S.ui.chRw)); }
+function chRwGo(how){
+  const v=S.room; if(!v||!chRwOK(v)) return;
+  const len=v.g.snaps.length, cur=S.ui.chRw==null?len-1:Math.min(S.ui.chRw,len-1);
+  let n=how==="first"?0:how==="last"?len-1:cur+(+how);
+  n=Math.max(0,Math.min(len-1,n)); S.ui.chRw=n>=len-1?null:n; render();
+}
+function chRwHTML(v){
+  if(!chRwOK(v)) return "";
+  const g=v.g, len=g.snaps.length, idx=chRwIdx(v), cur=idx==null?len-1:idx, sn=g.snaps[cur];
+  const pl=sn.s>=0?chP(v,sn.s):null;
+  const t=cur===0?"Starting position":`Move <b>${cur}</b> / ${len-1} · <span style="color:${pl.fill}">●</span> <b>${esc(sn.x)}</b>`;
+  const mySeat=g.seats.findIndex((s,i)=>!s.bot&&s.pid===v.me&&!g.alive[i]);
+  let note="";
+  if(idx!=null) note=`🔍 Reviewing an earlier position${g.phase==="play"?" – the game is still going on. Press ⏭ to return to the live board.":"."}`;
+  else if(mySeat>=0&&g.phase==="play") note=`You are out – use ◀ ▶ (or the ← → keys) to replay the moves and see how it happened.`;
+  else if(g.phase==="reveal") note=`Game over – use ◀ ▶ (or the ← → keys) to replay the whole game.`;
+  return `<div class="ch-rw ${idx!=null?"on":""}"><button class="btn secondary rwb" data-a="chrw" data-d="first" title="Start" ${cur===0?"disabled":""}>⏮</button>
+    <button class="btn secondary rwb" data-a="chrw" data-d="-1" title="Previous move" ${cur===0?"disabled":""}>◀</button>
+    <span class="rwt">${t}</span>
+    <button class="btn secondary rwb" data-a="chrw" data-d="1" title="Next move" ${idx==null?"disabled":""}>▶</button>
+    <button class="btn secondary rwb" data-a="chrw" data-d="last" title="Back to the live board" ${idx==null?"disabled":""}>⏭</button></div>${note?`<div class="ch-rw-note mut">${note}</div>`:""}`;
+}
+document.addEventListener("keydown",e=>{
+  if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight") return;
+  const tg=e.target&&e.target.tagName; if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT") return;
+  const v=typeof S!=="undefined"&&S.room; if(!v||v.game!=="chess"||!chRwOK(v)) return;
+  e.preventDefault(); chRwGo(e.key==="ArrowLeft"?-1:1);
+});
 const chViewSeat=v=>{ const g=v.g; if(S.ui.chView!=null&&S.ui.chView<g.seats.length) return S.ui.chView; const m=g.seats.findIndex(s=>s.pid===v.me&&!s.bot); return m>=0?m:0; };
 const chMyTurn=v=>{ const g=v.g; if(g.phase!=="play") return false; const s=g.seats[g.turn]; return !s.bot&&s.pid===v.me; };
 function chSeatName(v,i){
-  const g=v.g,B=chBoard(g.id),s=g.seats[i],col=B.players[i].name;
+  const g=v.g,B=chBoard(g.id),s=g.seats[i],col=chP(v,i).name;
   if(s.bot) return `🤖 Computer (${["","Easy","Medium","Hard"][s.lvl]||"Medium"})`;
   if(g.local) return col;
   return `${pAv(v,s.pid)} ${esc(pName(v,s.pid))}`;
@@ -2894,22 +2979,24 @@ function chBoardSVG(v){
   polys.forEach(pl=>pl.forEach(p=>{ x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]); y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]); }));
   const pad=.35, f=n=>n.toFixed(3);
   const ctr=polys.map(pl=>[pl.reduce((s,p)=>s+p[0],0)/4,pl.reduce((s,p)=>s+p[1],0)/4]);
-  const [dk,lt]=CH_PAL[g.id], hints=v.settings.hints!=0, mine=chMyTurn(v), sel=S.ui.chSel;
+  const th=chTheme(v.settings), dk=th.dk, lt=th.lt, hints=v.settings.hints!=0;
+  const ri=chRwIdx(v), snap=ri!=null?g.snaps[ri]:null, dec=snap?chDecode(snap.b):null, T=dec?dec.T:g.T, O=dec?dec.O:g.O;
+  const mine=!snap&&chMyTurn(v), sel=snap?null:S.ui.chSel;
   const targets=new Map(); if(mine&&sel!=null&&hints) g.legal.forEach(m=>{ if(m[0]===sel) targets.set(m[1],1); });
   const kingHome=new Set(hex?B.players.map(p=>p.back[4]):[]);
   let h=`<svg class="ch-board" viewBox="${f(x0-pad)} ${f(y0-pad)} ${f(x1-x0+2*pad)} ${f(y1-y0+2*pad)}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="chk"><stop offset="0" stop-color="#ff2d2d" stop-opacity=".95"/><stop offset=".7" stop-color="#ff2d2d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d2d" stop-opacity="0"/></radialGradient></defs>`;
   B.cells.forEach((c,i)=>{
-    const fill=kingHome.has(i)?"#6a4fd8":(B.col[i]===0?dk:lt), own=mine&&g.T[i]&&g.O[i]===g.turn&&!S.ui.chPromo;
+    const fill=kingHome.has(i)?th.kh:(B.col[i]===0?dk:lt), own=mine&&T[i]&&O[i]===g.turn&&!S.ui.chPromo;
     h+=`<polygon class="sq${own?" mine":""}" data-a="chcell" data-c="${i}" fill="${fill}" stroke="#0a0d2299" stroke-width=".02" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"><title>${c.label}</title></polygon>`;
   });
-  const hl=new Set(g.last?[g.last.f,g.last.t]:[]);
-  hl.forEach(i=>{ h+=`<polygon fill="#ffd60a" fill-opacity=".72" stroke="#fff3a0" stroke-width=".05" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; });
-  g.chk.forEach(s=>{ const kc=g.O.findIndex((o,i)=>o===s&&g.T[i]===6); if(kc>=0) h+=`<circle cx="${f(ctr[kc][0])}" cy="${f(ctr[kc][1])}" r=".95" fill="url(#chk)" pointer-events="none"/>`; });
+  const lm=snap?(snap.f>=0?{f:snap.f,t:snap.t}:null):g.last;
+  if(lm){ [[lm.f,.14],[lm.t,.24]].forEach(([i,op])=>{ h+=`<polygon fill="#ffe98a" fill-opacity="${op}" stroke="#ffe98a" stroke-opacity=".38" stroke-width=".035" pointer-events="none" points="${polys[i].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`; }); }   // subtle: pale tint, the destination a touch stronger than the origin
+  (snap?snap.ck:g.chk).forEach(s=>{ const kc=O.findIndex((o,i)=>o===s&&T[i]===6); if(kc>=0) h+=`<circle cx="${f(ctr[kc][0])}" cy="${f(ctr[kc][1])}" r=".95" fill="url(#chk)" pointer-events="none"/>`; });
   if(sel!=null) h+=`<polygon fill="#46d6a4" fill-opacity=".5" stroke="#46d6a4" stroke-width=".07" pointer-events="none" points="${polys[sel].map(p=>f(p[0])+","+f(p[1])).join(" ")}"/>`;
   // coordinates
   B.cells.forEach((c,i)=>{
     const pl=polys[i], col=B.col[i]===0?lt:dk;
-    if(hex){ if(!g.T[i]) h+=`<text x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.12)}" font-size=".34" text-anchor="middle" fill="#000" fill-opacity=".38" pointer-events="none">${c.label}</text>`; return; }
+    if(hex){ if(!T[i]) h+=`<text x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.12)}" font-size=".34" text-anchor="middle" fill="#000" fill-opacity=".38" pointer-events="none">${c.label}</text>`; return; }
     let be=0,le=0,bv=-1e9,lv=1e9;
     for(let j=0;j<4;j++){ const my=pl[j][1]+pl[(j+1)%4][1], mx=pl[j][0]+pl[(j+1)%4][0]; if(my>bv){ bv=my; be=j; } if(mx<lv){ lv=mx; le=j; } }
     const xs=pl.map(p=>p[0]), ys=pl.map(p=>p[1]);
@@ -2918,14 +3005,25 @@ function chBoardSVG(v){
   });
   // move hints
   targets.forEach((_,i)=>{
-    if(g.T[i]) h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".46" fill="none" stroke="#46d6a4" stroke-opacity=".85" stroke-width=".09" pointer-events="none"/>`;
+    if(T[i]) h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".46" fill="none" stroke="#46d6a4" stroke-opacity=".85" stroke-width=".09" pointer-events="none"/>`;
     else h+=`<circle cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".17" fill="#46d6a4" fill-opacity=".8" pointer-events="none"/>`;
   });
   // pieces
   for(let i=0;i<B.N;i++){
-    if(!g.T[i]) continue; const o=g.O[i], pl=o===4?{fill:"#9a9a9a",stroke:"#3c3c3c"}:B.players[o];
+    if(!T[i]) continue; const o=O[i], pl=o===4?{fill:"#9a9a9a",stroke:"#3c3c3c"}:chP(v,o);
     const lift=S.ui.chDrag&&S.ui.chDrag.on&&S.ui.chDrag.from===i;
-    h+=`<text class="ch-pc${lift?" lift":""}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05">${CH_GLYPH[g.T[i]]}</text>`;
+    h+=`<text class="ch-pc${lift?" lift":""}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05">${CH_GLYPH[T[i]]}</text>`;
+  }
+  // a checkmated / eliminated player's pieces (hexagon) fade out over 5 seconds instead of vanishing, with their king glowing red
+  if(!snap&&g.ghosts&&g.ghosts.length){
+    g.ghosts.forEach(gh=>{
+      const el=Math.max(0,Math.min(5,(Date.now()+S.off-gh.at)/1000)), d=chDecode(gh.b), pl=chP(v,gh.seat), st=`animation-duration:5s;animation-delay:-${el.toFixed(2)}s`;
+      for(let i=0;i<B.N;i++){
+        if(d.O[i]!==gh.seat||!d.T[i]) continue;
+        if(d.T[i]===6) h+=`<circle class="ch-fade" style="${st}" cx="${f(ctr[i][0])}" cy="${f(ctr[i][1])}" r=".95" fill="url(#chk)"/>`;
+        h+=`<text class="ch-pc ch-fade" style="${st}" x="${f(ctr[i][0])}" y="${f(ctr[i][1]+.27)}" font-size=".86" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05">${CH_GLYPH[d.T[i]]}</text>`;
+      }
+    });
   }
   return h+`</svg>`;
 }
@@ -2933,10 +3031,10 @@ function chBoardSVG(v){
 function chStatusHTML(v){
   const g=v.g,B=chBoard(g.id);
   if(g.phase==="reveal") return chResultHTML(v);
-  const me=chMyTurn(v), cur=g.turn, col=B.players[cur].name;
+  const me=chMyTurn(v), cur=g.turn, col=chP(v,cur).name;
   let h="";
   if(S.ui.chPromo){
-    h+=`<div class="msg warn"><b>Promote the pawn to:</b> <span class="ch-promo">${S.ui.chPromo.opts.map(o=>`<button class="btn secondary" data-a="chpromo" data-p="${o[2]}" style="font-size:1.6rem;padding:2px 12px;color:${B.players[cur].fill}">${CH_GLYPH[o[2]]}</button>`).join("")}</span></div>`;
+    h+=`<div class="msg warn"><b>Promote the pawn to:</b> <span class="ch-promo">${S.ui.chPromo.opts.map(o=>`<button class="btn secondary" data-a="chpromo" data-p="${o[2]}" style="font-size:1.6rem;padding:2px 12px;color:${chP(v,cur).fill}">${CH_GLYPH[o[2]]}</button>`).join("")}</span></div>`;
   }
   const inChk=g.chk.includes(cur);
   if(g.local) h+=`<div class="msg ${me?"ok":"info"}"><b>${col}</b> to move${inChk?" – ⚠️ <b>check!</b>":""}</div>`;
@@ -2947,7 +3045,7 @@ function chStatusHTML(v){
 }
 function chResultHTML(v){
   const g=v.g,r=g.res,B=chBoard(g.id); if(!r) return "";
-  const nm=i=>`<b>${chSeatName(v,i)}</b> (${B.players[i].name})`;
+  const nm=i=>`<b>${chSeatName(v,i)}</b> (${chP(v,i).name})`;
   const last=g.elim.length?g.elim[g.elim.length-1]:null;
   const how={mate:"by checkmate",time:"– opponent ran out of time",resign:"– opponent resigned",left:"– opponent left",stalemate:""};
   let h;
@@ -2956,13 +3054,13 @@ function chResultHTML(v){
     h=`<div class="msg ok" style="font-size:1.05rem">🏆 ${r.winners.map(nm).join(" & ")} ${r.winners.length>1?"tie":"wins"} with <b>${r.seatPts[r.winners[0]]}</b> points!${r.type==="draw"?` <span class="mut">(${esc(r.why)})</span>`:""}</div>`;
   } else if(r.winners.length) h=`<div class="msg ok" style="font-size:1.05rem">🏆 ${nm(r.winners[0])} wins ${g.id===2&&last?(how[last.why]||""):"– last king standing!"}</div>`;
   else h=`<div class="msg info">Game over.</div>`;
-  if(g.id>2&&g.elim.length) h+=`<div class="scoreboard">${g.elim.map(e=>`<span class="chip">❌ ${B.players[e.seat].name}: ${{mate:"checkmated",stalemate:"stalemated",time:"out of time",resign:"resigned",left:"left"}[e.why]}</span>`).join("")}</div>`;
+  if(g.id>2&&g.elim.length) h+=`<div class="scoreboard">${g.elim.map(e=>`<span class="chip">❌ ${chP(v,e.seat).name}: ${{mate:"checkmated",stalemate:"stalemated",time:"out of time",resign:"resigned",left:"left"}[e.why]}</span>`).join("")}</div>`;
   return h;
 }
 function chSeatsHTML(v){
   const g=v.g,B=chBoard(g.id); let h="";
   g.seats.forEach((s,i)=>{
-    const pl=B.players[i], act=g.phase==="play"&&g.turn===i&&g.alive[i], out=!g.alive[i];
+    const pl=chP(v,i), act=g.phase==="play"&&g.turn===i&&g.alive[i], out=!g.alive[i];
     let ck="";
     if(g.rem&&!s.bot){
       ck=act?`<span class="chip timer" data-dl="${g.tAt+g.rem[i]}">⏱ …</span>`:`<span class="ch-clk">⏱ ${chFmt(g.rem[i])}</span>`;
@@ -2979,13 +3077,18 @@ function chHistHTML(v){
   const g=v.g,B=chBoard(g.id); let n=0, h="";
   g.hist.forEach(e=>{
     if(e.s===0&&e.t[0]!=="✖") { n++; h+=`<span class="ch-no">${n}.</span>`; }
-    h+=`<span class="ch-mv" style="border-color:${B.players[e.s].fill}">${esc(e.t)}</span>`;
+    h+=`<span class="ch-mv" style="border-color:${chP(v,e.s).fill}">${esc(e.t)}</span>`;
   });
   return h||`<span class="mut">No moves yet</span>`;
 }
 function chessGameHTML(v){
   const g=v.g,B=chBoard(g.id),host=v.me===v.hostPid;
-  if(S.ui.chRound!==v.round) S.ui.chView=null;
+  if(S.ui.chRound!==v.round){ S.ui.chView=null; S.ui.chRw=null; }
+  if(!v.g.snaps) S.ui.chRw=null;
+  else if(!v.g.local){                                    // when YOU are checkmated, open the replay at the mating move so you can see how
+    const mated=v.g.elim.find(e=>e.why==="mate"&&v.g.seats[e.seat]&&!v.g.seats[e.seat].bot&&v.g.seats[e.seat].pid===v.me), key=v.round+":"+(mated?mated.seat:"");
+    if(mated&&S.ui.chAuto!==key){ S.ui.chAuto=key; const ix=Math.min(mated.ply,v.g.snaps.length-1); S.ui.chRw=ix<v.g.snaps.length-1?ix:null; }
+  }
   if(S.ui.chPly!==g.ply||S.ui.chRound!==v.round){ S.ui.chPly=g.ply; S.ui.chRound=v.round; S.ui.chSel=null; S.ui.chPromo=null; }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
   const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
@@ -3000,10 +3103,10 @@ function chessGameHTML(v){
     }
   }
   acts+=`</div>`;
-  const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in"><div class="pole"></div><div class="flag">It is your turn ! ♟️</div>${astroSVG(B.players[g.turn].fill,pAv(v,v.me))}</div></div>`:"";
+  const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in"><div class="pole"></div><div class="flag">It is your turn ! ♟️</div>${astroSVG(chP(v,g.turn).fill,pAv(v,v.me))}</div></div>`:"";
   let h=`<div class="ch-wrap"><div class="ch-top">${info}${chStatusHTML(v)}</div>
     <div class="ch-seats">${chSeatsHTML(v)}</div>
-    <div class="ch-left">${chBoardSVG(v)}</div>
+    <div class="ch-left">${chBoardSVG(v)}${chRwHTML(v)}</div>
     <div class="ch-below">${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></div></div>${buddy}`;
   if(g.phase==="reveal") h+=boardHTML({players:v.players,scores:v.scores,g:{res:g.res}})+nextControls(v,host);
   return h;
@@ -3042,7 +3145,7 @@ function chPointerMove(e){
     if(Math.hypot(e.clientX-d.x,e.clientY-d.y)<6) return;
     const v=S.room; if(!v||!v.g||!chMyTurn(v)){ return chDragEnd(); }
     d.on=true; S.ui.chSel=d.c; S.ui.chDrag={on:true,from:d.c};
-    const g=v.g, B=chBoard(g.id), pl=B.players[g.O[d.c]];
+    const g=v.g, B=chBoard(g.id), pl=chP(v,g.O[d.c]);
     const gh=document.createElement("div"); gh.className="ch-ghost";
     gh.innerHTML=`<svg width="${d.size}" height="${d.size}" viewBox="-.5 -.5 1 1"><text x="0" y=".3" font-size=".92" text-anchor="middle" fill="${pl.fill}" stroke="${pl.stroke}" stroke-width=".05" style="paint-order:stroke;stroke-linejoin:round;font-family:'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','DejaVu Sans',sans-serif">${CH_GLYPH[g.T[d.c]]}</text></svg>`;
     document.body.appendChild(gh); d.ghost=gh; document.body.classList.add("ch-dragging");
@@ -3192,6 +3295,7 @@ function onAppClick(e){
     case "kick": { const v=S.room, p=v&&v.players.find(x=>x.pid===t.dataset.pid); if(p) showModal({title:"Kick "+p.name+"?",text:"They will be removed from the room"+(v.phase==="play"?" and the current game":"")+". They can join again with the room code.",ok:"Kick",danger:true,act:"kick",pid:p.pid}); break; }
     case "chcell": chClick(+t.dataset.c); break;
     case "chpromo": chPromote(+t.dataset.p); break;
+    case "chrw": chRwGo(t.dataset.d); break;
     case "chrot": { const v=S.room; S.ui.chView=(chViewSeat(v)+1)%v.g.seats.length; render(); break; }
     case "chresign": showModal({title:"Resign?",text:"You will lose this game.",ok:"Resign",danger:true,act:"chresign"}); break;
     case "chdraw": sendAct({a:"draw"}); toast("Draw offered.","info"); break;
@@ -3257,7 +3361,8 @@ function ejCheck(v){
   const ev=v&&v.ev; if(!ev||!ev.items||!ev.items.length) return;
   const key=v.code+"#"+ev.id; if(EJ.seen.has(key)) return; EJ.seen.add(key);
   if(v.now-ev.at>12000) return;                       // old event (e.g. we just reconnected) – don't replay it
-  EJ.q.push({items:ev.items,me:v.me}); if(!EJ.active) ejNext();
+  const wait=Math.max(0,(+ev.items[0].wait||0)-(v.now-ev.at)), go=()=>{ EJ.q.push({items:ev.items,me:v.me}); if(!EJ.active) ejNext(); };
+  if(wait>0) setTimeout(go,wait); else go();
 }
 function ejDefer(fn){ if(EJ.active||EJ.q.length) EJ.after.push(fn); else fn(); }
 function ejNext(){
