@@ -613,6 +613,25 @@
   .db-die i.p{background:#1b2150;border-radius:50%;transform:scale(.8)}
   .db-sum{font-size:1.6rem;font-weight:800;color:var(--warn)}
   .db-roll{font-size:1.15rem;padding:14px}
+  /* Dots and Boxes turn panel: fixed height in every phase, and the tumbling dice are clipped inside it, so nothing around it moves */
+  .db-turn{display:flex;align-items:center;gap:14px;height:118px;margin:10px 0;padding:10px 14px;border-radius:14px;background:#ffffff0a;border:1px solid var(--border);overflow:hidden;contain:layout paint}
+  .db-turn.mine{border-color:var(--ok,#46d6a4);background:#46d6a412}
+  .db-turn .db-dice{flex:none;margin:0;gap:10px;min-width:68px}
+  .db-turn .db-dice.idle .db-die{opacity:.28;box-shadow:none}
+  .db-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .db-txt{font-size:.95rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .db-note{font-size:.8rem;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .db-turn .db-roll{font-size:1rem;padding:10px 14px;align-self:flex-start}
+  .chip.timer{font-variant-numeric:tabular-nums;min-width:5.2em;text-align:center}
+  @media(max-width:600px){
+    .db-turn{height:104px;gap:10px;padding:8px 10px}
+    .db-turn .db-die{width:50px;height:50px;padding:7px;border-radius:11px}
+    .db-turn .db-dice{gap:6px;min-width:50px}
+    .db-turn .db-sum{font-size:1.2rem}
+    .db-txt{font-size:.86rem;-webkit-line-clamp:2}
+    .db-turn .db-roll{font-size:.92rem;padding:8px 12px}
+    .db-wrap{margin:8px auto}
+  }
   /* ludo */
   /* accounts + admin */
   .acct-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;margin:0 0 14px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(6px)}
@@ -649,6 +668,56 @@
   .pr-dot.none{border:1.5px dashed #7b82a8}
   .pr-tags{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:110px}
   .pr-tag{font-size:.62rem;border:1px solid #8b93ff55;border-radius:999px;padding:1px 6px;color:#b8bdf0;white-space:nowrap}
+  /* mates: invite + chat buttons, game picker */
+  .pr-acts{display:flex;gap:6px;flex:none}
+  .pr-act{position:relative;width:38px;height:38px;border-radius:10px;border:1px solid #8b93ff55;background:#1d2250;color:#fff;font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pr-act:hover,.pr-act.on{background:#2a3070;border-color:#8b93ffaa}
+  .pr-un{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#ff5468;color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .pr-badge.un{top:auto;bottom:-6px;right:auto;left:-10px;background:#ff5468;color:#fff}
+  .pr-pick{margin:0 8px 8px 28px;padding:10px;border-radius:12px;background:#ffffff0a;border:1px solid #ffffff14}
+  .pr-games{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .pr-g{font-size:.8rem;padding:6px 10px;border-radius:999px;border:1px solid #8b93ff55;background:#1d2250;color:#fff;cursor:pointer}
+  .pr-g:hover{background:#2a3070}
+  .pr-x{font-size:.78rem;background:none;border:0;color:#9aa0c8;cursor:pointer;padding:2px 0;text-decoration:underline}
+  .pr-foot{font-size:.72rem;color:#9aa0c8;padding:8px 14px;border-top:1px solid #ffffff14}
+  .mt-lobby{margin-top:12px}
+  .mt-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #ffffff10}
+  .mt-row:first-of-type{border-top:0}
+  .mt-row b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mt-row .pr-st{flex:1;min-width:0}
+  .mt-inv{padding:6px 14px;flex:none}
+  /* game request popup – above everything, top of the screen so it's seen on phones too */
+  #mtinv{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1200;width:min(460px,calc(100vw - 24px));animation:ivIn .3s ease-out}
+  .iv-card{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:14px 16px;border-radius:16px;background:#161a38;border:1px solid #8b93ffaa;box-shadow:0 18px 50px #000c,0 0 0 4px #8b93ff22}
+  .iv-ico{font-size:2rem}
+  .iv-game{font-size:1.1rem;font-weight:800;margin:2px 0}
+  .iv-btns{grid-column:1/-1;display:flex;gap:10px;margin-top:6px}
+  .iv-btns .btn{flex:1}
+  @keyframes ivIn{from{transform:translate(-50%,-30px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+  /* one-to-one chat */
+  #mtchat{position:fixed;right:16px;bottom:84px;z-index:1000;width:min(360px,calc(100vw - 32px));height:min(480px,calc(100vh - 120px));display:flex;flex-direction:column;background:#12163a;border:1px solid #8b93ff66;border-radius:16px;box-shadow:0 18px 50px #000c;overflow:hidden}
+  .mc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #ffffff14;background:#161a38}
+  .mc-who{flex:1;min-width:0;display:flex;flex-direction:column}
+  .mc-who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mc-x{background:none;border:0;color:#cfd3ff;font-size:1.1rem;cursor:pointer;width:36px;height:36px;border-radius:8px}
+  .mc-x:hover{background:#ffffff14}
+  .mc-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+  .mc-m{max-width:82%;align-self:flex-start}
+  .mc-m.me{align-self:flex-end;text-align:right}
+  .mc-b{display:inline-block;text-align:left;padding:8px 12px;border-radius:14px 14px 14px 4px;background:#262c5e;white-space:pre-wrap;overflow-wrap:anywhere}
+  .mc-m.me .mc-b{background:#3b46b8;border-radius:14px 14px 4px 14px}
+  .mc-t{font-size:.66rem;color:#9aa0c8;margin-top:2px}
+  .mc-form{display:flex;gap:8px;padding:10px;border-top:1px solid #ffffff14}
+  .mc-form input{flex:1;min-width:0;margin:0;font-size:16px}
+  .mc-form .btn{flex:none;padding:10px 16px}
+  .mc-foot{font-size:.68rem;color:#9aa0c8;padding:0 12px 10px}
+  #mtnote{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1150;max-width:min(92vw,460px);text-align:left;padding:12px 16px;border-radius:14px;border:1px solid #8b93ffaa;background:#161a38;color:#fff;font:inherit;box-shadow:0 14px 36px #000b;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:ivIn .25s ease-out}
+  @media(max-width:600px){
+    #mtchat{inset:0;width:auto;height:auto;border-radius:0;border:0;height:100dvh}
+    .mc-head{padding-top:max(12px,env(safe-area-inset-top))}
+    .mc-foot{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  }
+  @media(prefers-reduced-motion:reduce){#mtinv,#mtnote{animation:none}}
   .gm-pop{position:fixed;z-index:3000;max-height:260px;overflow-y:auto;padding:6px;background:#161a38;border:1px solid #8b93ff55;border-radius:14px;box-shadow:0 14px 36px #000a,0 0 0 1px #0006}
   .gm-opt{padding:9px 12px;border-radius:9px;font-size:.88rem;color:#e8eaff;cursor:pointer;overflow-wrap:anywhere}
   .gm-opt:hover{background:#6c74ff;color:#fff}
@@ -705,14 +774,14 @@
   .rps-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}
   .rps-row{padding-top:84px}
   .rps-slot{position:relative;min-width:120px;flex:1 1 120px;max-width:190px}
-  .rps-astro{position:absolute;z-index:0;left:50%;top:-80px;width:80px;transform:translate(-50%,84px);animation:rpsRise 2.8s ease-in-out both;pointer-events:none}
+  .rps-astro{position:absolute;z-index:0;left:50%;top:-80px;width:80px;transform:translate(-50%,var(--rise,84px));animation:rpsRise 2.8s ease-in-out both;pointer-events:none}
   .rps-astro svg{display:block;width:100%;height:auto;overflow:visible}
   .rps-astro .ej-leg,.rps-astro .ej-arm.l{animation:none}
   .rps-astro .ej-arm{transform-box:fill-box;transform-origin:50% 8%}
   .rps-astro.wave .ej-arm.r{animation:rpsHi .5s ease-in-out infinite alternate}   /* hi: the hand swings right and left */
   .rps-astro.shrug .ej-arm.r{animation:rpsShrugR .6s ease-in-out infinite alternate}
   .rps-astro.shrug .ej-arm.l{animation:rpsShrugL .6s ease-in-out infinite alternate}
-  @keyframes rpsRise{0%{transform:translate(-50%,84px)}14%,84%{transform:translate(-50%,0)}100%{transform:translate(-50%,84px)}}
+  @keyframes rpsRise{0%{transform:translate(-50%,var(--rise,84px))}14%,84%{transform:translate(-50%,0)}100%{transform:translate(-50%,var(--rise,84px))}}
   @keyframes rpsHi{from{transform:rotate(-135deg)}to{transform:rotate(-175deg)}}
   @keyframes rpsShrugR{from{transform:rotate(-25deg)}to{transform:rotate(-55deg)}}
   @keyframes rpsShrugL{from{transform:rotate(25deg)}to{transform:rotate(55deg)}}
@@ -731,9 +800,23 @@
   .rps-b{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 8px;border-radius:16px;border:1px solid #ffffff30;background:linear-gradient(160deg,#ffffff1c,#ffffff08);color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
   .rps-b:hover{transform:translateY(-3px);border-color:var(--accent)}
   .rps-b span{font-size:2.8rem}
+  @media(max-width:600px){                        /* phones: compact cards (3 per row) and smaller sign buttons, so everything fits on one screen */
+    .rps-row{gap:8px;padding-top:58px;margin:10px 0}
+    .rps-slot{min-width:0;flex:1 1 92px;max-width:130px}
+    .rps-astro{width:56px;top:-56px;--rise:60px}
+    .rps-p{padding:8px 4px;border-radius:12px}
+    .rps-av{font-size:1.2rem}
+    .rps-nm{font-size:.8rem}
+    .rps-hand{font-size:2.1rem}
+    .rps-hand.ready{font-size:1.5rem}
+    .rps-btns{gap:8px;margin:8px auto}
+    .rps-b{padding:10px 4px;border-radius:14px}
+    .rps-b span{font-size:2.2rem}
+    .rps-b b{font-size:.85rem}
+  }
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
-  @keyframes dbTumble{0%{transform:rotate(0) scale(.5);opacity:.3}60%{transform:rotate(540deg) scale(1.2);opacity:1}100%{transform:rotate(720deg) scale(1)}}
+  @keyframes dbTumble{0%{transform:rotate(0) scale(.5);opacity:.3}60%{transform:rotate(540deg) scale(1);opacity:1}100%{transform:rotate(720deg) scale(1)}}
   @media(prefers-reduced-motion:reduce){.db-die{animation:none!important}}
 
 </style>
@@ -1062,6 +1145,7 @@ function createRoom(game){
       S.busy=null; saveSession();
       clearInterval(NET.timer); NET.timer=setInterval(hostTick,500);
       pushState();
+      try{ mateAfterRoom(); }catch(e){}                  // a game request waiting for this room (from the My groups panel)
     });
     peer.on("error",e=>{
       if(!opened){
@@ -3431,23 +3515,20 @@ async function prLoadMembers(){
 }
 function prSync(){                                   // (re)start when my groups change
   const gs=prActive()?(AUTH.groups||[]).slice().sort():[], key=gs.join("|");
-  if(key===PR.key) return prRender();
-  prStop(); if(!gs.length) return;
+  if(key===PR.key){ mateSync(); return prRender(); }
+  prStop(); mateSync(); if(!gs.length) return;
   PR.key=key;
   gs.forEach(g=>PR.subs.push(FBD.collection("drawGroups").doc(g).collection("presence").onSnapshot(s=>{
-    PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRender();
+    PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRefresh();
   },e=>{ PR.err=fbErrText(e); prRender(); })));
   prLoadMembers(); prBeat(true);
-  PR.hb=setInterval(()=>{ if(document.visibilityState==="visible") prBeat(true); prRender(); },60000);
+  PR.hb=setInterval(()=>{ if(document.visibilityState==="visible") prBeat(true); prRefresh(); },60000);
 }
-function prRender(){
-  let el=PR.el;
-  if(!prActive()||(S&&S.screen==="room")){ if(el) el.style.display="none"; return; }
-  if(!el){
-    el=PR.el=document.createElement("div"); el.id="prw"; document.body.appendChild(el);
-    el.addEventListener("click",e=>{ if(e.target.closest("[data-prt]")){ PR.open=!PR.open; if(PR.open) prLoadMembers(); prRender(); } });
-  }
-  el.style.display="";
+/* presence changed: the room lobby's "Invite mates" list shows who is online, so redraw it too (never mid-game) */
+function prRefresh(){ if(S&&S.screen==="room"&&S.room&&S.room.phase==="lobby") render(); else prRender(); }
+/* Everyone in my groups (not me), with live status: {name, gm (their login e-mail), groups, on, joined, ms} – online first. */
+function prPeople(){
+  if(!prActive()) return [];
   const me=AUTH.user.email.toLowerCase(), now=Date.now(), people=new Map();
   Object.keys(PR.members).forEach(g=>(PR.members[g]||[]).forEach(m=>{
     const gm=(m.gameMail||"").toLowerCase(); if(gm&&gm===me) return;
@@ -3455,21 +3536,299 @@ function prRender(){
     cur.rem=Math.max(cur.rem,fbMs(m.removedAt));          // set by the master when the account was removed
     if(!cur.groups.includes(g)) cur.groups.push(g); people.set(id,cur);
   }));
-  const list=[...people.values()].map(p=>{
+  return [...people.values()].map(p=>{
     let best=null; p.groups.forEach(g=>{ const d=p.gm&&PR.pres[g]&&PR.pres[g][p.gm]; if(d&&(!best||fbMs(d.lastSeen)>fbMs(best.lastSeen))) best=d; });
     const ms=best?fbMs(best.lastSeen):0;
     return Object.assign(p,{ms,joined:!!best,on:!!(best&&best.online&&now-ms<150000)});
   }).filter(p=>!p.rem||p.ms>p.rem)       // a removed account stays hidden unless they register again and show new activity
   .sort((a,b)=>(b.on-a.on)||(b.joined-a.joined)||(b.ms-a.ms)||String(a.name).localeCompare(String(b.name)));
-  const online=list.filter(p=>p.on).length;
-  const row=p=>`<div class="pr-row"><span class="pr-dot ${p.on?"on":p.joined?"off":"none"}"></span><div class="pr-main"><b>${esc(p.name)}</b>
-    <span class="pr-st">${p.on?"online":p.joined?"last seen "+fbAgo(p.ms):"not joined yet"}</span></div><div class="pr-tags">${p.groups.map(g=>`<span class="pr-tag">${esc(g)}</span>`).join("")}</div></div>`;
+}
+function prRender(){
+  let el=PR.el;
+  if(!prActive()||(S&&S.screen==="room")){ if(el) el.style.display="none"; return; }
+  if(!el){
+    el=PR.el=document.createElement("div"); el.id="prw"; document.body.appendChild(el);
+    el.addEventListener("click",e=>{
+      const t=e.target.closest("[data-prt],[data-mi],[data-mc],[data-mg],[data-mx]"); if(!t) return;
+      if(t.dataset.prt!==undefined){ PR.open=!PR.open; if(PR.open) prLoadMembers(); else MATE.pick=null; }
+      else if(t.dataset.mi!==undefined){ MATE.pick=MATE.pick===t.dataset.mi?null:t.dataset.mi; }      // 🎮: show the game list under that mate
+      else if(t.dataset.mx!==undefined){ MATE.pick=null; }
+      else if(t.dataset.mg!==undefined&&MATE.pick){ const gm=MATE.pick; MATE.pick=null; mateInviteNew(gm,t.dataset.mg); }
+      else if(t.dataset.mc!==undefined){ PR.open=false; mateChatOpen(t.dataset.mc); }
+      prRender();
+    });
+  }
+  el.style.display="";
+  const list=prPeople(), online=list.filter(p=>p.on).length, unread=mateUnreadTotal();
+  const row=p=>{
+    const u=p.gm&&MATE.unread[p.gm]||0, has=p.gm&&MATE.chat[p.gm]&&MATE.chat[p.gm].msgs.length, sent=p.gm&&mateSentState(p.gm);
+    const acts=p.gm&&(p.on||has)?`<div class="pr-acts">${p.on?`<button type="button" class="pr-act ${MATE.pick===p.gm?"on":""}" data-mi="${esc(p.gm)}" title="Invite ${esc(p.name)} to a game" aria-label="Invite ${esc(p.name)} to a game">🎮</button>`:""}<button type="button" class="pr-act" data-mc="${esc(p.gm)}" title="Chat with ${esc(p.name)}" aria-label="Chat with ${esc(p.name)}">💬${u?`<span class="pr-un">${u}</span>`:""}</button></div>`
+      :`<div class="pr-tags">${p.groups.map(g=>`<span class="pr-tag">${esc(g)}</span>`).join("")}</div>`;
+    const pick=MATE.pick&&MATE.pick===p.gm?`<div class="pr-pick"><div class="pr-st">Pick a game – a room is made and ${esc(p.name)} gets a request:</div><div class="pr-games">${MATE_GAMES.map(g=>`<button type="button" class="pr-g" data-mg="${g}">${GTITLE[g]}</button>`).join("")}</div><button type="button" class="pr-x" data-mx>Cancel</button></div>`:"";
+    return `<div class="pr-row"><span class="pr-dot ${p.on?"on":p.joined?"off":"none"}"></span><div class="pr-main"><b>${esc(p.name)}</b>
+      <span class="pr-st">${p.on?"online":p.joined?"last seen "+fbAgo(p.ms):"not joined yet"}${sent?" · "+sent:""}</span></div>${acts}</div>${pick}`;
+  };
   el.innerHTML=(PR.open?`<div class="pr-panel"><div class="pr-head"><b>👥 My groups</b><span class="pr-st">${online} online · ${list.length} people</span></div>
-      ${PR.err?`<div class="pr-st" style="padding:8px 14px;color:#ffb4b4">⚠ Couldn't read live status (${esc(PR.err)}) – publish the latest firestore.rules in Firebase.</div>`:""}<div class="pr-list">${list.length?list.map(row).join(""):`<p class="pr-st" style="padding:10px">Nobody else is registered in your groups yet.</p>`}</div></div>`:"")
-    +`<button class="pr-fab" data-prt title="People in my groups"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" aria-hidden="true"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${online?`<span class="pr-badge">${online}</span>`:""}</button>`;
+      ${PR.err?`<div class="pr-st" style="padding:8px 14px;color:#ffb4b4">⚠ Couldn't read live status (${esc(PR.err)}) – publish the latest firestore.rules in Firebase.</div>`:""}${MATE.note?`<div class="pr-st" style="padding:8px 14px;color:#ffd68a">${esc(MATE.note)}</div>`:""}<div class="pr-list">${list.length?list.map(row).join(""):`<p class="pr-st" style="padding:10px">Nobody else is registered in your groups yet.</p>`}</div>
+      ${online?`<div class="pr-foot">🎮 invite to a game · 💬 chat (not saved – gone when you close the tab)</div>`:""}</div>`:"")
+    +`<button class="pr-fab" data-prt title="People in my groups"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" aria-hidden="true"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${online?`<span class="pr-badge">${online}</span>`:""}${unread?`<span class="pr-badge un">💬 ${unread}</span>`:""}</button>`;
 }
 document.addEventListener("visibilitychange",()=>prBeat(document.visibilityState==="visible"));
 window.addEventListener("pagehide",()=>prBeat(false));
+
+/* ================= MATES: game requests and one-to-one chat =================
+   Peer to peer over PeerJS (WebRTC data channels), like the game rooms – nothing is written to Firebase or any server.
+   - Every signed-in player who has groups also opens a personal "mate link": a PeerJS peer with an id made from their login e-mail
+     (wfgm-<hash>), so a mate can reach them while their Game Hub tab is open.
+   - A connection starts with {t:"hi",from:<login e-mail>}. Only people in my groups are accepted; their name comes from the group list.
+   - Messages: inv (game request: game + room code), invr (accepted / declined), msg (chat line), ack (delivered).
+   - Chats live in this tab only (sessionStorage): they survive a refresh and are gone when the tab or browser is closed, or on sign-out.
+   - A second Game Hub tab of the same person can send but not receive (the id is taken by the first tab). */
+const MATE={peer:null,ready:false,dup:false,owner:"",starting:false,conns:{},pend:{},sent:{},inbox:[],chat:{},open:null,unread:{},pick:null,after:null,note:"",tick:null,el:null,cel:null,nel:null,nt:null};
+const MATE_GAMES=["spy","raja","Scribblio","chess","dots","ludo","rps","number"];
+const MATE_TTL=60000, MATE_KEY="gh_mchat";
+function mateHash(str){
+  const h=seed=>{ let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
+    for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
+    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+    h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+    return (4294967296*(2097151&h2)+(h1>>>0)).toString(36); };
+  return h(11)+h(29);
+}
+const mateId=gm=>"wfgm-"+mateHash("gamehubverse|"+String(gm).toLowerCase());
+const mateMe=()=>AUTH.user&&AUTH.user.email?AUTH.user.email.toLowerCase():"";
+const mateMyName=()=>String((AUTH.profile&&AUTH.profile.name)||S.me.name||mateMe().split("@")[0]).slice(0,30);
+const matePerson=gm=>prPeople().find(p=>p.gm===gm);
+const mateNameOf=gm=>{ const p=matePerson(gm); return p?p.name:(MATE.chat[gm]&&MATE.chat[gm].name)||gm.split("@")[0]; };
+const mateUnreadTotal=()=>Object.values(MATE.unread).reduce((a,b)=>a+b,0);
+function mateSentState(gm){
+  const s=MATE.sent[gm]; if(!s) return "";
+  if(s.status==="sending") return "sending request…";
+  if(s.status==="sent") return Date.now()-s.at<MATE_TTL?"request sent ⏳":"no answer";
+  return {accepted:"✅ accepted",declined:"❌ declined",failed:"⚠ couldn't reach",busy:"busy"}[s.status]||"";
+}
+
+/* ---- this tab's chats (sessionStorage only) ---- */
+function mateLoadChats(){
+  try{ const d=JSON.parse(sessionStorage.getItem(MATE_KEY)); if(d&&d.owner===MATE.owner){ MATE.chat=d.chat||{}; MATE.unread=d.unread||{}; return; } }catch(e){}
+  MATE.chat={}; MATE.unread={};
+}
+function mateSaveChats(){ try{ sessionStorage.setItem(MATE_KEY,JSON.stringify({owner:MATE.owner,chat:MATE.chat,unread:MATE.unread})); }catch(e){} }
+
+/* ---- start / stop the mate link with the sign-in ---- */
+function mateSync(){
+  const me=prActive()?mateMe():"";
+  if(!me){ mateStop(!AUTH.user); return; }
+  if(MATE.owner!==me){ mateStop(true); MATE.owner=me; mateLoadChats(); }
+  if(MATE.peer||MATE.starting) return;
+  MATE.starting=true;
+  loadPeerLib().then(ok=>{ MATE.starting=false; if(ok&&prActive()&&mateMe()===MATE.owner&&!MATE.peer) mateOpen(false); });
+}
+function mateStop(wipe){
+  try{ MATE.peer&&MATE.peer.destroy(); }catch(e){}
+  Object.assign(MATE,{peer:null,ready:false,dup:false,conns:{},pend:{},pick:null,after:null});
+  MATE.inbox=[]; mateInvRender();
+  if(wipe){ MATE.chat={}; MATE.unread={}; MATE.sent={}; MATE.open=null; MATE.owner=""; try{ sessionStorage.removeItem(MATE_KEY); }catch(e){} mateChatRender(); }
+}
+function mateOpen(dup){
+  let peer; try{ peer=dup?new Peer(iceConfig()):new Peer(mateId(MATE.owner),iceConfig()); }catch(e){ return; }
+  MATE.peer=peer; MATE.dup=dup;
+  peer.on("open",()=>{ if(MATE.peer!==peer) return; MATE.ready=true; MATE.note=dup?"Game Hub is open in another tab – requests and chats arrive there.":""; prRender(); });
+  peer.on("connection",conn=>mateWire(conn,null));
+  peer.on("disconnected",()=>{ if(MATE.peer===peer) setTimeout(()=>{ try{ if(MATE.peer===peer&&!peer.destroyed) peer.reconnect(); }catch(e){} },1500); });
+  peer.on("error",e=>{
+    if(MATE.peer!==peer) return;
+    if(e.type==="unavailable-id"&&!dup){ try{ peer.destroy(); }catch(x){} MATE.peer=null; return mateOpen(true); }   // another tab of mine already has the id
+    if(e.type==="peer-unavailable"){                     // the mate's tab isn't reachable: fail whatever was waiting for them
+      const m=/(wfgm-[a-z0-9]+)/i.exec(e.message||""); const ids=m?[m[1]]:Object.keys(MATE.pend);
+      ids.forEach(id=>{ const p=MATE.pend[id]; if(p){ delete MATE.pend[id]; p.fail(); } });
+    }
+  });
+}
+/* every data connection (incoming or mine) */
+function mateWire(conn,gm){
+  conn._gm=gm;
+  conn.on("data",m=>{
+    if(!m||typeof m!=="object") return;
+    if(m.t==="hi"){                                      // who is calling? only people in my groups get in
+      const from=String(m.from||"").toLowerCase();
+      if(!from||!matePerson(from)){ try{ conn.close(); }catch(e){} return; }
+      conn._gm=from; MATE.conns[from]=conn; return;
+    }
+    if(conn._gm) mateOnMsg(conn._gm,m,conn);
+  });
+  conn.on("close",()=>{ if(conn._gm&&MATE.conns[conn._gm]===conn) delete MATE.conns[conn._gm]; });
+  conn.on("error",()=>{ if(conn._gm&&MATE.conns[conn._gm]===conn) delete MATE.conns[conn._gm]; });
+}
+/* an open connection to a mate (reused), or null if they can't be reached */
+function mateConn(gm){
+  const c=MATE.conns[gm]; if(c&&c.open) return Promise.resolve(c);
+  if(!MATE.peer||!MATE.ready) return Promise.resolve(null);
+  return new Promise(res=>{
+    const id=mateId(gm); let done=false;
+    const fin=v=>{ if(done) return; done=true; clearTimeout(to); delete MATE.pend[id]; res(v); };
+    const conn=MATE.peer.connect(id,{reliable:true}); mateWire(conn,gm);
+    const to=setTimeout(()=>{ try{ conn.close(); }catch(e){} fin(null); },12000);
+    MATE.pend[id]={fail:()=>fin(null)};
+    conn.on("open",()=>{ try{ conn.send({t:"hi",from:MATE.owner}); }catch(e){} MATE.conns[gm]=conn; fin(conn); });
+  });
+}
+async function mateSend(gm,m){ const c=await mateConn(gm); if(!c) return false; try{ c.send(m); return true; }catch(e){ return false; } }
+function mateOnMsg(gm,m,conn){
+  if(m.t==="inv"){
+    if(!/^[A-Z0-9]{4,8}$/.test(String(m.code||""))||!GTITLE[m.game]) return;
+    MATE.inbox=MATE.inbox.filter(x=>x.gm!==gm);           // a newer request from the same mate replaces the old one
+    MATE.inbox.push({id:String(m.id||""),gm,game:m.game,code:m.code,at:Date.now()});
+    mateInvRender(); mateBeep();
+  } else if(m.t==="invr"){
+    const s=MATE.sent[gm]; if(!s||s.id!==m.id) return;
+    s.status=m.ok?"accepted":m.busy?"busy":"declined"; s.at=Date.now();
+    toast(m.ok?"✅ "+mateNameOf(gm)+" accepted – joining your room…":"❌ "+mateNameOf(gm)+(m.busy?" is busy right now.":" declined your game request."),m.ok?"ok":"info");
+    prRefresh();
+  } else if(m.t==="msg"){
+    const text=String(m.text||"").slice(0,500); if(!text.trim()) return;
+    const c=mateThread(gm); if(c.msgs.some(x=>x.id===m.id)) return;
+    c.msgs.push({id:String(m.id||Date.now()),me:false,text,at:Date.now()}); if(c.msgs.length>300) c.msgs.splice(0,c.msgs.length-300);
+    try{ conn.send({t:"ack",id:m.id}); }catch(e){}
+    const looking=MATE.open===gm&&document.visibilityState==="visible";
+    if(!looking){ MATE.unread[gm]=(MATE.unread[gm]||0)+1; mateNotify(gm,text); }
+    mateSaveChats(); mateChatRender(); prRender();
+  } else if(m.t==="ack"){
+    const c=MATE.chat[gm], x=c&&c.msgs.find(y=>y.id===m.id&&y.me); if(x){ x.st="ok"; mateSaveChats(); mateChatRender(); }
+  }
+}
+function mateThread(gm){ return MATE.chat[gm]||(MATE.chat[gm]={name:mateNameOf(gm),msgs:[]}); }
+
+/* ---- game requests: sending ---- */
+const mateUid=()=>Math.random().toString(36).slice(2,10);
+/* invite a mate to the room I'm hosting (room lobby → "Invite mates") */
+async function mateInvite(gm){
+  if(!(NET.role==="host"&&!NET.local&&S.room)) return toast("Create a room first.","err");
+  if(!MATE.ready) return toast("Still connecting to your mates – try again in a moment.","info");
+  const s=MATE.sent[gm]; if(s&&s.code===NET.code&&(s.status==="sending"||(s.status==="sent"&&Date.now()-s.at<MATE_TTL))) return;
+  const id=mateUid(), code=NET.code;
+  MATE.sent[gm]={id,code,status:"sending",at:Date.now()}; prRefresh();
+  const ok=await mateSend(gm,{t:"inv",id,game:S.room.game,code});
+  const cur=MATE.sent[gm]; if(cur&&cur.id===id&&cur.status==="sending"){ cur.status=ok?"sent":"failed"; cur.at=Date.now(); }
+  if(!ok) toast("Couldn't reach "+mateNameOf(gm)+" – their Game Hub tab may be closed or in the background.","err");
+  prRefresh();
+}
+/* from the My groups panel: make a room for that game, then send the request once it is open */
+function mateInviteNew(gm,game){
+  if(!GTITLE[game]) return;
+  if(NET.role) return toast("You're already in a room – invite from its lobby with “Invite mates”.","info");
+  if(!S.me.name){ S.me.name=mateMyName().slice(0,16); try{ localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
+  MATE.after={gm,until:Date.now()+30000};
+  S.game=game; createRoom(game);
+}
+function mateAfterRoom(){                                  // called by createRoom when the room is open
+  const a=MATE.after; MATE.after=null;
+  if(a&&Date.now()<a.until) setTimeout(()=>mateInvite(a.gm),200);
+}
+
+/* ---- game requests: receiving (a popup with Accept / Decline) ---- */
+function mateInvRender(){
+  MATE.inbox=MATE.inbox.filter(x=>Date.now()-x.at<MATE_TTL);
+  const r=MATE.inbox[0];
+  let el=MATE.el;
+  if(!r){ if(el) el.remove(); MATE.el=null; clearInterval(MATE.tick); MATE.tick=null; return; }
+  if(!el){
+    el=MATE.el=document.createElement("div"); el.id="mtinv"; el.setAttribute("role","alertdialog"); el.setAttribute("aria-live","assertive");
+    document.body.appendChild(el);
+    el.addEventListener("click",e=>{ const b=e.target.closest("[data-iv]"); if(b) mateAnswer(b.dataset.iv==="yes"); });
+  }
+  const left=Math.max(0,Math.ceil((MATE_TTL-(Date.now()-r.at))/1000)), inRoom=!!NET.role, key=r.id+"|"+inRoom+"|"+MATE.inbox.length;
+  if(el._key!==key){
+    el._key=key;
+    el.innerHTML=`<div class="iv-card"><div class="iv-ico">🎮</div><div class="iv-body"><b>${esc(mateNameOf(r.gm))}</b> invited you to play<div class="iv-game">${GTITLE[r.game]}</div>
+      <div class="pr-st">Room ${esc(r.code)} · <span class="iv-left">${left}s</span>${inRoom?" · accepting leaves your current room":""}${MATE.inbox.length>1?` · ${MATE.inbox.length-1} more waiting`:""}</div></div>
+      <div class="iv-btns"><button type="button" class="btn secondary" data-iv="no">Decline</button><button type="button" class="btn green" data-iv="yes">Accept</button></div></div>`;
+  } else { const l=el.querySelector(".iv-left"); if(l) l.textContent=left+"s"; }
+  if(!MATE.tick) MATE.tick=setInterval(mateInvRender,1000);
+}
+function mateAnswer(ok){
+  const r=MATE.inbox.shift(); mateInvRender(); if(!r) return;
+  mateSend(r.gm,{t:"invr",id:r.id,ok});
+  if(!ok) return;
+  if(!S.me.name){ S.me.name=mateMyName().slice(0,16); try{ localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
+  MATE.inbox=[]; mateInvRender();                           // joining a room: drop the rest
+  if(NET.role){ leaveRoom(true); setTimeout(()=>joinRoom(r.code),500); }
+  else joinRoom(r.code);
+}
+function mateBeep(){
+  try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; const a=MATE.ac||(MATE.ac=new C());
+    [0,.16].forEach((t,i)=>{ const o=a.createOscillator(), g=a.createGain(); o.frequency.value=i?880:660; o.connect(g); g.connect(a.destination);
+      g.gain.setValueAtTime(.0001,a.currentTime+t); g.gain.exponentialRampToValueAtTime(.12,a.currentTime+t+.02); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+t+.14);
+      o.start(a.currentTime+t); o.stop(a.currentTime+t+.16); }); }catch(e){}
+  try{ navigator.vibrate&&navigator.vibrate([80,60,80]); }catch(e){}
+}
+
+/* ---- chat window ---- */
+function mateChatOpen(gm){
+  MATE.open=gm; delete MATE.unread[gm]; mateThread(gm); mateSaveChats(); mateChatRender(true); prRender();
+  if(!MATE.chat[gm].msgs.length&&!(matePerson(gm)||{}).on) toast(mateNameOf(gm)+" is offline – messages only arrive while their Game Hub is open.","info");
+}
+function mateChatClose(){ MATE.open=null; mateChatRender(); prRender(); }
+function mateChatRender(focus){
+  const gm=MATE.open;
+  let el=MATE.cel;
+  if(!gm){ if(el) el.style.display="none"; return; }
+  if(!el){
+    el=MATE.cel=document.createElement("div"); el.id="mtchat"; el.setAttribute("role","dialog"); el.setAttribute("aria-label","Chat");
+    el.innerHTML=`<div class="mc-head"><span class="pr-dot" id="mcDot"></span><div class="mc-who"><b id="mcName"></b><span class="pr-st" id="mcSt"></span></div><button type="button" class="mc-x" data-mcx aria-label="Close chat">✖</button></div>
+      <div class="mc-log" id="mcLog" aria-live="polite"></div>
+      <form class="mc-form" id="mcForm" autocomplete="off"><input id="mcIn" maxlength="500" placeholder="Message…" enterkeyhint="send" aria-label="Message"><button type="submit" class="btn green" id="mcSend">Send</button></form>
+      <div class="mc-foot">🔒 Sent straight to them – not saved anywhere. Gone when either of you closes the tab.</div>`;
+    document.body.appendChild(el);
+    el.addEventListener("click",e=>{ if(e.target.closest("[data-mcx]")) mateChatClose(); });
+    el.querySelector("#mcForm").addEventListener("submit",e=>{ e.preventDefault(); mateChatSend(); });
+    el.addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.stopPropagation(); mateChatClose(); } });
+  }
+  el.style.display="";
+  const p=matePerson(gm), c=mateThread(gm);
+  el.querySelector("#mcName").textContent=mateNameOf(gm);
+  el.querySelector("#mcSt").textContent=p&&p.on?"online":p&&p.joined?"last seen "+fbAgo(p.ms):"offline";
+  el.querySelector("#mcDot").className="pr-dot "+(p&&p.on?"on":"off");
+  const log=el.querySelector("#mcLog"), near=log.scrollHeight-log.scrollTop-log.clientHeight<60;
+  log.innerHTML=c.msgs.length?c.msgs.map(x=>`<div class="mc-m ${x.me?"me":""}"><div class="mc-b">${esc(x.text)}</div><div class="mc-t">${new Date(x.at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}${x.me?(x.st==="ok"?" ✓":x.st==="fail"?" ⚠ not delivered":" …"):""}</div></div>`).join("")
+    :`<p class="pr-st" style="text-align:center;margin:24px 8px">Say hi 👋</p>`;
+  if(near||focus) log.scrollTop=log.scrollHeight;
+  if(focus&&!matchMedia("(max-width:600px)").matches) el.querySelector("#mcIn").focus();
+}
+async function mateChatSend(){
+  const gm=MATE.open, inp=MATE.cel&&MATE.cel.querySelector("#mcIn"); if(!gm||!inp) return;
+  const text=inp.value.trim().slice(0,500); if(!text) return;
+  inp.value=""; inp.focus();
+  const x={id:mateUid(),me:true,text,at:Date.now(),st:""}, c=mateThread(gm);
+  c.msgs.push(x); if(c.msgs.length>300) c.msgs.splice(0,c.msgs.length-300);
+  mateSaveChats(); mateChatRender(true);
+  const ok=await mateSend(gm,{t:"msg",id:x.id,text});
+  if(!ok){ x.st="fail"; mateSaveChats(); mateChatRender(); }
+  else setTimeout(()=>{ if(!x.st){ x.st="fail"; mateSaveChats(); mateChatRender(); } },8000);     // no "delivered" back in time
+}
+/* a new message while that chat isn't open: a small banner at the top – tap to open */
+function mateNotify(gm,text){
+  let el=MATE.nel;
+  if(!el){
+    el=MATE.nel=document.createElement("button"); el.type="button"; el.id="mtnote"; document.body.appendChild(el);
+    el.addEventListener("click",()=>{ el.style.display="none"; if(el._gm) mateChatOpen(el._gm); });
+  }
+  el._gm=gm; el.innerHTML=`💬 <b>${esc(mateNameOf(gm))}</b>: ${esc(text.length>80?text.slice(0,80)+"…":text)}`; el.style.display="";
+  clearTimeout(MATE.nt); MATE.nt=setTimeout(()=>{ el.style.display="none"; },6000);
+  mateBeep();
+}
+
+/* the host's lobby card: online mates with an Invite button each */
+function mateLobbyHTML(v){
+  if(!(prActive()&&v.me===v.hostPid&&!NET.local&&!NET.spec)) return "";
+  const list=prPeople().filter(p=>p.gm), on=list.filter(p=>p.on), off=list.length-on.length;
+  const inRoom=gm=>{ const n=mateNameOf(gm).toLowerCase(); return v.players.some(p=>!p.left&&p.name.toLowerCase()===n.slice(0,16)); };
+  return `<div class="card2 mt-lobby"><h3 style="margin:0 0 8px">📨 Invite mates</h3>${on.length?on.map(p=>{
+      const s=MATE.sent[p.gm], cur=s&&s.code===v.code?s:null, st=cur?mateSentState(p.gm):"", wait=cur&&(cur.status==="sending"||(cur.status==="sent"&&Date.now()-cur.at<MATE_TTL));
+      return `<div class="mt-row"><span class="pr-dot on"></span><b>${esc(p.name)}</b><span class="pr-st">${inRoom(p.gm)?"in the room":esc(st)}</span>
+        <button type="button" class="btn secondary mt-inv" data-a="mateInv" data-gm="${esc(p.gm)}" ${wait||inRoom(p.gm)?"disabled":""}>${cur&&!wait&&!inRoom(p.gm)?"Ask again":"Invite"}</button></div>`; }).join("")
+    :`<p class="mut" style="margin:0">None of your mates are online right now.</p>`}${off?`<div class="mut" style="font-size:.8rem;margin-top:6px">${off} other mate${off===1?" is":"s are"} offline.</div>`:""}</div>`;
+}
 
 /* ================= ROOM UI ================= */
 const pObj=(v,pid)=>v.players.find(p=>p.pid===pid)||{name:"?",av:"❔"};
@@ -3574,6 +3933,7 @@ function lobbyHTML(v,host){
   const st=v.settings, n=v.players.filter(p=>!p.left).length, fields=SETTINGS[v.game].filter(f=>!f.when||f.when(n,st));
   let h="";
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
+  h+=mateLobbyHTML(v);
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${st.board==6?"6-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
   if(host){
@@ -3815,20 +4175,22 @@ function dbGameHTML(v){
   const total=g.boxes.length, taken=g.boxes.filter(x=>x).length;
   let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${st.rounds}</span><span class="chip">📦 ${taken}/${total} boxes</span>${timerHTML(play?g.deadline:0)}</div>`;
   h+=`<div class="scoreboard">${g.ids.map(p=>`<span class="chip ${play&&p===cur?"active":""} ${pObj(v,p).left?"gone":""}" style="border-color:${dbHue(v,p,.9)}">${g.marks[p]} ${esc(pName(v,p))}${p===me?" (you)":""} · <b>${g.counts[p]}</b></span>`).join("")}</div>`;
-  if(g.note&&play) h+=`<div class="msg warn">${esc(g.note)}</div>`;
   if(play){
+    /* One fixed-size turn panel (dice on the left, status + roll button on the right) that looks the same size in every phase,
+       so the board below never jumps up or down when someone rolls, draws or the turn passes (this used to shake the board on phones). */
     const el=Date.now()+S.off-g.rollAt, spin=g.rid&&el<800?`animation:dbTumble .8s ease-out ${-Math.max(0,el)}ms both;`:"";
-    const dice=g.dice.length?`<div class="db-dice">${g.dice.map(n=>dbDie(n,spin)).join("")}${g.dice.length>1?`<div class="db-sum">= ${g.total}</div>`:""}</div>`:"";
+    const rolled=g.phase==="draw"&&g.dice.length, nd=Math.max(1,+st.dice||1);
+    const dice=rolled?g.dice.map(n=>dbDie(n,spin)).join("")+(g.dice.length>1?`<div class="db-sum">= ${g.total}</div>`:"")
+      :Array.from({length:nd},()=>dbDie(0,"")).join("");
+    let txt, btn="";
     if(g.phase==="roll"){
-      h+=mine
-        ?`<div class="msg ok">${g.marks[me]} <b>Your turn!</b> Roll the dice – you draw that many lines.</div><button class="btn green block db-roll" data-a="dbroll">🎲 Roll the dice</button>`
-        :`<div class="msg info">⏳ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> is about to roll…</div>`;
+      txt=mine?`${g.marks[me]} <b>Your turn!</b> Roll – you draw that many lines.`:`⏳ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> is about to roll…`;
+      if(mine) btn=`<button class="btn green db-roll" data-a="dbroll">🎲 Roll the dice</button>`;
     } else {
-      h+=dice;
-      h+=mine
-        ?`<div class="msg ok">${g.marks[me]} Draw <b>${g.left}</b> more line${g.left===1?"":"s"} – tap a line between two dots.${st.bonus?" Closing a box gives you one extra line.":""}</div>`
-        :`<div class="msg info">✏️ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> rolled ${g.total} and has <b>${g.left}</b> line${g.left===1?"":"s"} left to draw.</div>`;
+      txt=mine?`${g.marks[me]} Draw <b>${g.left}</b> more line${g.left===1?"":"s"} – tap a line between two dots.${st.bonus?" Closing a box gives you one extra line.":""}`
+        :`✏️ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> rolled ${g.total} and has <b>${g.left}</b> line${g.left===1?"":"s"} left to draw.`;
     }
+    h+=`<div class="db-turn ${mine?"mine":""}"><div class="db-dice ${rolled?"":"idle"}">${dice}</div><div class="db-info">${g.note?`<div class="db-note">${esc(g.note)}</div>`:""}<div class="db-txt">${txt}</div>${btn}</div></div>`;
   }
   h+=dbBoardHTML(v,mine&&g.phase==="draw");
   if(!play){
@@ -3996,7 +4358,7 @@ function rpsGameHTML(v){
   const g=v.g, st=v.settings, me=v.me, host=me===v.hostPid, play=g.phase!=="reveal", pick=g.phase==="pick";
   const mineE=g.ent.find(e=>e.pid===me), alive=g.ent.filter(e=>!e.out);
   let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${st.rounds}</span><span class="chip">Throw ${g.throws+(pick?1:0)}</span>${g.target?`<span class="chip">First to ${g.target}</span>`:`<span class="chip">${alive.length} left</span>`}${timerHTML(pick?g.deadline:0)}</div>`;
-  h+=`<div class="rps-row">${g.ent.map(e=>{
+  const row=`<div class="rps-row">${g.ent.map(e=>{
     const win=g.last&&g.phase!=="pick"&&g.last.winners.includes(e.id), lose=g.last&&g.phase!=="pick"&&g.last.losers.includes(e.id), sh=g.phase!=="pick"&&g.shown?g.shown[e.id]:undefined;
     const ready=pick&&g.picked.includes(e.id);
     // after the reveal an astronaut peeks out from behind the card of each throw winner and waves hi (everyone shrugs on a draw)
@@ -4005,6 +4367,7 @@ function rpsGameHTML(v){
     return `<div class="rps-slot">${astro}<div class="rps-p ${e.out?"out":""} ${win?"win":""} ${lose?"lose":""} ${e.id===(mineE&&mineE.id)?"me":""}"><div class="rps-av">${esc(e.av)}</div><div class="rps-nm">${esc(e.name)}${e.id===(mineE&&mineE.id)?" (you)":""}</div>
       <div class="rps-hand ${sh!==undefined?"shown":""} ${ready?"ready":""}">${sh!==undefined?RPS_ICO[sh]:e.out?"💨":ready?"✔":"❔"}</div>
       <div class="rps-sc">${g.target?`<b>${e.pts}</b> win${e.pts===1?"":"s"}`:e.out?"out":"in"}${!e.bot&&e.pid&&e.pid!==me&&!e.out?kickBtn(v,pObj(v,e.pid)):""}</div></div></div>`; }).join("")}</div>`;
+  /* The sign buttons (and the throw result) come BEFORE the player cards, so on a phone you can choose without scrolling down past everyone's card. */
   if(pick){
     if(mineE&&!mineE.out){
       h+=g.mine===null
@@ -4016,6 +4379,7 @@ function rpsGameHTML(v){
     h+=l.draw?`<div class="msg warn rps-res">🤝 Draw – ${new Set(Object.values(l.shown)).size===1?"everyone threw the same sign":"all three signs showed up"}. Throw again!</div>`
       :`<div class="msg ok rps-res">${l.winners.map(i=>esc(g.ent.find(e=>e.id===i).name)).join(", ")||"The winners"} won the throw ${RPS_ICO[l.shown[l.winners[0]]]||""}${l.knock?` – ${l.losers.length} knocked out!`:""}</div>`;
   }
+  h+=row;
   if(!play){
     const w=g.ent.find(e=>e.id===g.res.winner);
     h+=w?`<div class="msg ok" style="font-size:1.05rem">🏆 ${esc(w.av)} <b>${esc(w.name)}</b> wins this round! 🎉</div>`:`<div class="msg info">Nobody won this round.</div>`;
@@ -4671,6 +5035,7 @@ function onAppClick(e){
     case "create": createRoom(S.game); break;
     case "join": joinRoom(S.ui.joinCode||""); break;
     case "copyLink": copyLink(); break;
+    case "mateInv": if(t.dataset.gm) mateInvite(t.dataset.gm); break;
     case "leave": leaveRoom(); break;
     case "exitgame":
       showModal({title:"Exit the game?",text:"Everyone stays in the room. You'll go back to the lobby where you can change the settings and start again.",ok:"Exit game",danger:false,act:"exitgame"});
@@ -5217,7 +5582,7 @@ async function fbReject(u,why){
   try{ await u.delete(); }catch(e){ try{ await FBA.signOut(); }catch(x){} }
 }
 async function fbOnUser(u){
-  if(!u){ if(AUTH.state==="in") console.warn("[auth] signed out (state was \"in\") – "+(AUTH.err||"no error recorded")); fbStop(); AUTH.groups=[]; AUTH.user=null; AUTH.profile=null; AUTH.isAdmin=false; AUTH.state="out"; AUTH.busy=false; render(); return; }
+  if(!u){ if(AUTH.state==="in") console.warn("[auth] signed out (state was \"in\") – "+(AUTH.err||"no error recorded")); fbStop(); try{ mateStop(true); }catch(e){} AUTH.groups=[]; AUTH.user=null; AUTH.profile=null; AUTH.isAdmin=false; AUTH.state="out"; AUTH.busy=false; render(); return; }
   AUTH.user=u; AUTH.isAdmin=false;
   AUTH.state="loading"; render();
   try{

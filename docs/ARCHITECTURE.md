@@ -52,6 +52,14 @@ Details of each game's rules are in [README.md](../README.md).
 | host → guest | `kicked` | removed by the host |
 | host → guest | `draw` | relayed Scribblio strokes |
 
+### Mates: game requests and one-to-one chat
+Peer to peer, outside any room (`mate*` functions). Nothing is written to Firebase or any server.
+- Every signed-in player with groups opens a personal PeerJS peer, id `wfgm-<hash of login e-mail>` (`mateId`), so a mate can reach them while their tab is open. A second tab of the same person can send but not receive.
+- A connection opens with `{t:"hi",from}`; only people in the receiver's groups (`prPeople`) are accepted, and their shown name comes from the group list. The sender's e-mail is not cryptographically verified – fine among friends.
+- Messages: `inv` (game, room code) → pop-up with Accept / Decline (60 s), `invr` (accepted / declined), `msg` (chat line, max 500 chars), `ack` (delivered).
+- Requests come from the My groups panel (`mateInviteNew` creates the room, then `mateAfterRoom` sends the request) or the lobby's Invite mates card (`mateInvite`).
+- Chats are kept in `sessionStorage gh_mchat` only (tab lifetime), wiped on sign-out.
+
 ### Voice chat
 Optional group call for everyone in a room (`voice*` functions, floating 🎙 dock). It is a WebRTC mesh using PeerJS media calls, so audio flows directly between players, encrypted (DTLS-SRTP), and never touches Firebase or is recorded.
 - The mic opens only after the player taps **Join voice** (https required) and starts **off**; leaving voice releases the microphone.
@@ -108,6 +116,7 @@ Summary cards (accounts, invited, online now, active in 7 days, games played, pl
 | `localStorage ngg_mute` | cut-scene sound toggle |
 | `sessionStorage ngg_pid`, `ngg_room` | this tab's player id and the room to rejoin after a refresh |
 | `sessionStorage gh_login_<uid>` | marks that this tab's sign-in was already counted |
+| `sessionStorage gh_mchat` | this tab's one-to-one chats and unread counts (gone when the tab closes) |
 
 ## 7. Files
 | File | Purpose |

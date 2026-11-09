@@ -68,6 +68,12 @@ Everyone throws ✊ ✋ ✌️ in secret; all throws are revealed together. **2 
 ### 🎄 ChristMom ChristChild / 🪔 Diwali Daddy Diwali Kid
 Secret-Santa style draws. Names and emails are entered, a random matching (nobody gets themselves) is made, and each person is emailed their match. Pairs are never shown on screen.
 
+## 👥 Mates: game requests & chat
+When you're signed in, the **👥 My groups** button (bottom-right) lists the people in your groups with a live online dot. Online mates get two buttons:
+- **🎮 Invite** – pick a group game; a room is created for you and the mate gets a **pop-up request** ("Anchu invited you to play 🎲 Dots and Boxes") with **Accept** / **Decline** and a 60-second countdown, plus a short chime. Accept takes them straight into your room (leaving any room they were in); you see "accepted" or "declined".
+- In a room's lobby the host also sees an **📨 Invite mates** card listing online mates, with an **Invite** button each (and "in the room" once they've joined).
+- **💬 Chat** – a one-to-one chat. A message that arrives while the chat isn't open shows a banner at the top (tap to open) and a red unread count. Chats are **never saved anywhere**: they go straight from browser to browser, survive a page refresh, and are gone when the tab or browser is closed or you sign out. Messages only reach a mate whose Game Hub tab is open (a ✓ shows when delivered, "⚠ not delivered" otherwise).
+
 ## Kicking players & too few players
 - The **host** sees a ✖ next to every other player (room header, Scribblio player list, chess seat cards) – in the lobby and **during a game**. A kicked player is sent home with a message, the others see an airlock scene, and the kicked player can join again with the room code (from the lobby).
 - If someone leaves or is kicked mid-game and the game no longer has enough players (Spy 3, Raja Rani 3, Scribblio 2), everyone sees an ejection-style **"Less players than required – taking you to the room"** scene and is returned to the room lobby. Chess hands the leaver's seat to the computer and stops once fewer than 2 humans are left.
