@@ -305,6 +305,20 @@
   .ch-wrap{--chw:clamp(400px,calc(100vh - 210px),600px);display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px}
   .ch-top,.ch-seats,.ch-below{width:min(100%,max(calc(var(--chw) + 70px),620px))}   /* wide enough for "Computer (Medium)" + clock on one line */
   .ch-top .msg{margin-top:10px}
+  .ch-fsb{display:none}
+  /* phones: full-screen board */
+  @media(max-width:600px){
+    .ch-fsb{display:inline-flex;align-self:center}
+    .ch-wrap.full{position:fixed;inset:0;z-index:950;margin:0;gap:6px;padding:max(6px,env(safe-area-inset-top)) 4px max(6px,env(safe-area-inset-bottom));overflow-y:auto;background:#070a1f;justify-content:center}
+    .ch-wrap.full .ch-top,.ch-wrap.full .ch-below{display:none}
+    .ch-wrap.full .ch-fsb{order:9;padding:8px 16px}
+    .ch-wrap.full .ch-seats{width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:0 2px}
+    .ch-wrap.full .ch-seats .ch-seat{flex:1 1 0;min-width:0;padding:6px 8px;font-size:.8rem;gap:2px 6px}
+    .ch-wrap.full .ch-left{width:100%}
+    .ch-wrap.full .ch-board{width:min(calc(100vw - 8px),calc(100dvh - 150px));max-width:none;min-width:0;border-radius:10px}
+    .ch-wrap.full .ch-rw,.ch-wrap.full .ch-rw-note{width:100%}
+    body:has(.ch-wrap.full){overflow:hidden}
+  }
   .ch-seats{display:flex;gap:10px;flex-wrap:wrap}
   .ch-seats .ch-seat{flex:1 1 200px;margin:0}
   .ch-below{display:flex;flex-direction:column;align-items:stretch}
@@ -594,6 +608,52 @@
   @media(max-width:560px){.game-grid.g2{grid-template-columns:minmax(0,1fr)}}
   .game-btn.wide{grid-column:1/-1;flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px 16px}
   .game-btn.wide span.d{flex:1 1 240px}
+  .game-grid.g1{grid-template-columns:minmax(0,1fr)}
+  /* phones: home tiles two per row, icon + name only, about half as tall; an odd last tile spans both columns */
+  @media(max-width:600px){
+    .game-grid.hg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px;margin-top:8px}
+    .game-grid.hg+.game-grid.hg{margin-top:10px!important}
+    .game-grid.hg>.game-btn:last-child:nth-child(odd){grid-column:1/-1}
+    .game-grid.hg>.game-btn{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;padding:12px 10px;min-height:64px;border-radius:14px}
+    .game-grid.hg>.game-btn:hover{transform:none}
+    .game-grid.hg>.game-btn span.d{display:none}
+    .game-grid.hg>.game-btn .ico{font-size:1.55rem;flex:none;line-height:1}
+    .game-grid.hg>.game-btn b{font-size:.92rem;line-height:1.2;min-width:0;overflow-wrap:break-word}
+    .game-grid.hg>.game-btn .offb{position:absolute;top:5px;right:7px;margin:0;padding:0;border:0;background:none;font-size:0;line-height:1}
+    .game-grid.hg>.game-btn .offb::before{content:"📴";font-size:.72rem}
+    .game-grid.hg>.game-btn:last-child:nth-child(odd){justify-content:center}
+  }
+  /* coin flip */
+  .coin-card{max-width:460px;margin:14px auto 0;text-align:center}
+  .coin-stage{position:relative;height:230px;display:flex;align-items:center;justify-content:center;perspective:900px}
+  .coin-toss{background:none;border:0;padding:0;cursor:pointer;width:170px;height:170px;border-radius:50%;transform-style:preserve-3d}
+  .coin-toss[disabled]{cursor:default}
+  .coin-toss.up{animation:coinUp 1.6s cubic-bezier(.3,0,.4,1)}
+  .coin{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+  .coin-f{position:absolute;inset:0;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:radial-gradient(circle at 35% 30%,#fff3b0 0%,#ffd25e 32%,#e0a526 70%,#a8740f 100%);border:6px solid #c88f1d;box-shadow:inset 0 0 0 4px #ffe58a88,inset 0 -8px 18px #7a520c66,0 10px 30px #0008;color:#6b4708}
+  .coin-f span{font-size:3.4rem;line-height:1;text-shadow:0 1px 0 #ffe9a3}
+  .coin-f b{font-family:"Fredoka",system-ui,sans-serif;font-size:1.05rem;letter-spacing:.14em}
+  .coin-f.t{transform:rotateY(180deg);background:radial-gradient(circle at 35% 30%,#f4f6ff 0%,#c9cfe6 34%,#9aa3c7 72%,#6a7299 100%);border-color:#8790b8;color:#353c63;box-shadow:inset 0 0 0 4px #ffffff66,inset 0 -8px 18px #2a2f5066,0 10px 30px #0008}
+  .coin-f.t span{text-shadow:0 1px 0 #fff}
+  .coin-shadow{position:absolute;bottom:6px;left:50%;width:120px;height:14px;margin-left:-60px;border-radius:50%;background:#0009;filter:blur(6px)}
+  .coin-shadow.up{animation:coinSh 1.6s cubic-bezier(.3,0,.4,1)}
+  @keyframes coinUp{0%{transform:translateY(0) scale(1)}45%{transform:translateY(-120px) scale(1.12)}100%{transform:translateY(0) scale(1)}}
+  @keyframes coinSh{0%,100%{transform:scale(1);opacity:1}45%{transform:scale(.45);opacity:.35}}
+  .coin-out{min-height:2.2rem;font-size:1.05rem;margin:4px 0 10px}
+  .coin-res{font-family:"Fredoka",system-ui,sans-serif;font-size:1.8rem;animation:rpsPop .35s ease-out}
+  .coin-res.H{color:#ffd25e}.coin-res.T{color:#c9cfe6}
+  .coin-btn{font-size:1.1rem;padding:14px}
+  .coin-tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .coin-tally>div{display:flex;flex-direction:column;gap:2px;padding:10px 6px;border-radius:12px;background:#ffffff0a;border:1px solid var(--border)}
+  .coin-tally span{font-size:.78rem;color:var(--muted)}
+  .coin-tally b{font-size:1.5rem;font-variant-numeric:tabular-nums}
+  .coin-tally i{font-style:normal;font-size:.72rem;color:var(--muted)}
+  .coin-hist{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:12px}
+  .coin-hist span{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800}
+  .coin-hist .H{background:#ffd25e;color:#6b4708}.coin-hist .T{background:#c9cfe6;color:#353c63}
+  .coin-hist span:first-child{outline:2px solid #fff;outline-offset:1px}
+  @media(prefers-reduced-motion:reduce){.coin-toss.up,.coin-shadow.up,.coin-res{animation:none}}
   @media(max-width:760px){.game-grid.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
   /* dots and boxes */
   .db-wrap{max-width:640px;margin:14px auto}
@@ -639,6 +699,16 @@
   .acct-bar .ab-r{margin-left:auto;justify-content:flex-end}
   .acct-bar .chip,.acct-bar .btn{box-sizing:border-box;height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;font-size:.9rem;line-height:1;white-space:nowrap;border-radius:999px;margin:0}
   .acct-bar .chip{font-weight:600}
+  .acct-bar .grp-chip{color:var(--text);font-family:inherit;cursor:pointer}
+  .acct-bar .grp-chip:hover{border-color:var(--accent)}
+  #grpPop{position:fixed;inset:0;z-index:1250;background:#05071acc;display:flex;align-items:center;justify-content:center;padding:16px;animation:gpIn .18s ease-out}
+  .gp-card{width:min(380px,100%);max-height:min(70vh,520px);display:flex;flex-direction:column;background:#12163a;border:1px solid #8b93ff66;border-radius:16px;box-shadow:0 18px 50px #000c;overflow:hidden}
+  .gp-head{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-bottom:1px solid #ffffff14}
+  .gp-head b{flex:1}
+  .gp-list{overflow-y:auto;padding:8px;overscroll-behavior:contain}
+  .gp-row{padding:10px 12px;border-radius:10px;font-weight:600;overflow-wrap:anywhere}
+  .gp-row:nth-child(odd){background:#ffffff08}
+  @keyframes gpIn{from{opacity:0}to{opacity:1}}
   .acct-bar .chip[title]{max-width:min(46vw,420px);overflow:hidden;text-overflow:ellipsis;display:inline-block;line-height:36px}
   @media(max-width:600px){.acct-bar{justify-content:center}.acct-bar .ab-l,.acct-bar .ab-r{justify-content:center;margin:0}}
   .adm-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}
@@ -3843,7 +3913,7 @@ function topbar(title,home){
 function landingHTML(){
   let h=acctBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>Open a room, share the code, and play with friends.</p></header>`;
   if(S.notice) h+=`<div class="msg ${S.notice.type}">${esc(S.notice.text)}</div>`;
-  h+=`<h3>Play online with a room code</h3><div class="game-grid g3">
+  h+=`<h3>Play online with a room code</h3><div class="game-grid g3 hg">
     <button class="game-btn" data-a="go" data-g="number"><span class="ico">🎯</span><b>NumberGame</b><span class="d">Guess the secret number in turns. Rounds, timers and attempts are set per room.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" data-a="go" data-g="spy"><span class="ico">🕵️</span><b>Who Is the Spy?</b><span class="d">Secret words on every screen. Cycle clues, call a vote when you suspect someone.</span></button>
     <button class="game-btn" data-a="go" data-g="raja"><span class="ico">👑</span><b>Raja Rani</b><span class="d">3–20 players. Secret roles, Police finds the Thief, multi-round scores.</span></button>
@@ -3851,18 +3921,21 @@ function landingHTML(){
     <button class="game-btn" style="--glow:#9cc66b" data-a="go" data-g="chess"><span class="ico">♟️</span><b>Chess</b><span class="d">1–4 players. Vs computer, classic 2-player, 3-player hexagon or 4-player cross board, with clocks.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" style="--glow:#ffb24d" data-a="go" data-g="dots"><span class="ico">🎲</span><b>Dots and Boxes</b><span class="d">Any number of players. Roll the dice, draw that many lines, and close boxes to stamp them with your emoji.</span></button>
   </div>
-  <div class="game-grid g2">
+  <div class="game-grid g2 hg">
     <button class="game-btn" style="--glow:#ff5468" data-a="go" data-g="ludo"><span class="ico">🏁</span><b>Ludo</b><span class="d">Up to 6 players on a 4- or 6-colour board. Computer fills empty colours if you like.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" style="--glow:#4aa3ff" data-a="go" data-g="rps"><span class="ico">✊</span><b>Rock Paper Scissors</b><span class="d">Throw in secret, reveal together. Duel a friend or the computer, or knock out a crowd.</span><span class="offb">📴 works offline</span></button>
   </div>
-  <div class="game-grid" style="margin-top:14px;grid-template-columns:minmax(0,1fr)">
+  <div class="game-grid g1 hg" style="margin-top:14px">
     <button class="game-btn wide" data-a="goJoin"><span class="ico">🔑</span><b>Join a room</b><span class="d">Got a room code or invite link from a friend? Enter it here.</span></button>
   </div>
-  <h3 class="home-h" style="margin-top:34px">Secret draws by email</h3><div class="game-grid">
+  <h3 class="home-h" style="margin-top:34px">Quick play – no room needed</h3><div class="game-grid g1 hg">
+    <button class="game-btn wide" style="--glow:#ffd25e" data-a="goCoin"><span class="ico">🪙</span><b>Coin Flip</b><span class="d">Heads or tails? A fair random flip with a running count – just tap and go.</span><span class="offb">📴 works offline</span></button>
+  </div>
+  <h3 class="home-h" style="margin-top:34px">Secret draws by email</h3><div class="game-grid hg">
     <button class="game-btn" style="--glow:#5ee08a" data-a="goXmas"><span class="ico">🎄</span><b>ChristMom ChristChild</b><span class="d">Secretly match everyone with a Christ Child by email.</span></button>
     <button class="game-btn" style="--glow:#ff9a3c" data-a="goDiwali"><span class="ico">🪔</span><b>Diwali Daddy Diwali Kid</b><span class="d">Secretly match everyone with a Diwali Kid by email.</span></button>
   </div>
-  <h3 class="home-h" style="margin-top:34px">No signal?</h3><div class="game-grid">
+  <h3 class="home-h" style="margin-top:34px">No signal?</h3><div class="game-grid hg">
     <button class="game-btn" style="--glow:#46d6a4" data-a="goOffline"><span class="ico">📴</span><b>Offline mode</b><span class="d">See which games and features work without an internet connection – and play them.</span></button>
   </div>`;
   return h;
@@ -4398,6 +4471,7 @@ function mainHTML(){
     case "entry": return entryHTML();
     case "room": return roomHTML();
     case "offline": return topbar("📴 Offline mode",true)+offlineHTML();
+    case "coin": return topbar("🪙 Coin Flip",true)+coinHTML();
     default: return landingHTML();
   }
 }
@@ -4798,6 +4872,7 @@ function chessGameHTML(v){
   }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
   const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
+  const full=!!(S.ui.chFull&&g.phase==="play");
   let acts=`<div class="ch-actions"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
   if(g.phase==="play"){
     const mine=g.seats.findIndex(s=>s.pid===v.me&&!s.bot);
@@ -4810,7 +4885,9 @@ function chessGameHTML(v){
   }
   acts+=`</div>`;
   const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s"><div class="pole"></div><div class="flag" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s">It is your turn ! ♟️</div>${astroSVG(chP(v,g.turn).fill,pAv(v,v.me))}</div></div>`:"";
-  let h=`<div class="ch-wrap"><div class="ch-top">${info}${chStatusHTML(v)}</div>
+  /* phones: "⛶ Full screen" shows just the clocks/turn bar and an edge-to-edge board; ✖ goes back */
+  const fsBtn=g.phase==="play"?`<button type="button" class="btn secondary ch-fsb" data-a="chfull" aria-pressed="${full}">${full?"✖ Exit full screen":"⛶ Full screen board"}</button>`:"";
+  let h=`<div class="ch-wrap${full?" full":""}"><div class="ch-top">${info}${chStatusHTML(v)}</div>${fsBtn}
     <div class="ch-seats">${chSeatsHTML(v)}</div>
     <div class="ch-left">${chBoardSVG(v)}${chRwHTML(v)}</div>
     <div class="ch-below">${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></div></div>${buddy}`;
@@ -5031,7 +5108,12 @@ function onAppClick(e){
     case "goDiwali": S.notice=null; S.screen="diwali"; render(); drawGroupsLoad(); break;
     case "goOffline": S.notice=null; S.screen="offline"; try{ history.replaceState(null,"","#/offline-mode"); }catch(x){} render(); break;
     case "createLocal": createLocalRoom(S.game); break;
-    case "offStart": S.game=t.dataset.g; createLocalRoom(S.game,t.dataset.solo); break;
+    case "goCoin": S.notice=null; S.screen="coin"; try{ history.replaceState(null,"","#/coin-flip"); }catch(x){} render(); window.scrollTo(0,0); break;
+    case "coinFlip": coinFlip(); break;
+    case "coinReset": COIN.h=0; COIN.t=0; COIN.hist=[]; COIN.last=null; render(); break;
+    case "grpPop": grpPopOpen(); break;
+    case "chfull": S.ui.chFull=!S.ui.chFull; render(); if(S.ui.chFull) window.scrollTo(0,0); break;
+    case "offStart": if(t.dataset.g==="coin"){ S.screen="coin"; render(); window.scrollTo(0,0); break; } S.game=t.dataset.g; createLocalRoom(S.game,t.dataset.solo); break;
     case "create": createRoom(S.game); break;
     case "join": joinRoom(S.ui.joinCode||""); break;
     case "copyLink": copyLink(); break;
@@ -5482,12 +5564,55 @@ function registerSW(){
 }
 
 /* ---- Offline mode page ---- */
+/* ---- Coin Flip: no room, just this device. The side comes from crypto.getRandomValues (a fair 50/50, not Math.random). ---- */
+const COIN={h:0,t:0,hist:[],last:null,deg:0,busy:false};
+function coinSide(){
+  try{ const a=new Uint8Array(1); crypto.getRandomValues(a); return (a[0]&1)?"H":"T"; }catch(e){ return Math.random()<.5?"H":"T"; }
+}
+function coinHTML(){
+  const n=COIN.h+COIN.t, pc=x=>n?Math.round(x*100/n)+"%":"–";
+  const res=COIN.busy?`<span class="mut">Flipping…</span>`:COIN.last?`<b class="coin-res ${COIN.last}">${COIN.last==="H"?"Heads!":"Tails!"}</b>`:`<span class="mut">Tap the coin or the button to flip</span>`;
+  return `<div class="card2 coin-card">
+    <div class="coin-stage"><button type="button" class="coin-toss" data-a="coinFlip" aria-label="Flip the coin" ${COIN.busy?"disabled":""}>
+      <div class="coin" id="coin" style="transform:rotateY(${COIN.deg}deg)"><div class="coin-f h"><span>★</span><b>HEADS</b></div><div class="coin-f t"><span>✦</span><b>TAILS</b></div></div></button><div class="coin-shadow" id="coinShadow"></div></div>
+    <div class="coin-out" id="coinOut" aria-live="polite">${res}</div>
+    <button class="btn green block coin-btn" data-a="coinFlip" ${COIN.busy?"disabled":""}>🪙 Flip the coin</button>
+    <div class="coin-tally"><div><span>Heads</span><b>${COIN.h}</b><i>${pc(COIN.h)}</i></div><div><span>Flips</span><b>${n}</b><i>this visit</i></div><div><span>Tails</span><b>${COIN.t}</b><i>${pc(COIN.t)}</i></div></div>
+    ${COIN.hist.length?`<div class="coin-hist" aria-label="Last flips">${COIN.hist.map(x=>`<span class="${x}">${x}</span>`).join("")}</div>`:""}
+    ${n?`<div style="text-align:center;margin-top:10px"><button class="btn secondary" data-a="coinReset">↺ Reset count</button></div>`:""}
+    <p class="mut" style="font-size:.82rem;text-align:center;margin:12px 0 0">Each flip is a fresh 50/50 from your device's secure random generator. No room, nothing saved – works offline too.</p></div>`;
+}
+function coinFlip(){
+  if(COIN.busy) return;
+  const side=coinSide(), slow=!matchMedia("(prefers-reduced-motion:reduce)").matches;
+  COIN.busy=true;
+  // spin 5–7 whole turns, landing on 0° (heads) or 180° (tails)
+  const turns=5+Math.floor(Math.random()*3);
+  COIN.deg=(Math.floor(COIN.deg/360)+turns)*360+(side==="T"?180:0);
+  const coin=document.getElementById("coin");
+  if(coin){                                               // animate in place – no re-render while it spins
+    document.querySelectorAll('[data-a="coinFlip"]').forEach(b=>b.disabled=true);
+    const out=document.getElementById("coinOut"); if(out) out.innerHTML=`<span class="mut">Flipping…</span>`;
+    const toss=coin.parentElement, sh=document.getElementById("coinShadow");
+    coin.style.transition=slow?"transform 1.6s cubic-bezier(.15,.6,.25,1)":"none";
+    if(slow){ toss.classList.remove("up"); void toss.offsetWidth; toss.classList.add("up"); sh&&sh.classList.remove("up"); sh&&void sh.offsetWidth; sh&&sh.classList.add("up"); }
+    coin.style.transform=`rotateY(${COIN.deg}deg)`;
+  }
+  try{ navigator.vibrate&&navigator.vibrate(25); }catch(e){}
+  setTimeout(()=>{
+    COIN.busy=false; COIN.last=side; COIN[side==="H"?"h":"t"]++;
+    COIN.hist.unshift(side); if(COIN.hist.length>20) COIN.hist.length=20;
+    try{ navigator.vibrate&&navigator.vibrate(side==="H"?[30,40,30]:60); }catch(e){}
+    if(S.screen==="coin") render();
+  },coin&&slow?1650:150);
+}
 const OFF_YES=[
   {ico:"♟️",name:"Chess vs the computer",d:"Easy, Medium or Hard, choose your colour, with clocks and move hints.",g:"chess"},
   {ico:"♟️",name:"Chess – pass & play",d:"Two sides, one device. Hand the screen to a friend sitting next to you.",g:"chess",solo:"local"},
   {ico:"🎯",name:"Number Game – solo",d:"Crack the secret number on your own. Rounds, difficulty and timers all work.",g:"number"},
   {ico:"🏁",name:"Ludo vs the computer",d:"Choose the 4- or 6-colour board, play against computer colours.",g:"ludo"},
-  {ico:"✊",name:"Rock Paper Scissors vs the computer",d:"First to 2, best of 3 – or change the target in the settings.",g:"rps"}
+  {ico:"✊",name:"Rock Paper Scissors vs the computer",d:"First to 2, best of 3 – or change the target in the settings.",g:"rps"},
+  {ico:"🪙",name:"Coin Flip",d:"Heads or tails – a fair random flip with a running count. No room needed.",g:"coin"}
 ];
 const OFF_NO=[
   {ico:"🕵️",name:"Who Is the Spy?",d:"Needs 3+ people, each on their own device to see their secret word."},
@@ -5858,10 +5983,22 @@ function acctBarHTML(){
   if(AUTH.state==="offline") return `<div class="msg warn">📴 Signed-out offline mode – accounts need an internet connection. The offline games below still work.</div>`;
   if(AUTH.state!=="in") return "";
   const p=AUTH.profile||{};
-  return `<div class="acct-bar"><div class="ab-l"><span class="chip">👤 ${esc(p.name||AUTH.user.email)}${AUTH.isAdmin?(fbIsMaster()?" · 👑 Master admin":" · 🛡 Admin"):""}</span>${(AUTH.groups&&AUTH.groups.length)?`<span class="chip" title="Your group IDs">🏷 ${AUTH.groups.map(esc).join(", ")}</span>`:""}</div><div class="ab-r">
+  return `<div class="acct-bar"><div class="ab-l"><span class="chip">👤 ${esc(p.name||AUTH.user.email)}${AUTH.isAdmin?(fbIsMaster()?" · 👑 Master admin":" · 🛡 Admin"):""}</span>${(AUTH.groups&&AUTH.groups.length)?`<button type="button" class="chip grp-chip" data-a="grpPop" aria-haspopup="dialog">🏷 Groups (${AUTH.groups.length})</button>`:""}</div><div class="ab-r">
     <button class="btn secondary" data-a="goMyStats">📊 My activity</button>${AUTH.isAdmin?`<button class="btn secondary" data-a="goAdmin">🛡 Admin</button>`:""}<button class="btn secondary" data-a="authLogout">Sign out</button></div></div>`;
 }
 const gameLabel=g=>GTITLE[g]||g;
+/* "🏷 Groups (n)" chip → a pop-up listing my group names (scrolls when there are many) */
+function grpPopOpen(){
+  grpPopClose();
+  const gs=(AUTH.groups||[]).slice().sort((a,b)=>String(a).localeCompare(String(b)));
+  const el=document.createElement("div"); el.id="grpPop"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); el.setAttribute("aria-label","Your groups");
+  el.innerHTML=`<div class="gp-card"><div class="gp-head"><b>🏷 Your groups</b><span class="pr-st">${gs.length}</span><button type="button" class="mc-x" data-gpx aria-label="Close">✖</button></div>
+    <div class="gp-list">${gs.length?gs.map(g=>`<div class="gp-row">🏷 ${esc(g)}</div>`).join(""):`<p class="mut" style="margin:8px 4px">You aren't in any group yet.</p>`}</div></div>`;
+  el.addEventListener("click",e=>{ if(e.target===el||e.target.closest("[data-gpx]")) grpPopClose(); });
+  el.addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.stopPropagation(); grpPopClose(); } });
+  document.body.appendChild(el); el.querySelector("[data-gpx]").focus();
+}
+function grpPopClose(){ const el=document.getElementById("grpPop"); if(el) el.remove(); }
 function statsTableHTML(stats){
   const rows=Object.keys(stats||{}).sort((a,b)=>(stats[b].played||0)-(stats[a].played||0));
   if(!rows.length) return `<p class="mut">No games played yet.</p>`;

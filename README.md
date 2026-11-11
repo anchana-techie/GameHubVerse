@@ -68,6 +68,14 @@ Everyone throws ✊ ✋ ✌️ in secret; all throws are revealed together. **2 
 ### 🎄 ChristMom ChristChild / 🪔 Diwali Daddy Diwali Kid
 Secret-Santa style draws. Names and emails are entered, a random matching (nobody gets themselves) is made, and each person is emailed their match. Pairs are never shown on screen.
 
+## 🪙 Coin Flip
+Home screen → **Quick play – no room needed**. Tap the coin (or **Flip the coin**): it spins and lands on **Heads** or **Tails**. The side comes from the browser's secure random generator (`crypto.getRandomValues`), so every flip is an independent 50/50. Shows a heads / tails / flips count with percentages and the last 20 flips for this visit (**↺ Reset count** clears it). Nothing is saved, and it works offline.
+
+## 📱 On phones
+- **Home tiles** sit two per row and show just the icon and name (about half the height); a tile left alone on the last row spans the full width. The 📴 badge marks games that work offline. Descriptions still show on larger screens.
+- **Chess:** tap **⛶ Full screen board** during a game for an edge-to-edge board with a slim bar of players and clocks on top; **✖ Exit full screen** goes back.
+- **🏷 Groups (n)** in the account bar opens a pop-up with the names of your groups (scrolls when there are many).
+
 ## 👥 Mates: game requests & chat
 When you're signed in, the **👥 My groups** button (bottom-right) lists the people in your groups with a live online dot. Online mates get two buttons:
 - **🎮 Invite** – pick a group game; a room is created for you and the mate gets a **pop-up request** ("Anchu invited you to play 🎲 Dots and Boxes") with **Accept** / **Decline** and a 60-second countdown, plus a short chime. Accept takes them straight into your room (leaving any room they were in); you see "accepted" or "declined".
