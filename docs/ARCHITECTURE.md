@@ -116,6 +116,7 @@ Summary cards (accounts, invited, online now, active in 7 days, games played, pl
 | `localStorage ngg_mute` | cut-scene sound toggle |
 | `sessionStorage ngg_pid`, `ngg_room` | this tab's player id and the room to rejoin after a refresh |
 | `sessionStorage gh_login_<uid>` | marks that this tab's sign-in was already counted |
+| `sessionStorage gh_upd` | time of the last automatic update reload |
 | `sessionStorage gh_mchat` | this tab's one-to-one chats and unread counts (gone when the tab closes) |
 
 ## 7. Files

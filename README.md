@@ -73,8 +73,12 @@ Home screen → **Quick play – no room needed**. Tap the coin (or **Flip the c
 
 ## 📱 On phones
 - **Home tiles** sit two per row and show just the icon and name (about half the height); a tile left alone on the last row spans the full width. The 📴 badge marks games that work offline. Descriptions still show on larger screens.
+- **Chess player cards** show the name on top and the clock (and ⭐ points) underneath, two per row; in full screen all players share one row.
 - **Chess:** tap **⛶ Full screen board** during a game for an edge-to-edge board with a slim bar of players and clocks on top; **✖ Exit full screen** goes back.
 - **🏷 Groups (n)** in the account bar opens a pop-up with the names of your groups (scrolls when there are many).
+
+## 🔄 Automatic updates
+Every deploy stamps the commit id into `index.html`, `sw.js` and a new `version.json` (see `.github/workflows/deploy-pages.yml`). When someone opens Game Hub or comes back to the tab, it compares its own id with `version.json` (also every 10 minutes while open). If a newer version is out it reloads by itself on the home, coin flip, offline and My activity screens. In a room, a game or a form it shows a small **"A new version is ready"** bar instead – the update loads when they go back home, or straight away with **Update now**. The service worker loads the site's own files network-first, so the fresh copy is used whenever there's a connection, and the saved copy when offline.
 
 ## 👥 Mates: game requests & chat
 When you're signed in, the **👥 My groups** button (bottom-right) lists the people in your groups with a live online dot. Online mates get two buttons:

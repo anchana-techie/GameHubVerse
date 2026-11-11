@@ -25,6 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stamp the build id (lets open apps notice the update and reload)
+        run: |
+          V="${GITHUB_SHA::12}"
+          sed -i "s/__BUILD__/$V/g" index.html sw.js
+          printf '{"v":"%s"}\n' "$V" > version.json
+          grep -c "$V" index.html sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

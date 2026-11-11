@@ -311,9 +311,25 @@
     .ch-fsb{display:inline-flex;align-self:center}
     .ch-wrap.full{position:fixed;inset:0;z-index:950;margin:0;gap:6px;padding:max(6px,env(safe-area-inset-top)) 4px max(6px,env(safe-area-inset-bottom));overflow-y:auto;background:#070a1f;justify-content:center}
     .ch-wrap.full .ch-top,.ch-wrap.full .ch-below{display:none}
-    .ch-wrap.full .ch-fsb{order:9;padding:8px 16px}
-    .ch-wrap.full .ch-seats{width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:0 2px}
-    .ch-wrap.full .ch-seats .ch-seat{flex:1 1 0;min-width:0;padding:6px 8px;font-size:.8rem;gap:2px 6px}
+    /* player cards: name on top, clock (and ⭐ points) underneath – two per row, all in one row in full screen */
+    .ch-wrap .ch-seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .ch-wrap .ch-seat{grid-template-columns:14px minmax(0,1fr);grid-template-areas:"dot nm" "rt rt" "cp cp";align-content:start;gap:4px 8px;padding:8px 10px;height:94px}
+    .ch-wrap .ch-seat>.ch-dot{grid-area:dot;width:14px;height:14px}
+    .ch-wrap .ch-seat .nm{grid-area:nm;font-size:.9rem}
+    .ch-wrap .ch-seat .rt{grid-area:rt;justify-content:flex-start;flex-wrap:wrap;gap:4px}
+    .ch-wrap .ch-seat .rt:empty{display:none}
+    .ch-wrap .ch-seat .cp{grid-area:cp;font-size:.85rem;line-height:1.1;white-space:nowrap;overflow:hidden}
+    .ch-wrap .ch-seat .cp:empty{display:none}
+    .ch-wrap .ch-seat .chip.timer,.ch-wrap .ch-seat .ch-clk{min-width:0;font-size:1rem;padding:3px 10px}
+    .ch-wrap .ch-seat .rt .chip:not(.timer){padding:3px 8px;font-size:.85rem}
+    .ch-wrap.full .ch-fsb{order:-1;align-self:flex-end;padding:6px 12px;font-size:.88rem;margin-right:2px}
+    .ch-wrap.full .ch-seats{width:100%;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:5px;padding:0 2px}
+    .ch-wrap.full .ch-seat{padding:6px 7px;gap:4px 6px;height:auto;grid-template-areas:"dot nm" "rt rt"}
+    .ch-wrap.full .ch-seat .nm>div,.ch-wrap.full .ch-seat .cp{display:none}      /* full screen: colour dot + name + clock only, so the cards never change size */
+    .ch-wrap.full .ch-seat .nm{font-size:.8rem}
+    .ch-wrap.full .ch-seat .chip.timer,.ch-wrap.full .ch-seat .ch-clk{font-size:.9rem;padding:2px 7px;width:100%}
+    .ch-wrap.full .ch-seat .rt .chip:not(.timer){width:100%;text-align:center;padding:2px 6px;font-size:.8rem}
+    .ch-wrap.full .ch-rw-note{display:none}
     .ch-wrap.full .ch-left{width:100%}
     .ch-wrap.full .ch-board{width:min(calc(100vw - 8px),calc(100dvh - 150px));max-width:none;min-width:0;border-radius:10px}
     .ch-wrap.full .ch-rw,.ch-wrap.full .ch-rw-note{width:100%}
@@ -781,6 +797,9 @@
   .mc-form input{flex:1;min-width:0;margin:0;font-size:16px}
   .mc-form .btn{flex:none;padding:10px 16px}
   .mc-foot{font-size:.68rem;color:#9aa0c8;padding:0 12px 10px}
+  #updBar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1100;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100vw - 24px);padding:10px 12px 10px 16px;border-radius:14px;background:#161a38;border:1px solid #ffd25e88;box-shadow:0 14px 36px #000b;font-size:.9rem}
+  #updBar .btn{flex:none;padding:8px 14px}
+  @media(max-width:600px){#updBar{bottom:auto;top:10px;flex-wrap:wrap;justify-content:center;text-align:center}}
   #mtnote{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1150;max-width:min(92vw,460px);text-align:left;padding:12px 16px;border-radius:14px;border:1px solid #8b93ffaa;background:#161a38;color:#fff;font:inherit;box-shadow:0 14px 36px #000b;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:ivIn .25s ease-out}
   @media(max-width:600px){
     #mtchat{inset:0;width:auto;height:auto;border-radius:0;border:0;height:100dvh}
@@ -4888,7 +4907,7 @@ function chessGameHTML(v){
   /* phones: "⛶ Full screen" shows just the clocks/turn bar and an edge-to-edge board; ✖ goes back */
   const fsBtn=g.phase==="play"?`<button type="button" class="btn secondary ch-fsb" data-a="chfull" aria-pressed="${full}">${full?"✖ Exit full screen":"⛶ Full screen board"}</button>`:"";
   let h=`<div class="ch-wrap${full?" full":""}"><div class="ch-top">${info}${chStatusHTML(v)}</div>${fsBtn}
-    <div class="ch-seats">${chSeatsHTML(v)}</div>
+    <div class="ch-seats" style="--n:${g.seats.length}">${chSeatsHTML(v)}</div>
     <div class="ch-left">${chBoardSVG(v)}${chRwHTML(v)}</div>
     <div class="ch-below">${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></div></div>${buddy}`;
   if(g.phase==="reveal") h+=boardHTML({players:v.players,scores:v.scores,g:{res:g.res}})+nextControls(v,host);
@@ -5054,7 +5073,7 @@ function bind(){
 }
 
 /* ================= EVENT DELEGATION ================= */
-function goHome(){ clearHash(); S=freshState(); padClear(); render(); }
+function goHome(){ clearHash(); S=freshState(); padClear(); render(); setTimeout(()=>{ try{ updMaybe(); }catch(e){} },50); }
 function doClue(){
   const t=String(S.ui.spyClue||"").trim();
   if(!t) return toast("Type a clue first.","err");
@@ -5555,6 +5574,44 @@ window.addEventListener("online",async()=>{
   if(SYS.offline){ SYS.offline=false; SYS.key="x"; toast("✅ You're back online.","ok"); }
   if(S&&(S.screen==="offline"||S.screen==="entry")) render();
 });
+/* ---- Auto-update: each deploy stamps a build id into this page, sw.js and version.json (see .github/workflows/deploy-pages.yml).
+   When the app is opened or comes back to the screen it compares its id with version.json; if a newer build is out it reloads –
+   right away on the home-type screens, otherwise (in a room, a game, a draw form…) it shows a small bar and reloads once you're back home. ---- */
+const APP_BUILD="__BUILD__";
+const UPD={ready:false,checking:false,last:0,el:null};
+const updSafe=()=>!NET.role&&["landing","offline","coin","mystats"].includes(S&&S.screen)&&!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+async function updCheck(force){
+  if(APP_BUILD.startsWith("__")||UPD.checking||!navigator.onLine) return;   // not a stamped deploy (local copy) or offline
+  if(!force&&Date.now()-UPD.last<60000) return;
+  UPD.checking=true; UPD.last=Date.now();
+  try{
+    const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});
+    if(r.ok){ const d=await r.json(); if(d&&d.v&&d.v!==APP_BUILD){ UPD.ready=true; updMaybe(); } }
+  }catch(e){}
+  UPD.checking=false;
+}
+function updMaybe(){
+  if(!UPD.ready) return;
+  if(updSafe()){ updReload(); return; }
+  if(!UPD.el){
+    const el=UPD.el=document.createElement("div"); el.id="updBar"; el.setAttribute("role","status");
+    el.innerHTML=`<span>✨ A new version of Game Hub is ready – it loads when you go back home.</span><button type="button" class="btn secondary" data-upd>Update now</button>`;
+    el.querySelector("[data-upd]").addEventListener("click",()=>{ if(NET.role&&!confirm("Updating reloads the page and you'll leave this room. Update now?")) return; updReload(); });
+    document.body.appendChild(el);
+  }
+}
+function updReload(){
+  try{ sessionStorage.setItem("gh_upd",String(Date.now())); }catch(e){}
+  const go=()=>location.reload();
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}).finally(()=>setTimeout(go,150));
+  } else go();
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") updCheck(); });
+window.addEventListener("focus",()=>updCheck());
+window.addEventListener("online",()=>updCheck(true));
+setInterval(()=>{ if(document.visibilityState==="visible") updCheck(true); },10*60000);
+setTimeout(()=>updCheck(true),4000);
 function registerSW(){
   if(!("serviceWorker" in navigator)){ SWSTATE="unsupported"; return; }
   if(location.protocol==="file:"){ SWSTATE="file"; return; }
