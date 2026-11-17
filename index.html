@@ -350,9 +350,9 @@
     .ch-wrap .ch-seats.n3 .ch-seat .rt{flex-direction:row;justify-content:space-between;align-items:center}
     .ch-wrap .ch-seats.n3 .ch-seat .nm{font-size:.8rem}
     .ch-wrap .ch-seats.n3 .ch-seat .chip.timer,.ch-wrap .ch-seats.n3 .ch-seat .ch-clk{font-size:.85rem;padding:2px 6px}
-    .ch-rw{width:auto;margin:6px 6px 0;padding:6px;gap:5px;flex-wrap:nowrap}      /* ⏮ ◀ move ▶ ⏭ on one line */
-    .ch-rw .rwb{flex:none;min-width:0;width:40px;height:38px;padding:0;font-size:1rem;display:inline-flex;align-items:center;justify-content:center}
-    .ch-rw .rwt{flex:1 1 0;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ch-wrap .ch-rw{width:auto;margin:6px 6px 0;padding:6px;gap:5px;flex-wrap:nowrap}      /* ⏮ ◀ move ▶ ⏭ always on one line */
+    .ch-wrap .ch-rw .rwb{flex:none;min-width:0;width:38px;height:38px;padding:0;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center}
+    .ch-wrap .ch-rw .rwt{flex:1 1 0;min-width:0;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ch-rw-note{display:none}
     .ch-below{padding:0 8px}
   }
@@ -363,9 +363,9 @@
   .ch-board{display:block;width:100%;max-width:min(100%,var(--chw));min-width:260px;margin:0 auto;border-radius:16px;
     border:1px solid #3a4390;box-shadow:0 0 0 1px #0a0d22,0 10px 40px #000a,0 0 46px #6c7bff33;
     background:radial-gradient(120% 120% at 50% 0%,#1d2457 0%,#0e1230 62%,#080a1c 100%);
-    user-select:none;-webkit-user-select:none;touch-action:none}
+    user-select:none;-webkit-user-select:none;touch-action:manipulation}
   .ch-board .sq{cursor:pointer}
-  .ch-board .sq.mine{cursor:grab}
+  .ch-board .sq.mine{cursor:grab;touch-action:none}     /* only your own pieces (on your turn) hold the finger for drag-and-drop – everywhere else the page scrolls */
   body.ch-dragging,body.ch-dragging *{cursor:grabbing!important}
   .ch-pc{pointer-events:none;paint-order:stroke;stroke-linejoin:round;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols","DejaVu Sans","Arial Unicode MS",sans-serif}
   .ch-pc.lift{opacity:.22}
@@ -5202,6 +5202,14 @@ function chPointerDown(e){
   window.addEventListener("pointerup",chPointerUp);
   window.addEventListener("pointercancel",chPointerUp);
 }
+/* Phones: the board lets the page scroll, except when the finger starts on one of your own pieces on your turn – that touch is
+   claimed for drag-and-drop (Chrome ignores touch-action on SVG shapes, so the touchstart is cancelled instead). Cancelling it
+   also stops the browser's click, so a plain tap on the piece is turned into a select in chPointerUp. */
+document.addEventListener("touchstart",e=>{
+  if(!CHD||e.touches.length!==1) return;
+  const t=e.target&&e.target.closest&&e.target.closest("polygon.sq.mine"); if(!t) return;
+  e.preventDefault(); CHD.tap=true;
+},{passive:false});
 function chPointerMove(e){
   const d=CHD; if(!d||e.pointerId!==d.id) return;
   if(!d.on){
@@ -5226,6 +5234,7 @@ function chPointerUp(e){
     if(sq) to=+sq.dataset.c;
   }
   chDragEnd();
+  if(!was&&d.tap&&e.type==="pointerup"){ chClick(d.c); return; }   // a tap on your own piece (its click was cancelled above)
   if(was){
     S.ui.chNoClick=Date.now()+350;                     // swallow the click the browser fires after the drop
     if(to>=0&&to!==d.c&&chTryMove(d.c,to)) return;     // legal drop – move sent (or promotion chooser opened)
