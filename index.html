@@ -6416,6 +6416,8 @@ function startApp(){
   }
   clearSession();
   if(q){ S.screen="entry"; S.game=null; S.ui.joinCode=q; }
+  // the invite link's ?room=CODE is used once: take it out of the address so a later refresh opens the home page, not "Join a room"
+  if(location.search.includes("room=")){ try{ const u=new URL(location.href); u.searchParams.delete("room"); history.replaceState(null,"",u.pathname+u.search+u.hash); }catch(e){} }
   render();
 }
 async function boot(){
