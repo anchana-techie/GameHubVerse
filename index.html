@@ -327,13 +327,13 @@
   .ch-top .msg{margin-top:10px}
   /* phones: like Ludo – the board goes edge to edge, compact player cards (opponents above, you below), a slim status line */
   @media(max-width:600px){
-    .ch-wrap{--chw:100%;gap:6px;margin:4px -14px 0;width:auto}
+    .ch-wrap{--chw:100%;gap:6px;margin:4px -20px 0;width:auto}
     .ch-top,.ch-seats,.ch-below{width:100%;box-sizing:border-box}
     .ch-top{padding:0 6px}
     .ch-top>.scoreboard{display:none}
     .ch-top .msg{margin:0;padding:8px 12px;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ch-left{width:100%}
-    .ch-board{max-width:none;min-width:0;width:100%;border-radius:10px}
+    .ch-wrap .ch-board{max-width:none;min-width:0;width:100%;border:0;border-radius:6px;background:none;box-shadow:none}
     .ch-wrap .ch-seats{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:6px;padding:0 6px}
     .ch-wrap .ch-seat{grid-template-columns:12px minmax(0,1fr) auto;grid-template-areas:"dot nm rt" "dot cp rt";align-content:center;gap:1px 8px;padding:6px 10px;height:54px;margin:0}
     .ch-wrap .ch-seat>.ch-dot{grid-area:dot;width:12px;height:12px}
@@ -350,8 +350,9 @@
     .ch-wrap .ch-seats.n3 .ch-seat .rt{flex-direction:row;justify-content:space-between;align-items:center}
     .ch-wrap .ch-seats.n3 .ch-seat .nm{font-size:.8rem}
     .ch-wrap .ch-seats.n3 .ch-seat .chip.timer,.ch-wrap .ch-seats.n3 .ch-seat .ch-clk{font-size:.85rem;padding:2px 6px}
-    .ch-rw{width:auto;margin:6px 6px 0;padding:6px;gap:6px}
-    .ch-rw .rwb{min-width:38px;padding:6px 8px;font-size:1rem}
+    .ch-rw{width:auto;margin:6px 6px 0;padding:6px;gap:5px;flex-wrap:nowrap}      /* ⏮ ◀ move ▶ ⏭ on one line */
+    .ch-rw .rwb{flex:none;min-width:0;width:40px;height:38px;padding:0;font-size:1rem;display:inline-flex;align-items:center;justify-content:center}
+    .ch-rw .rwt{flex:1 1 0;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ch-rw-note{display:none}
     .ch-below{padding:0 8px}
   }
@@ -5029,7 +5030,7 @@ function chBoardSVG(v){
   const polys=B.cells.map(c=>c.poly.map(tr));
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   polys.forEach(pl=>pl.forEach(p=>{ x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]); y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]); }));
-  const pad=.35, f=n=>n.toFixed(3);
+  const pad=matchMedia("(max-width:600px)").matches?.06:.35, f=n=>n.toFixed(3);   // phones: almost no frame, so the board gets the room
   const ctr=polys.map(pl=>[pl.reduce((s,p)=>s+p[0],0)/4,pl.reduce((s,p)=>s+p[1],0)/4]);
   const th=chTheme(v.settings), dk=th.dk, lt=th.lt, hints=v.settings.hints!=0;
   const ri=chRwIdx(v), snap=ri!=null?g.snaps[ri]:null, dec=snap?chDecode(snap.b):null, T=dec?dec.T:g.T, O=dec?dec.O:g.O;
