@@ -5824,12 +5824,18 @@ const APP_BUILD="__BUILD__";
 const UPD={ready:false,checking:false,last:0,el:null};
 const updSafe=()=>!NET.role&&["landing","offline","coin","mystats"].includes(S&&S.screen)&&!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
 async function updCheck(force){
-  if(APP_BUILD.startsWith("__")||UPD.checking||!navigator.onLine) return;   // not a stamped deploy (local copy) or offline
+  if(UPD.checking||UPD.ready||!navigator.onLine||location.protocol==="file:") return;
   if(!force&&Date.now()-UPD.last<60000) return;
   UPD.checking=true; UPD.last=Date.now();
   try{
-    const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});
-    if(r.ok){ const d=await r.json(); if(d&&d.v&&d.v!==APP_BUILD){ UPD.ready=true; updMaybe(); } }
+    if(!APP_BUILD.startsWith("__")){                      // stamped deploy: compare with version.json
+      const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});
+      if(r.ok){ const d=await r.json(); if(d&&d.v&&d.v!==APP_BUILD){ UPD.ready=true; updMaybe(); } UPD.checking=false; return; }
+    }
+    // not stamped (e.g. published by GitHub's own Pages job): watch index.html's ETag instead – it changes with every deploy
+    const r=await fetch("index.html?t="+Date.now(),{method:"HEAD",cache:"no-store"});
+    const tag=r.ok&&(r.headers.get("etag")||r.headers.get("last-modified"));
+    if(tag){ if(!UPD.tag) UPD.tag=tag; else if(tag!==UPD.tag){ UPD.ready=true; updMaybe(); } }
   }catch(e){}
   UPD.checking=false;
 }
