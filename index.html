@@ -5824,10 +5824,10 @@ function clearHash(){ try{ if(location.hash) history.replaceState(null,"",locati
 
 /* ---- #/routes (preview pages + unknown routes → 404) ---- */
 function applyRoute(){
-  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline"};
+  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline","#/coin-flip":"coin","#/coin":"coin"};
   SYS.route=null; SYS.badPath="";
-  if(h===""||h==="#"){ if(S&&S.screen==="offline") S.screen="landing"; }
-  else if(pages[h]){ S.screen="offline"; }
+  if(h===""||h==="#"){ if(S&&(S.screen==="offline"||S.screen==="coin")) S.screen="landing"; }
+  else if(pages[h]){ S.screen=pages[h]; }
   else if(h==="#/loading") SYS.route="loading";
   else if(h==="#/error") SYS.route="error";
   else if(h==="#/no-internet") SYS.route="nointernet";
