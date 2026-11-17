@@ -833,6 +833,22 @@
   .mc-n{font-size:.72rem;color:#b8bdf0;margin:0 0 2px 4px}
   #rcTip{position:fixed;left:70px;bottom:16px;z-index:1150;max-width:min(calc(100vw - 86px),380px);text-align:left;padding:10px 14px;border-radius:14px;border:1px solid #8b93ffaa;background:#161a38;color:#fff;font:inherit;font-size:.88rem;box-shadow:0 14px 36px #000b;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:ivIn .25s ease-out}
   @media(max-width:600px){ #rcChat{inset:0;width:auto;height:100dvh;border-radius:0;border:0} #rcChat .mc-head{padding-top:max(12px,env(safe-area-inset-top))} #rcChat .mc-foot{padding-bottom:max(10px,env(safe-area-inset-bottom))} }
+  /* phones in a room: header buttons are icons only, chat lives in the header, voice is a small round button,
+     and the page gets room at the bottom so nothing ends up hidden behind the floating button */
+  @media(max-width:600px){
+    body.in-room main{padding-bottom:76px}
+    body.in-room .topbar{flex-wrap:nowrap}
+    body.in-room .topbar .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+    body.in-room .topbar>div{flex-wrap:nowrap!important;flex:none}
+    body.in-room .topbar .btn{position:relative;width:42px;height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem}
+    body.in-room .topbar .btn .lbl{display:none}
+    .rc-top .pr-un{top:-6px;right:-6px}
+    #rcFab{display:none!important}
+    #rcTip{left:50%;transform:translateX(-50%);top:10px;bottom:auto;max-width:calc(100vw - 24px)}
+    .vc-fab{width:48px;height:48px;padding:0;border-radius:50%;font-size:1.2rem;display:flex;align-items:center;justify-content:center}
+    .vc-fab .lbl{display:none}
+  }
+  .rc-top{position:relative}
   #updBar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1100;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100vw - 24px);padding:10px 12px 10px 16px;border-radius:14px;background:#161a38;border:1px solid #ffd25e88;box-shadow:0 14px 36px #000b;font-size:.9rem}
   #updBar .btn{flex:none;padding:8px 14px}
   @media(max-width:600px){#updBar{bottom:auto;top:10px;flex-wrap:wrap;justify-content:center;text-align:center}}
@@ -1108,7 +1124,7 @@ const SETTINGS={
   ],
   ludo:[
     {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
-    {k:"board",l:"Board (the most players it can hold)",o:[[4,"4-colour board – up to 4 players"],[6,"6-colour board – up to 6 players"]]},
+    {k:"board",l:"Board (the most players it can hold)",o:[[4,"4-colour board – up to 4 players"],[5,"5-colour board – up to 5 players"],[6,"6-colour board – up to 6 players"]]},
     {k:"fill",l:"Colours nobody sits on (e.g. 2 players on the 4-colour board)",o:[["bots","Played by the computer"],["empty","Left empty – no tokens there"]]},
     {k:"level",l:"Computer strength",o:[[1,"Easy – random moves"],[2,"Smart – captures, safe squares, finishing"]],when:(n,st)=>st.fill==="bots"&&n<st.board},
     {k:"turnTime",l:"Time to roll and to move (then the game plays for you)",o:[[15,"15 sec"],[30,"30 sec"],[45,"45 sec"],[60,"1 min"],[0,"No limit"]]}
@@ -1903,13 +1919,13 @@ function dbTick(R,now){
    A seat belongs to a human (pid), the computer (bot) or - when the host leaves colours empty - nobody. Someone who leaves / is kicked is out: their tokens vanish. */
 const LU_COL=["#ff5468","#3ddc84","#ffd23f","#4aa3ff","#b57bff","#ff9a3c"];
 const LU_NAME=["Red","Green","Yellow","Blue","Purple","Orange"];
-const LU_SPREAD={4:[[0],[0,2],[0,1,2],[0,1,2,3]],6:[[0],[0,3],[0,2,4],[0,1,3,4],[0,1,2,3,4],[0,1,2,3,4,5]]};
+const LU_SPREAD={4:[[0],[0,2],[0,1,2],[0,1,2,3]],5:[[0],[0,2],[0,1,3],[0,1,2,3],[0,1,2,3,4]],6:[[0],[0,3],[0,2,4],[0,1,3,4],[0,1,2,3,4],[0,1,2,3,4,5]]};
 const luL=g=>13*g.C, luFin=g=>13*g.C+4;
 const luCellOf=(g,s,pos)=>(13*s.c+7+pos)%luL(g);
 const luSafe=cell=>cell%13===7||cell%13===2;
 const luName=(R,s)=>s.bot?LU_NAME[s.c]+" (computer)":skPn(R,s.pid);
 function luDeal(R){
-  const st=R.settings, C=+st.board===6?6:4, humans=R.players.filter(p=>!p.left).map(p=>p.pid).slice(0,C), n=humans.length;
+  const st=R.settings, C=[4,5,6].includes(+st.board)?+st.board:4, humans=R.players.filter(p=>!p.left).map(p=>p.pid).slice(0,C), n=humans.length;
   const rot=(R.round-1)%n, order=shuffle(humans.slice(rot).concat(humans.slice(0,rot))), corners=LU_SPREAD[C][n-1], seats=[];
   let k=0;
   for(let c=0;c<C;c++){
@@ -3202,7 +3218,7 @@ function voiceDock(){
   const held=vo.hm.includes(v.me);
   let h;
   if(!VC.open){
-    h=`<button type="button" class="vc-fab ${VC.on?"live":""}" data-v="toggle" aria-label="Open voice chat">${VC.on?(held?"🔇":(VC.mode==="open"&&VC.mic)?"🎙":"🎧"):"🎙"} Voice${inV.length?` · ${inV.length}`:""}</button>`;
+    h=`<button type="button" class="vc-fab ${VC.on?"live":""}" data-v="toggle" aria-label="Open voice chat">${VC.on?(held?"🔇":(VC.mode==="open"&&VC.mic)?"🎙":"🎧"):"🎙"}<span class="lbl"> Voice${inV.length?` · ${inV.length}`:""}</span></button>`;
   } else {
     h=`<div class="vc-panel" role="region" aria-label="Voice chat"><h4><span>🎙 Voice chat</span><button type="button" class="btn secondary" data-v="toggle" aria-label="Close voice panel">✕</button></h4>`;
     if(!vo.on) h+=`<div class="msg info" style="margin:6px 0">The host has turned voice chat off for this room.</div>`;
@@ -3816,7 +3832,7 @@ function rcRender(){
     const f=RC.fab=document.createElement("button"); f.type="button"; f.id="rcFab"; f.setAttribute("aria-label","Room chat");
     document.body.appendChild(f); f.addEventListener("click",()=>{ RC.open=!RC.open; rcRender(); if(RC.open) setTimeout(()=>{ const i=document.getElementById("rcIn"); if(i&&!matchMedia("(max-width:600px)").matches) i.focus(); },50); });
   }
-  if(RC.open) RC.seen=last;
+  if(RC.open&&RC.seen!==last){ RC.seen=last; setTimeout(()=>{ if(S.screen==="room") renderMain(); },0); }
   if(last>RC.tip){ const x=chat[chat.length-1]; RC.tip=last; if(!RC.open&&x.pid!==v.me) rcTipShow(x); }
   const un=chat.filter(x=>x.id>RC.seen&&x.pid!==v.me).length;
   RC.fab.style.display=""; RC.fab.innerHTML=`💬${un?`<span class="pr-un">${un>9?"9+":un}</span>`:""}`;
@@ -3844,6 +3860,7 @@ function rcRender(){
     log.scrollTop=log.scrollHeight;
   }
 }
+function rcUnread(v){ const chat=(v&&v.chat)||[]; return RC.code===v.code?chat.filter(x=>x.id>RC.seen&&x.pid!==v.me).length:0; }
 function rcTipShow(x){
   let t=document.getElementById("rcTip");
   if(!t){ t=document.createElement("button"); t.type="button"; t.id="rcTip"; document.body.appendChild(t); t.addEventListener("click",()=>{ t.style.display="none"; RC.open=true; rcRender(); }); }
@@ -4185,9 +4202,10 @@ function roomHTML(){
   if(!v) return `<div class="msg info">⏳ Connecting to room…</div>`;
   const host=v.me===v.hostPid, spec=NET.spec;
   let h=spec?specBarHTML(v):`<div class="topbar"><h1 class="title">${GTITLE[v.game]}</h1><div style="display:flex;gap:8px;flex-wrap:wrap">
-    ${NET.local?"":`<button class="btn secondary" data-a="copyLink">🔗 Invite link</button>`}
-    ${host&&v.phase==="play"?`<button class="btn secondary" data-a="exitgame">⏹ Exit game (keep room)</button>`:""}
-    <button class="btn secondary" data-a="leave">${host?(NET.local?"🏠 Leave game":"✖ Close room"):"🚪 Leave room"}</button></div></div>`;
+    ${rcVisible()?`<button class="btn secondary rc-top" data-a="rcToggle" aria-label="Room chat">💬<span class="lbl"> Chat</span>${rcUnread(v)?`<span class="pr-un">${rcUnread(v)}</span>`:""}</button>`:""}
+    ${NET.local?"":`<button class="btn secondary" data-a="copyLink" aria-label="Invite link">🔗<span class="lbl"> Invite link</span></button>`}
+    ${host&&v.phase==="play"?`<button class="btn secondary" data-a="exitgame" aria-label="Exit game (keep room)">⏹<span class="lbl"> Exit game (keep room)</span></button>`:""}
+    <button class="btn secondary" data-a="leave" aria-label="${host?(NET.local?"Leave game":"Close room"):"Leave room"}">${host?(NET.local?"🏠<span class='lbl'> Leave game</span>":"✖<span class='lbl'> Close room</span>"):"🚪<span class='lbl'> Leave room</span>"}</button></div></div>`;
   if(spec) return h+`<div inert>`+roomBodyHTML(v,host)+`</div>`;          // inert: nothing in the game can be clicked, typed into or changed
   return h+roomBodyHTML(v,host);
 }
@@ -4212,7 +4230,7 @@ function lobbyHTML(v,host){
   let h="";
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
   h+=mateLobbyHTML(v);
-  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${st.board==6?"6-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
+  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
   if(host){
     h+=`<div class="sgrid">${fields.map(f=>{
@@ -4493,14 +4511,14 @@ function luGeo(C,rot){
   const sq=(k,r,v)=>{ const p=at(k,d+(r+.5)*s,v); return [p[0],p[1],-90+k*360/C+90+rot]; };
   const cell=i=>{ i=((i%L)+L)%L; const k=Math.floor(i/13), j=i%13; return j<=5?sq(k,j,-s):j===6?sq(k,6,0):sq(k,12-j,s); };
   const col=(c,k)=>sq(c,5-k,0);
-  const yard=c=>{ const a=(-90+(c+.5)*360/C+rot)*Math.PI/180, r=(d+3.5*s)/Math.cos(Math.PI/C); return [f(300+r*Math.cos(a)),f(300+r*Math.sin(a)),C===4?0:-90+(c+.5)*360/C+90+rot]; };
+  const yard=c=>{ const a=(-90+(c+.5)*360/C+rot)*Math.PI/180, r=C===4?(d+3.5*s)/Math.cos(Math.PI/C):(Math.hypot(d,1.5*s)+2*((d+7*s)*Math.cos(Math.PI/C)+1.5*s*Math.sin(Math.PI/C)))/3; return [f(300+r*Math.cos(a)),f(300+r*Math.sin(a)),C===4?0:-90+(c+.5)*360/C+90+rot]; };
   const home=(c,t)=>{ const p=sq(c,0,0), a=ang(c); const du=(t<2?-1:1)*.27*s, dv=(t%2?1:-1)*.27*s;
     return [f(p[0]+du*Math.cos(a)-dv*Math.sin(a)),f(p[1]+du*Math.sin(a)+dv*Math.cos(a)),0,.55]; };
   return {C,L,s,d,cr:s*.4,ang,at,cell,col,yard,home};
 }
 function luTokXY(G,g,s,p,t){
   const L=G.L;
-  if(p===-1){ const y=G.yard(s.c); const o=G.s*(G.C===4?1.15:.8); return [f1(y[0]+(t%2?1:-1)*o),f1(y[1]+(t<2?-1:1)*o),0,1]; }
+  if(p===-1){ const y=G.yard(s.c); const o=G.s*(G.C===4?1.15:G.C===5?.66:.8); return [f1(y[0]+(t%2?1:-1)*o),f1(y[1]+(t<2?-1:1)*o),0,1]; }
   if(p<=L-2){ const c=G.cell(13*s.c+7+p); return [c[0],c[1],0,1]; }
   if(p<=L+3){ const c=G.col(s.c,p-(L-1)); return [c[0],c[1],0,1]; }
   return G.home(s.c,t);
@@ -4582,9 +4600,10 @@ function luBoardHTML(v,mine,L0,mid){
       b+=`<polygon points="${pts([P0,P1,P2])}" fill="${LU_COL[c]}" fill-opacity="${u?1:.3}" stroke="#0c1030" stroke-width="2" stroke-linejoin="round"/>`;
       b+=`<polygon points="${pts(ins(.64))}" fill="#f4f6fb" fill-opacity="${u?1:.4}" stroke-linejoin="round"/>`;
       // the name sits along the outer edge, turned so it always reads upright
-      const mx=(P1[0]+P2[0])/2, my=(P1[1]+P2[1])/2, k=.82; let ang=Math.atan2(P2[1]-P1[1],P2[0]-P1[0])*180/Math.PI; if(ang>90) ang-=180; if(ang<=-90) ang+=180;
+      const mx=(P1[0]+P2[0])/2, my=(P1[1]+P2[1])/2, k=C===5?.86:.82; let ang=Math.atan2(P2[1]-P1[1],P2[0]-P1[0])*180/Math.PI; if(ang>90) ang-=180; if(ang<=-90) ang+=180;
       b+=label(cx+(mx-cx)*k,cy+(my-cy)*k,ang,u?nmOf(c):"",s*.56);
-      for(let t=0;t<4;t++) b+=`<circle cx="${f1(cx+(t%2?1:-1)*s*.8)}" cy="${f1(cy+(t<2?-1:1)*s*.8)}" r="${f1(cr*1.05)}" fill="${LU_COL[c]}" fill-opacity="${u?.45:.15}" stroke="${LU_COL[c]}"/>`;
+      const so=s*(C===5?.66:.8);
+      for(let t=0;t<4;t++) b+=`<circle cx="${f1(cx+(t%2?1:-1)*so)}" cy="${f1(cy+(t<2?-1:1)*so)}" r="${f1(cr*1.05)}" fill="${LU_COL[c]}" fill-opacity="${u?.45:.15}" stroke="${LU_COL[c]}"/>`;
     }
   }
   // hub: one coloured triangle per arm
@@ -4592,7 +4611,7 @@ function luBoardHTML(v,mine,L0,mid){
     const p=(u,w)=>{ const q=G.at(c,u,w); return q[0]+" "+q[1]; };
     b+=`<polygon points="300 300 ${p(G.d,-1.5*s)} ${p(G.d,1.5*s)}" fill="${LU_COL[c]}" fill-opacity="${used(c)?.95:.3}" stroke="#0c1030" stroke-width="2"/>`;
   }
-  if(C===6) b+=`<circle cx="300" cy="300" r="${f1(G.d*.86)}" fill="#0c1030" fill-opacity=".55"/>`;   // a dark disc for the dice to sit on
+  if(C!==4) b+=`<circle cx="300" cy="300" r="${f1(G.d*.86)}" fill="#0c1030" fill-opacity=".55"/>`;   // a dark disc for the dice to sit on
   // ring squares: white, start squares coloured, ★ squares marked
   for(let i=0;i<L;i++){
     const c=G.cell(i), k=Math.floor(i/13), st=i%13===7, star=i%13===2;
@@ -5255,6 +5274,7 @@ function renderMain(){
 }
 function renderMain2(app){
   document.body.classList.toggle("home",S.screen==="landing");
+  document.body.classList.toggle("in-room",S.screen==="room");
   if(skPlayView()){ skRender(app); renderOverlay(); return; }
   const ae=document.activeElement; let keep=null;
   if(ae&&ae.dataset&&ae.dataset.keep!==undefined&&ae.id) keep={id:ae.id,s:ae.selectionStart,e:ae.selectionEnd};
@@ -5387,6 +5407,7 @@ function onAppClick(e){
     case "dbroll": sendAct({a:"dbroll"}); break;
     case "ludoroll": sendAct({a:"ludoroll"}); break;
     case "emoPick": if(t.dataset.k) emoPickOpen(t,t.dataset.k); break;
+    case "rcToggle": RC.open=!RC.open; rcRender(); render(); break;
     case "ludomove": sendAct({a:"ludomove",t:+t.dataset.t}); break;
     case "rpsthrow": sendAct({a:"rpsthrow",v:+t.dataset.v}); break;
     case "dbline": sendAct({a:"dbline",t:t.dataset.t,i:+t.dataset.i}); break;
