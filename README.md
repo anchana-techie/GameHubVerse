@@ -73,15 +73,14 @@ Secret-Santa style draws. Names and emails are entered, a random matching (nobod
 During a game, tap another player's box (Ludo) or card (Chess) and pick one of 12 emojis (😂 😎 🔥 👏 😭 😡 ❤️ 🍅 💣 🎉 😱 🙈) – it flies across the screen from your box to theirs on everyone's device and lands with a pop. Computers can be targets too. (Max one throw every 0.6 s per player.)
 
 ## 💬 Room chat
-Every online room has a **💬** button (bottom-left; on phones it sits in the header next to the other room buttons) for a chat between everyone in that room – in the lobby and during the game. New messages pop up as a banner and an unread count. Messages are kept only in the host's memory for the room and disappear when the room closes. Who Is the Spy? and Scribblio keep their own in-game chats, so the button hides while those are played; offline (this-device) games have no chat.
+Every online room has a floating **💬** button (bottom-left, like the 🎙 voice button on the right) for a chat between everyone in that room – in the lobby and during any game. New messages pop up as a banner and an unread count. Messages are kept only in the host's memory for the room and disappear when the room closes. Offline (this-device) games have no chat.
 
 ## 🪙 Coin Flip
 Home screen → **Quick play – no room needed**. Tap the coin (or **Flip the coin**): it spins and lands on **Heads** or **Tails**. The side comes from the browser's secure random generator (`crypto.getRandomValues`), so every flip is an independent 50/50. Shows a heads / tails / flips count with percentages and the last 20 flips for this visit (**↺ Reset count** clears it). Nothing is saved, and it works offline.
 
 ## 📱 On phones
 - **Home tiles** sit two per row and show just the icon and name (about half the height); a tile left alone on the last row spans the full width. The 📴 badge marks games that work offline. Descriptions still show on larger screens.
-- **Chess player cards** show the name on top and the clock (and ⭐ points) underneath, two per row; in full screen all players share one row.
-- **Chess:** tap **⛶ Full screen board** during a game for an edge-to-edge board with a slim bar of players and clocks on top; **✖ Exit full screen** goes back.
+- **Chess:** the board goes edge to edge (like Ludo) with compact player cards – opponents above the board, you below it – and a one-line status.
 - **🏷 Groups (n)** in the account bar opens a pop-up with the names of your groups (scrolls when there are many).
 
 ## 🔄 Automatic updates

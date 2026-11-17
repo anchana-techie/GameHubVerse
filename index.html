@@ -325,35 +325,35 @@
   .ch-wrap{--chw:clamp(400px,calc(100vh - 210px),600px);display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px}
   .ch-top,.ch-seats,.ch-below{width:min(100%,max(calc(var(--chw) + 70px),620px))}   /* wide enough for "Computer (Medium)" + clock on one line */
   .ch-top .msg{margin-top:10px}
-  .ch-fsb{display:none}
-  /* phones: full-screen board */
+  /* phones: like Ludo – the board goes edge to edge, compact player cards (opponents above, you below), a slim status line */
   @media(max-width:600px){
-    .ch-fsb{display:inline-flex;align-self:center}
-    .ch-wrap.full{position:fixed;inset:0;z-index:950;margin:0;gap:6px;padding:max(6px,env(safe-area-inset-top)) 4px max(6px,env(safe-area-inset-bottom));overflow-y:auto;background:#070a1f;justify-content:center}
-    .ch-wrap.full .ch-top,.ch-wrap.full .ch-below{display:none}
-    /* player cards: name on top, clock (and ⭐ points) underneath – two per row, all in one row in full screen */
-    .ch-wrap .ch-seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .ch-wrap .ch-seat{grid-template-columns:14px minmax(0,1fr);grid-template-areas:"dot nm" "rt rt" "cp cp";align-content:start;gap:4px 8px;padding:8px 10px;height:94px}
-    .ch-wrap .ch-seat>.ch-dot{grid-area:dot;width:14px;height:14px}
-    .ch-wrap .ch-seat .nm{grid-area:nm;font-size:.9rem}
-    .ch-wrap .ch-seat .rt{grid-area:rt;justify-content:flex-start;flex-wrap:wrap;gap:4px}
+    .ch-wrap{--chw:100%;gap:6px;margin:4px -14px 0;width:auto}
+    .ch-top,.ch-seats,.ch-below{width:100%;box-sizing:border-box}
+    .ch-top{padding:0 6px}
+    .ch-top>.scoreboard{display:none}
+    .ch-top .msg{margin:0;padding:8px 12px;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ch-left{width:100%}
+    .ch-board{max-width:none;min-width:0;width:100%;border-radius:10px}
+    .ch-wrap .ch-seats{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:6px;padding:0 6px}
+    .ch-wrap .ch-seat{grid-template-columns:12px minmax(0,1fr) auto;grid-template-areas:"dot nm rt" "dot cp rt";align-content:center;gap:1px 8px;padding:6px 10px;height:54px;margin:0}
+    .ch-wrap .ch-seat>.ch-dot{grid-area:dot;width:12px;height:12px}
+    .ch-wrap .ch-seat .nm{grid-area:nm;font-size:.88rem}
+    .ch-wrap .ch-seat .nm>div{display:none}
+    .ch-wrap .ch-seat .rt{grid-area:rt;flex-direction:column;align-items:flex-end;gap:2px}
     .ch-wrap .ch-seat .rt:empty{display:none}
-    .ch-wrap .ch-seat .cp{grid-area:cp;font-size:.85rem;line-height:1.1;white-space:nowrap;overflow:hidden}
-    .ch-wrap .ch-seat .cp:empty{display:none}
-    .ch-wrap .ch-seat .chip.timer,.ch-wrap .ch-seat .ch-clk{min-width:0;font-size:1rem;padding:3px 10px}
-    .ch-wrap .ch-seat .rt .chip:not(.timer){padding:3px 8px;font-size:.85rem}
-    .ch-wrap.full .ch-fsb{order:-1;align-self:flex-end;padding:6px 12px;font-size:.88rem;margin-right:2px}
-    .ch-wrap.full .ch-seats{width:100%;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:5px;padding:0 2px}
-    .ch-wrap.full .ch-seat{padding:6px 7px;gap:4px 6px;height:auto;grid-template-areas:"dot nm" "rt rt"}
-    .ch-wrap.full .ch-seat .nm>div,.ch-wrap.full .ch-seat .cp{display:none}      /* full screen: colour dot + name + clock only, so the cards never change size */
-    .ch-wrap.full .ch-seat .nm{font-size:.8rem}
-    .ch-wrap.full .ch-seat .chip.timer,.ch-wrap.full .ch-seat .ch-clk{font-size:.9rem;padding:2px 7px;width:100%}
-    .ch-wrap.full .ch-seat .rt .chip:not(.timer){width:100%;text-align:center;padding:2px 6px;font-size:.8rem}
-    .ch-wrap.full .ch-rw-note{display:none}
-    .ch-wrap.full .ch-left{width:100%}
-    .ch-wrap.full .ch-board{width:min(calc(100vw - 8px),calc(100dvh - 150px));max-width:none;min-width:0;border-radius:10px}
-    .ch-wrap.full .ch-rw,.ch-wrap.full .ch-rw-note{width:100%}
-    body:has(.ch-wrap.full){overflow:hidden}
+    .ch-wrap .ch-seat .cp{grid-area:cp;font-size:.78rem;line-height:1.1;white-space:nowrap;overflow:hidden}
+    .ch-wrap .ch-seat .chip.timer,.ch-wrap .ch-seat .ch-clk{min-width:0;font-size:.95rem;padding:2px 9px}
+    .ch-wrap .ch-seat .rt .chip:not(.timer){padding:1px 7px;font-size:.75rem}
+    /* three in a row (4-player opponents): name over clock */
+    .ch-wrap .ch-seats.n3 .ch-seat{grid-template-columns:10px minmax(0,1fr);grid-template-areas:"dot nm" "rt rt";height:64px;padding:6px 7px;gap:3px 6px}
+    .ch-wrap .ch-seats.n3 .ch-seat .cp{display:none}
+    .ch-wrap .ch-seats.n3 .ch-seat .rt{flex-direction:row;justify-content:space-between;align-items:center}
+    .ch-wrap .ch-seats.n3 .ch-seat .nm{font-size:.8rem}
+    .ch-wrap .ch-seats.n3 .ch-seat .chip.timer,.ch-wrap .ch-seats.n3 .ch-seat .ch-clk{font-size:.85rem;padding:2px 6px}
+    .ch-rw{width:auto;margin:6px 6px 0;padding:6px;gap:6px}
+    .ch-rw .rwb{min-width:38px;padding:6px 8px;font-size:1rem}
+    .ch-rw-note{display:none}
+    .ch-below{padding:0 8px}
   }
   .ch-seats{display:flex;gap:10px;flex-wrap:wrap}
   .ch-seats .ch-seat{flex:1 1 200px;margin:0}
@@ -827,7 +827,7 @@
   @keyframes fxHit{0%,100%{transform:none}25%{transform:rotate(-4deg) scale(1.04)}50%{transform:rotate(4deg) scale(1.04)}75%{transform:rotate(-2deg)}}
   .ch-seat[data-a="emoPick"]{cursor:pointer}
   /* room chat */
-  #rcFab{position:fixed;left:12px;bottom:12px;z-index:80;width:50px;height:50px;border-radius:50%;border:1px solid #8b93ff66;background:#1d2250;color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 8px 24px #0009}
+  #rcFab{position:fixed;left:12px;bottom:12px;z-index:80;width:48px;height:48px;border-radius:50%;border:1px solid #8b93ff66;background:#1d2250;color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 8px 24px #0009}
   #rcFab .pr-un{top:-4px;right:-4px}
   #rcChat{position:fixed;left:16px;bottom:74px;z-index:1000;width:min(360px,calc(100vw - 32px));height:min(460px,calc(100vh - 120px));display:flex;flex-direction:column;background:#12163a;border:1px solid #8b93ff66;border-radius:16px;box-shadow:0 18px 50px #000c;overflow:hidden}
   .mc-n{font-size:.72rem;color:#b8bdf0;margin:0 0 2px 4px}
@@ -838,12 +838,11 @@
   @media(max-width:600px){
     body.in-room main{padding-bottom:76px}
     body.in-room .topbar{flex-wrap:nowrap}
-    body.in-room .topbar .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-    body.in-room .topbar>div{flex-wrap:nowrap!important;flex:none}
+    body.in-room .topbar .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+    body.in-room .topbar>div{flex-wrap:nowrap!important;flex:none;width:auto!important}
     body.in-room .topbar .btn{position:relative;width:42px;height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem}
     body.in-room .topbar .btn .lbl{display:none}
     .rc-top .pr-un{top:-6px;right:-6px}
-    #rcFab{display:none!important}
     #rcTip{left:50%;transform:translateX(-50%);top:10px;bottom:auto;max-width:calc(100vw - 24px)}
     .vc-fab{width:48px;height:48px;padding:0;border-radius:50%;font-size:1.2rem;display:flex;align-items:center;justify-content:center}
     .vc-fab .lbl{display:none}
@@ -3822,7 +3821,7 @@ function fxFly(x){
    Everyone in the room (lobby and game) can chat. Messages live only in the host's room memory – gone when the room closes.
    Who Is the Spy and Scribblio keep their own in-game chats, so the room chat button hides while those are being played. */
 const RC={code:"",open:false,seen:0,tip:0,shown:-1,fab:null,el:null,tt:null};
-function rcVisible(){ const v=S&&S.screen==="room"&&S.room; return v&&!NET.local&&!NET.spec&&!(v.phase==="play"&&(v.game==="spy"||v.game==="Scribblio"))?v:null; }
+function rcVisible(){ const v=S&&S.screen==="room"&&S.room; return v&&!NET.local&&!NET.spec?v:null; }
 function rcRender(){
   const v=rcVisible();
   if(!v){ if(RC.fab) RC.fab.style.display="none"; if(RC.el) RC.el.style.display="none"; return; }
@@ -3832,7 +3831,7 @@ function rcRender(){
     const f=RC.fab=document.createElement("button"); f.type="button"; f.id="rcFab"; f.setAttribute("aria-label","Room chat");
     document.body.appendChild(f); f.addEventListener("click",()=>{ RC.open=!RC.open; rcRender(); if(RC.open) setTimeout(()=>{ const i=document.getElementById("rcIn"); if(i&&!matchMedia("(max-width:600px)").matches) i.focus(); },50); });
   }
-  if(RC.open&&RC.seen!==last){ RC.seen=last; setTimeout(()=>{ if(S.screen==="room") renderMain(); },0); }
+  if(RC.open) RC.seen=last;
   if(last>RC.tip){ const x=chat[chat.length-1]; RC.tip=last; if(!RC.open&&x.pid!==v.me) rcTipShow(x); }
   const un=chat.filter(x=>x.id>RC.seen&&x.pid!==v.me).length;
   RC.fab.style.display=""; RC.fab.innerHTML=`💬${un?`<span class="pr-un">${un>9?"9+":un}</span>`:""}`;
@@ -4202,7 +4201,6 @@ function roomHTML(){
   if(!v) return `<div class="msg info">⏳ Connecting to room…</div>`;
   const host=v.me===v.hostPid, spec=NET.spec;
   let h=spec?specBarHTML(v):`<div class="topbar"><h1 class="title">${GTITLE[v.game]}</h1><div style="display:flex;gap:8px;flex-wrap:wrap">
-    ${rcVisible()?`<button class="btn secondary rc-top" data-a="rcToggle" aria-label="Room chat">💬<span class="lbl"> Chat</span>${rcUnread(v)?`<span class="pr-un">${rcUnread(v)}</span>`:""}</button>`:""}
     ${NET.local?"":`<button class="btn secondary" data-a="copyLink" aria-label="Invite link">🔗<span class="lbl"> Invite link</span></button>`}
     ${host&&v.phase==="play"?`<button class="btn secondary" data-a="exitgame" aria-label="Exit game (keep room)">⏹<span class="lbl"> Exit game (keep room)</span></button>`:""}
     <button class="btn secondary" data-a="leave" aria-label="${host?(NET.local?"Leave game":"Close room"):"Leave room"}">${host?(NET.local?"🏠<span class='lbl'> Leave game</span>":"✖<span class='lbl'> Close room</span>"):"🚪<span class='lbl'> Leave room</span>"}</button></div></div>`;
@@ -5111,9 +5109,10 @@ function chResultHTML(v){
   if(g.id>2&&g.elim.length) h+=`<div class="scoreboard">${g.elim.map(e=>`<span class="chip">❌ ${chP(v,e.seat).name}: ${{mate:"checkmated",stalemate:"stalemated",time:"out of time",resign:"resigned",left:"left"}[e.why]}</span>`).join("")}</div>`;
   return h;
 }
-function chSeatsHTML(v){
+function chSeatsHTML(v,pick){
   const g=v.g,B=chBoard(g.id); let h="";
   g.seats.forEach((s,i)=>{
+    if(pick&&!pick(i)) return;
     const pl=chP(v,i), act=g.phase==="play"&&g.turn===i&&g.alive[i], out=!g.alive[i];
     let ck="";
     if(g.rem&&!s.bot){
@@ -5151,7 +5150,7 @@ function chessGameHTML(v){
   }
   const modeTxt=g.id===2?"Classic 8×8":g.id===3?"3-player hexagon":"4-player cross board";
   const info=`<div class="scoreboard" style="margin-top:0"><span class="chip">Round ${v.round}/${v.settings.rounds}</span><span class="chip">♟️ ${modeTxt}</span>${v.settings.clock?`<span class="chip">⏱ ${v.settings.clock} min${v.settings.inc?" +"+v.settings.inc+"s":""}</span>`:""}</div>`;
-  const full=!!(S.ui.chFull&&g.phase==="play");
+  const full=false;
   let acts=`<div class="ch-actions"><button class="btn secondary" data-a="chrot">🔄 Rotate board</button>`;
   if(g.phase==="play"){
     const mine=g.seats.findIndex(s=>s.pid===v.me&&!s.bot);
@@ -5165,10 +5164,11 @@ function chessGameHTML(v){
   acts+=`</div>`;
   const buddy=g.phase==="play"&&chMyTurn(v)?`<div class="ch-buddy" aria-live="polite"><div class="ch-buddy-in" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s"><div class="pole"></div><div class="flag" style="animation-delay:-${((Date.now()%1700)/1000).toFixed(3)}s">It is your turn ! ♟️</div>${astroSVG(chP(v,g.turn).fill,pAv(v,v.me))}</div></div>`:"";
   /* phones: "⛶ Full screen" shows just the clocks/turn bar and an edge-to-edge board; ✖ goes back */
-  const fsBtn=g.phase==="play"?`<button type="button" class="btn secondary ch-fsb" data-a="chfull" aria-pressed="${full}">${full?"✖ Exit full screen":"⛶ Full screen board"}</button>`:"";
+  const fsBtn="", meSeat=g.local?-1:g.seats.findIndex(x=>!x.bot&&x.pid===v.me), nOpp=g.seats.length-(meSeat>=0?1:0);
   let h=`<div class="ch-wrap${full?" full":""}"><div class="ch-top">${info}${chStatusHTML(v)}</div>${fsBtn}
-    <div class="ch-seats" style="--n:${g.seats.length}">${chSeatsHTML(v)}</div>
+    <div class="ch-seats ${nOpp===3?"n3":""}" style="--n:${nOpp}">${chSeatsHTML(v,i=>i!==meSeat)}</div>
     <div class="ch-left">${chBoardSVG(v)}${chRwHTML(v)}</div>
+    ${meSeat>=0?`<div class="ch-seats me" style="--n:1">${chSeatsHTML(v,i=>i===meSeat)}</div>`:""}
     <div class="ch-below">${acts}<h3 style="margin:14px 0 6px">📝 Moves</h3><div class="ch-hist" id="chHist">${chHistHTML(v)}</div></div></div>${buddy}`;
   if(g.phase==="reveal") h+=boardHTML({players:v.players,scores:v.scores,g:{res:g.res}})+nextControls(v,host);
   return h;
