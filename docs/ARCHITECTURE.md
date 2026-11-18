@@ -59,6 +59,8 @@ Peer to peer, outside any room (`mate*` functions). Nothing is written to Fireba
 - Messages: `inv` (game, room code) → pop-up with Accept / Decline (60 s), `invr` (accepted / declined), `msg` (chat line, max 500 chars), `ack` (delivered).
 - Requests come from the My groups panel (`mateInviteNew` creates the room, then `mateAfterRoom` sends the request) or the lobby's Invite mates card (`mateInvite`).
 - Chats are kept in `sessionStorage gh_mchat` only (tab lifetime), wiped on sign-out.
+- Backup route for requests: the sender also writes `invs.<key(recipient)> = {id, game, code, at}` into its own `drawGroups/{g}/presence/{sender}` doc; the recipient answers with `invr.<key(sender)> = {id, ok, at}` in its own presence doc. Both sides already listen to the group's presence, so no new rules are needed. Requests are de-duplicated by id. Chats never use this route.
+- Link health: `mateHeal()` rebuilds a destroyed / disconnected peer on visibility change, on reconnecting and every 20 s. Two copies on one device coordinate over `BroadcastChannel("gh-mate")`: the visible copy asks, a background owner releases the id.
 
 ### Voice chat
 Optional group call for everyone in a room (`voice*` functions, floating 🎙 dock). It is a WebRTC mesh using PeerJS media calls, so audio flows directly between players, encrypted (DTLS-SRTP), and never touches Firebase or is recorded.

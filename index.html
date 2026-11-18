@@ -3741,7 +3741,7 @@ function prSync(){                                   // (re)start when my groups
   prStop(); mateSync(); if(!gs.length) return;
   PR.key=key;
   gs.forEach(g=>PR.subs.push(FBD.collection("drawGroups").doc(g).collection("presence").onSnapshot(s=>{
-    PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRefresh();
+    PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRefresh(); try{ mateScan(g); }catch(e){}
   },e=>{ PR.err=fbErrText(e); prRender(); })));
   prLoadMembers(); prBeat(true);
   PR.hb=setInterval(()=>{ if(document.visibilityState==="visible") prBeat(true); prRefresh(); },60000);
@@ -3905,6 +3905,28 @@ function rcTipShow(x){
 const MATE={peer:null,ready:false,dup:false,owner:"",starting:false,conns:{},pend:{},sent:{},inbox:[],chat:{},open:null,unread:{},pick:null,after:null,note:"",tick:null,el:null,cel:null,nel:null,nt:null};
 const MATE_GAMES=["spy","raja","Scribblio","chess","dots","ludo","rps","number"];
 const MATE_TTL=60000, MATE_KEY="gh_mchat";
+/* Backup route for game requests: the request (and the accept / decline) is also written to the sender's own presence entry in
+   their groups, which every mate's app already listens to. So a request arrives even when the direct link can't be made
+   (different networks, a dropped link). Chats stay direct only – they are never written anywhere. */
+const mateKey=gm=>"k"+mateHash("inv|"+String(gm).toLowerCase());
+const MATE_SEEN=new Set();
+function mateFsWrite(field,gm,val){
+  if(!(FBD&&AUTH.user&&(AUTH.groups||[]).length)) return Promise.resolve(false);
+  const me=mateMe(), FV=firebase.firestore.FieldValue;
+  return Promise.all(AUTH.groups.map(g=>FBD.collection("drawGroups").doc(g).collection("presence").doc(me).set({[field]:{[mateKey(gm)]:val===null?FV.delete():val}},{merge:true})))
+    .then(()=>true,()=>false);
+}
+/* called from the presence listener: requests and answers addressed to me */
+function mateScan(g){
+  const me=mateMe(), k=mateKey(me), now=Date.now(), docs=PR.pres[g]||{};
+  Object.keys(docs).forEach(from=>{
+    if(from===me) return; const d=docs[from]||{};
+    const inv=d.invs&&d.invs[k];
+    if(inv&&inv.id&&!MATE_SEEN.has(inv.id)&&Math.abs(now-(+inv.at||0))<MATE_TTL&&matePerson(from)) mateOnMsg(from,{t:"inv",id:inv.id,game:inv.game,code:inv.code},null);
+    const r=d.invr&&d.invr[k];
+    if(r&&r.id) mateOnMsg(from,{t:"invr",id:r.id,ok:!!r.ok,busy:!!r.busy},null);
+  });
+}
 function mateHash(str){
   const h=seed=>{ let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
     for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
@@ -3942,6 +3964,34 @@ function mateSync(){
   MATE.starting=true;
   loadPeerLib().then(ok=>{ MATE.starting=false; if(ok&&prActive()&&mateMe()===MATE.owner&&!MATE.peer) mateOpen(false); });
 }
+/* Keep the mate link alive: phones drop the signalling connection when the app goes to the background, so whenever the app
+   comes back (and every 20 s while it's on screen) a dead or disconnected link is rebuilt. */
+function mateHeal(){
+  if(!prActive()||mateMe()!==MATE.owner||MATE.starting||typeof Peer==="undefined") return;
+  const p=MATE.peer;
+  if(!p||p.destroyed){ MATE.peer=null; MATE.ready=false; mateOpen(false); return; }
+  if(p.disconnected){ try{ p.reconnect(); }catch(e){ try{ p.destroy(); }catch(x){} MATE.peer=null; MATE.ready=false; mateOpen(false); } return; }
+  if(MATE.dup&&document.visibilityState==="visible") mateAsk();
+}
+/* Two copies of GameHub on one phone (e.g. the browser tab and the installed app): only one can receive requests and chats.
+   The copy you are looking at asks the other one to hand the link over; a copy in the background hands it over. */
+const MATE_TAB=Math.random().toString(36).slice(2);
+let MATE_BC=null; try{ MATE_BC=new BroadcastChannel("gh-mate"); }catch(e){}
+function mateAsk(){ if(MATE_BC&&MATE.owner&&document.visibilityState==="visible") try{ MATE_BC.postMessage({t:"take",who:MATE.owner,tab:MATE_TAB}); }catch(e){} }
+if(MATE_BC) MATE_BC.onmessage=ev=>{
+  const m=ev.data||{}; if(m.who!==MATE.owner||m.tab===MATE_TAB) return;
+  if(m.t==="take"&&MATE.peer&&!MATE.dup&&document.visibilityState!=="visible"){          // I'm the background owner: let go
+    try{ MATE.peer.destroy(); }catch(e){} MATE.peer=null; MATE.ready=false;
+    try{ MATE_BC.postMessage({t:"free",who:MATE.owner,tab:MATE_TAB,to:m.tab}); }catch(e){}
+    setTimeout(()=>{ if(!MATE.peer&&prActive()) mateOpen(true); },400);                   // keep a send-only link
+  } else if(m.t==="free"&&m.to===MATE_TAB&&MATE.dup){                                     // the id is free: take it
+    try{ MATE.peer&&MATE.peer.destroy(); }catch(e){} MATE.peer=null; MATE.ready=false;
+    setTimeout(()=>{ if(!MATE.peer&&prActive()) mateOpen(false); },900);
+  }
+};
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") setTimeout(mateHeal,300); });
+window.addEventListener("online",()=>setTimeout(mateHeal,800));
+setInterval(()=>{ if(document.visibilityState==="visible") mateHeal(); },20000);
 function mateStop(wipe){
   try{ MATE.peer&&MATE.peer.destroy(); }catch(e){}
   Object.assign(MATE,{peer:null,ready:false,dup:false,conns:{},pend:{},pick:null,after:null});
@@ -3954,9 +4004,11 @@ function mateOpen(dup){
   peer.on("open",()=>{ if(MATE.peer!==peer) return; MATE.ready=true; MATE.note=dup?"Game Hub is open in another tab – requests and chats arrive there.":""; prRender(); });
   peer.on("connection",conn=>mateWire(conn,null));
   peer.on("disconnected",()=>{ if(MATE.peer===peer) setTimeout(()=>{ try{ if(MATE.peer===peer&&!peer.destroyed) peer.reconnect(); }catch(e){} },1500); });
+  peer.on("close",()=>{ if(MATE.peer===peer){ MATE.peer=null; MATE.ready=false; setTimeout(mateHeal,1500); } });
   peer.on("error",e=>{
     if(MATE.peer!==peer) return;
-    if(e.type==="unavailable-id"&&!dup){ try{ peer.destroy(); }catch(x){} MATE.peer=null; return mateOpen(true); }   // another tab of mine already has the id
+    if(e.type==="unavailable-id"&&!dup){ try{ peer.destroy(); }catch(x){} MATE.peer=null; mateAsk(); return mateOpen(true); }   // another copy of mine has the id: ask it to hand over if it's in the background
+    if(/^(network|server-error|socket-error|socket-closed|disconnected)$/.test(e.type)){ try{ peer.destroy(); }catch(x){} MATE.peer=null; MATE.ready=false; setTimeout(mateHeal,2500); return; }
     if(e.type==="peer-unavailable"){                     // the mate's tab isn't reachable: fail whatever was waiting for them
       const m=/(wfgm-[a-z0-9]+)/i.exec(e.message||""); const ids=m?[m[1]]:Object.keys(MATE.pend);
       ids.forEach(id=>{ const p=MATE.pend[id]; if(p){ delete MATE.pend[id]; p.fail(); } });
@@ -3995,19 +4047,21 @@ async function mateSend(gm,m){ const c=await mateConn(gm); if(!c) return false; 
 function mateOnMsg(gm,m,conn){
   if(m.t==="inv"){
     if(!/^[A-Z0-9]{4,8}$/.test(String(m.code||""))||!GTITLE[m.game]) return;
+    const iid=String(m.id||""); if(!iid||MATE_SEEN.has(iid)) return; MATE_SEEN.add(iid);     // the same request can come both ways
     MATE.inbox=MATE.inbox.filter(x=>x.gm!==gm);           // a newer request from the same mate replaces the old one
     MATE.inbox.push({id:String(m.id||""),gm,game:m.game,code:m.code,at:Date.now()});
     mateInvRender(); mateBeep();
   } else if(m.t==="invr"){
-    const s=MATE.sent[gm]; if(!s||s.id!==m.id) return;
+    const s=MATE.sent[gm]; if(!s||s.id!==m.id||!["sending","sent","failed"].includes(s.status)) return;   // answered already (it can come both ways)
     s.status=m.ok?"accepted":m.busy?"busy":"declined"; s.at=Date.now();
+    mateFsWrite("invs",gm,null);                                                                         // tidy up the backup request
     toast(m.ok?"✅ "+mateNameOf(gm)+" accepted – joining your room…":"❌ "+mateNameOf(gm)+(m.busy?" is busy right now.":" declined your game request."),m.ok?"ok":"info");
     prRefresh();
   } else if(m.t==="msg"){
     const text=String(m.text||"").slice(0,500); if(!text.trim()) return;
     const c=mateThread(gm); if(c.msgs.some(x=>x.id===m.id)) return;
     c.msgs.push({id:String(m.id||Date.now()),me:false,text,at:Date.now()}); if(c.msgs.length>300) c.msgs.splice(0,c.msgs.length-300);
-    try{ conn.send({t:"ack",id:m.id}); }catch(e){}
+    try{ conn&&conn.send({t:"ack",id:m.id}); }catch(e){}
     const looking=MATE.open===gm&&document.visibilityState==="visible";
     if(!looking){ MATE.unread[gm]=(MATE.unread[gm]||0)+1; mateNotify(gm,text); }
     mateSaveChats(); mateChatRender(); prRender();
@@ -4022,13 +4076,15 @@ const mateUid=()=>Math.random().toString(36).slice(2,10);
 /* invite a mate to the room I'm hosting (room lobby → "Invite mates") */
 async function mateInvite(gm){
   if(!(NET.role==="host"&&!NET.local&&S.room)) return toast("Create a room first.","err");
-  if(!MATE.ready) return toast("Still connecting to your mates – try again in a moment.","info");
   const s=MATE.sent[gm]; if(s&&s.code===NET.code&&(s.status==="sending"||(s.status==="sent"&&Date.now()-s.at<MATE_TTL))) return;
-  const id=mateUid(), code=NET.code;
+  const id=mateUid(), code=NET.code, game=S.room.game;
   MATE.sent[gm]={id,code,status:"sending",at:Date.now()}; prRefresh();
-  const ok=await mateSend(gm,{t:"inv",id,game:S.room.game,code});
+  mateHeal();
+  // both routes at once: the account route always works when they're signed in; the direct one is faster when it connects
+  const [viaAcct,direct]=await Promise.all([mateFsWrite("invs",gm,{id,game,code,at:Date.now()}),MATE.ready?mateSend(gm,{t:"inv",id,game,code}):Promise.resolve(false)]);
+  const ok=viaAcct||direct;
   const cur=MATE.sent[gm]; if(cur&&cur.id===id&&cur.status==="sending"){ cur.status=ok?"sent":"failed"; cur.at=Date.now(); }
-  if(!ok) toast("Couldn't reach "+mateNameOf(gm)+" – their Game Hub tab may be closed or in the background.","err");
+  if(!ok) toast("Couldn't send the request to "+mateNameOf(gm)+" – check your internet connection and try again.","err");
   prRefresh();
 }
 /* from the My groups panel: make a room for that game, then send the request once it is open */
@@ -4067,6 +4123,7 @@ function mateInvRender(){
 function mateAnswer(ok){
   const r=MATE.inbox.shift(); mateInvRender(); if(!r) return;
   mateSend(r.gm,{t:"invr",id:r.id,ok});
+  mateFsWrite("invr",r.gm,{id:r.id,ok,at:Date.now()});                                     // answer by the account route too
   if(!ok) return;
   if(!S.me.name){ S.me.name=mateMyName().slice(0,16); try{ localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
   MATE.inbox=[]; mateInvRender();                           // joining a room: drop the rest
