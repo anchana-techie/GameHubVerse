@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Game Hub</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23181c30'/%3E%3Ctext x='50' y='72' font-size='64' text-anchor='middle'%3E🎮%3C/text%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GameHub</title>
+<!-- installable web app: open on a phone and "Add to Home Screen" / "Install app" -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#04061a">
+<meta name="application-name" content="GameHub">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GameHub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -849,6 +859,22 @@
     .vc-fab .lbl{display:none}
   }
   .rc-top{position:relative}
+  /* install button + installed-app polish */
+  .install-btn{margin-top:14px;padding:10px 18px;border-radius:999px;border:1px solid #8b93ffaa;background:linear-gradient(160deg,#6c7bff,#4b56d6);color:#fff;font-weight:700;box-shadow:0 8px 24px #0008,0 0 24px -6px #6c7bff}
+  .install-btn:hover{filter:brightness(1.08)}
+  .app-foot{display:flex;justify-content:center;margin:26px 0 0}
+  #pwaGuide{position:fixed;inset:0;z-index:1250;background:#05071acc;display:flex;align-items:center;justify-content:center;padding:16px;animation:gpIn .18s ease-out}
+  .pg-steps{margin:14px 16px 12px 36px;padding:0;display:flex;flex-direction:column;gap:10px;line-height:1.4}
+  .pg-ico{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;height:1.6em;border-radius:6px;background:#ffffff14;font-size:.9em}
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  @media (display-mode: standalone){
+    html,body{overscroll-behavior-y:none}                          /* no accidental pull-to-refresh in the middle of a game */
+    body{padding-top:env(safe-area-inset-top)}                     /* clear the notch / status bar (iPhone draws under it) */
+    #voice{bottom:calc(12px + env(safe-area-inset-bottom))}
+    #rcFab{bottom:calc(12px + env(safe-area-inset-bottom))}
+    #prw{bottom:calc(16px + env(safe-area-inset-bottom))}
+    .toast,#mtinv,#mtnote{top:calc(14px + env(safe-area-inset-top))}
+  }
   #updBar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1100;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100vw - 24px);padding:10px 12px 10px 16px;border-radius:14px;background:#161a38;border:1px solid #ffd25e88;box-shadow:0 14px 36px #000b;font-size:.9rem}
   #updBar .btn{flex:none;padding:8px 14px}
   @media(max-width:600px){#updBar{bottom:auto;top:10px;flex-wrap:wrap;justify-content:center;text-align:center}}
@@ -4133,7 +4159,7 @@ function topbar(title,home){
   return `<div class="topbar"><h1 class="title">${title}</h1><div style="display:flex;gap:8px">${home?`<button class="btn secondary" data-a="home">🏠 Home</button>`:""}</div></div>`;
 }
 function landingHTML(){
-  let h=acctBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>Open a room, share the code, and play with friends.</p></header>`;
+  let h=acctBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>Open a room, share the code, and play with friends.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   if(S.notice) h+=`<div class="msg ${S.notice.type}">${esc(S.notice.text)}</div>`;
   h+=`<h3>Play online with a room code</h3><div class="game-grid g3 hg">
     <button class="game-btn" data-a="go" data-g="number"><span class="ico">🎯</span><b>NumberGame</b><span class="d">Guess the secret number in turns. Rounds, timers and attempts are set per room.</span><span class="offb">📴 works offline</span></button>
@@ -4159,7 +4185,7 @@ function landingHTML(){
   </div>
   <h3 class="home-h" style="margin-top:34px">No signal?</h3><div class="game-grid hg">
     <button class="game-btn" style="--glow:#46d6a4" data-a="goOffline"><span class="ico">📴</span><b>Offline mode</b><span class="d">See which games and features work without an internet connection – and play them.</span></button>
-  </div>`;
+  </div>${pwaStandalone()?`<div class="app-foot"><button type="button" class="btn secondary" data-a="updNow">🔄 Check for updates</button></div>`:""}`;
   return h;
 }
 function entryHTML(){
@@ -5417,6 +5443,8 @@ function onAppClick(e){
     case "dbroll": sendAct({a:"dbroll"}); break;
     case "ludoroll": sendAct({a:"ludoroll"}); break;
     case "emoPick": if(t.dataset.k) emoPickOpen(t,t.dataset.k); break;
+    case "pwaInstall": pwaInstall(); break;
+    case "updNow": updManual(); break;
     case "rcToggle": RC.open=!RC.open; rcRender(); render(); break;
     case "ludomove": sendAct({a:"ludomove",t:+t.dataset.t}); break;
     case "rpsthrow": sendAct({a:"rpsthrow",v:+t.dataset.v}); break;
@@ -5824,10 +5852,11 @@ function clearHash(){ try{ if(location.hash) history.replaceState(null,"",locati
 
 /* ---- #/routes (preview pages + unknown routes → 404) ---- */
 function applyRoute(){
-  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline","#/coin-flip":"coin","#/coin":"coin"};
+  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline","#/coin-flip":"coin","#/coin":"coin","#/join":"entry"};
   SYS.route=null; SYS.badPath="";
   if(h===""||h==="#"){ if(S&&(S.screen==="offline"||S.screen==="coin")) S.screen="landing"; }
-  else if(pages[h]){ S.screen=pages[h]; }
+  else if(h==="#/join"&&S&&S.screen==="room"){ }          /* already in a room: stay */
+  else if(pages[h]){ S.screen=pages[h]; if(pages[h]==="entry") S.game=null; }
   else if(h==="#/loading") SYS.route="loading";
   else if(h==="#/error") SYS.route="error";
   else if(h==="#/no-internet") SYS.route="nointernet";
@@ -5892,6 +5921,46 @@ window.addEventListener("focus",()=>updCheck());
 window.addEventListener("online",()=>updCheck(true));
 setInterval(()=>{ if(document.visibilityState==="visible") updCheck(true); },10*60000);
 setTimeout(()=>updCheck(true),4000);
+/* ---- Installable web app ----
+   Android / Chrome: the browser's own install prompt is kept (beforeinstallprompt) and shown by the "📲 Install GameHub" button.
+   iPhone / iPad: Safari has no prompt, so the button shows how to use Share → Add to Home Screen.
+   Inside the installed app the button is hidden and the home page gets "🔄 Check for updates" (there is no address bar to refresh). */
+const PWA={prompt:null};
+const pwaStandalone=()=>{ try{ return matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: fullscreen)").matches||navigator.standalone===true; }catch(e){ return false; } };
+const pwaIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const pwaAndroid=()=>/android/i.test(navigator.userAgent);
+const pwaCanOffer=()=>!pwaStandalone()&&location.protocol!=="file:"&&!!(PWA.prompt||pwaIOS()||pwaAndroid());
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); PWA.prompt=e; if(S&&S.screen!=="room") render(); });
+window.addEventListener("appinstalled",()=>{ PWA.prompt=null; pwaGuideClose(); toast("✅ GameHub is installed – open it from your home screen.","ok"); if(S&&S.screen==="landing") render(); });
+async function pwaInstall(){
+  if(PWA.prompt){
+    const p=PWA.prompt; PWA.prompt=null;
+    try{ await p.prompt(); const r=await p.userChoice; if(r&&r.outcome!=="accepted") PWA.prompt=null; }catch(e){}
+    render(); return;
+  }
+  pwaGuide();
+}
+function pwaGuide(){
+  pwaGuideClose();
+  const ios=pwaIOS(), el=document.createElement("div"); el.id="pwaGuide"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); el.setAttribute("aria-label","Install GameHub");
+  const steps=ios?["Open GameHub in <b>Safari</b> (other browsers: use their Share menu).","Tap the <b>Share</b> button <span class='pg-ico'>⬆️</span> in the toolbar.","Scroll down and tap <b>Add to Home Screen</b> ➕.","Tap <b>Add</b> – GameHub appears on your home screen."]
+    :["Tap the browser menu <span class='pg-ico'>⋮</span> (top-right in Chrome).","Tap <b>Install app</b> or <b>Add to Home screen</b>.","Tap <b>Install</b> – GameHub appears on your home screen and in your app list."];
+  el.innerHTML=`<div class="gp-card"><div class="gp-head"><b>📲 Install GameHub</b><button type="button" class="mc-x" data-pgx aria-label="Close">✖</button></div>
+    <ol class="pg-steps">${steps.map(x=>`<li>${x}</li>`).join("")}</ol>
+    <p class="mut" style="margin:0 16px 14px;font-size:.82rem">It opens full-screen like an app, works offline for the offline games, and updates itself – no app store needed.</p></div>`;
+  el.addEventListener("click",e=>{ if(e.target===el||e.target.closest("[data-pgx]")) pwaGuideClose(); });
+  el.addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.stopPropagation(); pwaGuideClose(); } });
+  document.body.appendChild(el); el.querySelector("[data-pgx]").focus();
+}
+function pwaGuideClose(){ const el=document.getElementById("pwaGuide"); if(el) el.remove(); }
+async function updManual(){
+  if(!navigator.onLine) return toast("📡 You're offline – connect to the internet to check for updates.","err");
+  toast("🔄 Checking for updates…","info");
+  UPD.last=0; await updCheck(true);
+  if(UPD.ready) return;                                          // a newer version was found: it reloads (or shows the bar in a room)
+  try{ const r=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration(); if(r) await r.update(); }catch(e){}
+  toast("✅ You're on the latest version.","ok");
+}
 function registerSW(){
   if(!("serviceWorker" in navigator)){ SWSTATE="unsupported"; return; }
   if(location.protocol==="file:"){ SWSTATE="file"; return; }
@@ -6298,7 +6367,7 @@ function admRows(){
 /* ---- screens ---- */
 function authGate(){ return AUTH.on&&AUTH.state!=="off"&&AUTH.state!=="offline"&&AUTH.state!=="in"?authHTML():null; }
 function authHTML(){
-  const A=AUTH, hero=`<header class="hero"><h1>Game Hub</h1><p>Sign in to play.</p></header>`;
+  const A=AUTH, hero=`<header class="hero"><h1>Game Hub</h1><p>Sign in to play.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   const msg=(A.err?`<div class="msg err">${esc(A.err)}</div>`:"")+(A.info?`<div class="msg info">${esc(A.info)}</div>`:"");
   if(A.state==="loading") return hero+`<div class="card2" style="text-align:center"><h3>🚀 Checking your account…</h3><p class="mut">Connecting to Game Hub</p></div>`;
   if(A.state==="error") return hero+`<div class="card2"><div class="msg err">Couldn't reach the account service. Check your connection and try again.</div><button class="btn block" data-a="authRetry">Try again</button></div>`;

@@ -83,6 +83,13 @@ Home screen → **Quick play – no room needed**. Tap the coin (or **Flip the c
 - **Chess:** the board goes edge to edge (like Ludo) with compact player cards – opponents above the board, you below it – and a one-line status.
 - **🏷 Groups (n)** in the account bar opens a pop-up with the names of your groups (scrolls when there are many).
 
+## 📲 Install it like an app (no APK, no app store)
+GameHub is an installable web app (`manifest.webmanifest` + the service worker + icons in `icons/`).
+- **Android (Chrome):** tap **📲 Install GameHub** on the home or sign-in page and confirm – or Chrome menu **⋮ → Install app / Add to Home screen**.
+- **iPhone / iPad (Safari):** tap **📲 Install GameHub** for the steps: **Share ⬆️ → Add to Home Screen → Add**.
+- It opens full-screen with its own icon, the offline games work without internet, and it **updates itself** after every push (inside the app the home page also has **🔄 Check for updates**). Long-press the icon (Android) for shortcuts to Coin Flip, Join a room and Offline mode.
+- Notes: on iPhone the installed app keeps its own storage, so you sign in once more inside it. Game requests and chats still only arrive while GameHub is open.
+
 ## 🔄 Automatic updates
 Every deploy stamps the commit id into `index.html`, `sw.js` and a new `version.json` (see `.github/workflows/deploy-pages.yml`). When someone opens Game Hub or comes back to the tab, it compares its own id with `version.json` (also every 10 minutes while open). If a newer version is out it reloads by itself on the home, coin flip, offline and My activity screens. In a room, a game or a form it shows a small **"A new version is ready"** bar instead – the update loads when they go back home, or straight away with **Update now**. The service worker loads the site's own files network-first, so the fresh copy is used whenever there's a connection, and the saved copy when offline.
 

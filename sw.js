@@ -5,7 +5,7 @@
    - VERSION is stamped with the commit id on every deploy, so old caches are dropped automatically.
    - Never touches the PeerJS signalling server, EmailJS or connectivity probes. */
 const VERSION = "gamehub-__BUILD__";        // replaced with the commit id by the deploy workflow
-const SHELL = ["index.html", "offline.html", "404.html"];
+const SHELL = ["index.html", "offline.html", "404.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-48.png", "icons/icon.svg"];
 const CDN_OK = ["www.gstatic.com", "unpkg.com", "cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", e => {

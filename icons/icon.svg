@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath><g clip-path="url(#r)">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#2a2f7a"/>
+      <stop offset=".55" stop-color="#14174a"/>
+      <stop offset="1" stop-color="#070a1f"/>
+    </radialGradient>
+    <radialGradient id="planet" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#b9a8ff"/>
+      <stop offset=".5" stop-color="#7a6cff"/>
+      <stop offset="1" stop-color="#3b2f9e"/>
+    </radialGradient>
+    <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9defb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <!-- stars -->
+  <g fill="#fff">
+    <circle cx="70" cy="88" r="4" opacity=".9"/><circle cx="430" cy="70" r="3" opacity=".8"/>
+    <circle cx="455" cy="190" r="2.5" opacity=".7"/><circle cx="52" cy="230" r="2.5" opacity=".7"/>
+    <circle cx="120" cy="440" r="3" opacity=".6"/><circle cx="410" cy="452" r="3.5" opacity=".8"/>
+    <circle cx="300" cy="44" r="2" opacity=".6"/><circle cx="210" cy="470" r="2" opacity=".5"/>
+  </g>
+  <!-- planet with ring, behind the controller -->
+  <g transform="translate(256 210)">
+    <path d="M -152 0 A 152 34 0 0 1 152 0" transform="rotate(-14)" fill="none" stroke="#ffd25e" stroke-width="11" opacity=".5"/>
+    <circle r="112" fill="url(#planet)"/>
+    <circle cx="-40" cy="-30" r="16" fill="#ffffff" opacity=".18"/>
+    <circle cx="35" cy="40" r="22" fill="#2b2177" opacity=".35"/>
+    <path d="M -152 0 A 152 34 0 0 0 152 0" transform="rotate(-14)" fill="none" stroke="#ffd25e" stroke-width="11" stroke-linecap="round"/>
+  </g>
+  <!-- game controller -->
+  <g transform="translate(256 330)">
+    <path d="M -150 -40 C -150 -78 -120 -96 -84 -96 L 84 -96 C 120 -96 150 -78 150 -40 L 172 70 C 180 112 148 130 120 116 C 96 104 80 70 56 56 L -56 56 C -80 70 -96 104 -120 116 C -148 130 -180 112 -172 70 Z"
+          fill="url(#pad)" stroke="#0c1030" stroke-width="8" stroke-linejoin="round"/>
+    <!-- d-pad -->
+    <g fill="#2b3070">
+      <rect x="-108" y="-38" width="22" height="64" rx="5"/>
+      <rect x="-129" y="-17" width="64" height="22" rx="5"/>
+    </g>
+    <!-- buttons -->
+    <circle cx="86" cy="-34" r="14" fill="#ff5468"/>
+    <circle cx="116" cy="-6" r="14" fill="#3ddc84"/>
+    <circle cx="56" cy="-6" r="14" fill="#4aa3ff"/>
+    <circle cx="86" cy="22" r="14" fill="#ffd23f"/>
+    <rect x="-24" y="-30" width="48" height="12" rx="6" fill="#9aa3d9"/>
+  </g>
+</g></svg>
