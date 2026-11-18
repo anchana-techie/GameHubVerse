@@ -3545,6 +3545,7 @@ async function drawRegLoad(){
     catch(e){ DREG.err=fbErrText(e); }
   }
   DREG.busy=false; render();
+  if(!DREG.synced){ DREG.synced=true; drawLinkSync(null).then(n=>{ if(n) toast("🔗 Fixed the group links of "+n+" login"+(n===1?"":"s")+" – they now see all their groups.","ok"); }).catch(()=>{}); }
 }
 async function drawGroupAdd(){
   const g=String(S.ui.drGid||"").trim().toUpperCase();
@@ -3570,9 +3571,33 @@ async function drawPersonWrite(old,p,groups){
     if(groups.includes(g)) ops.push(ref(g).doc(newId).set({name:p.name,gmail:p.gmail,gameMail:p.gameMail,groups,addedAt:fbNow()}));
     else ops.push(ref(g).doc(newId).delete());
   });
-  if(oldGm&&oldGm!==p.gameMail) ops.push(FBD.collection("gameMailGroups").doc(oldGm).delete());
-  if(p.gameMail) ops.push(groups.length?FBD.collection("gameMailGroups").doc(p.gameMail).set({groups}):FBD.collection("gameMailGroups").doc(p.gameMail).delete());
   await Promise.all(ops);
+  await drawLinkSync([oldGm,p.gameMail].filter(Boolean));      // a login's groups = every group where any row carries that Game mail
+}
+/* Rebuild gameMailGroups (which groups a login is in) from the member lists themselves.
+   One login can sit on several rows (e.g. added once with a Gmail and once without), so a row's own group list is not enough –
+   saving one row used to wipe the login's other groups. With no list given, every login is checked (runs when the master opens
+   the groups screen, which also repairs links broken before this fix). */
+async function drawLinkSync(only){
+  if(!FBD||!fbIsMaster()) return 0;
+  const gs=DREG.groups.length?DREG.groups:(await FBD.collection("drawGroups").get()).docs.map(d=>d.id);
+  const want={};
+  for(const g of gs){
+    const snap=await FBD.collection("drawGroups").doc(g).collection("members").get();
+    snap.docs.forEach(d=>{ const gm=String(d.data().gameMail||"").toLowerCase(); if(gm&&(!only||only.includes(gm))) (want[gm]=want[gm]||new Set()).add(g); });
+  }
+  const ref=gm=>FBD.collection("gameMailGroups").doc(gm), ops=[];
+  let have={};
+  if(only) (await Promise.all(only.map(gm=>ref(gm).get()))).forEach((d,i)=>{ if(d.exists) have[only[i]]=d.data().groups||[]; });
+  else (await FBD.collection("gameMailGroups").get()).docs.forEach(d=>{ have[d.id]=d.data().groups||[]; });
+  const keys=new Set([...Object.keys(want),...Object.keys(have)]);
+  keys.forEach(gm=>{
+    const w=[...(want[gm]||[])].sort(), h=(have[gm]||[]).slice().sort();
+    if(w.join("|")===h.join("|")) return;
+    ops.push(w.length?ref(gm).set({groups:w}):ref(gm).delete());
+  });
+  await Promise.all(ops);
+  return ops.length;
 }
 function drawReadPerson(name,gmail,gameMail){
   name=String(name||"").trim(); gmail=String(gmail||"").trim().toLowerCase(); gameMail=String(gameMail||"").trim().toLowerCase();
