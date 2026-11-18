@@ -3718,16 +3718,20 @@ function drawRegHTML(){
    Each signed-in user keeps drawGroups/{group}/presence/{their login e-mail} fresh while the page is open (see firestore.rules).
    The people shown come from the group's registered list, so someone without a login yet shows as "not joined yet".
    The master admin has the Admin page for this and doesn't get the button. */
-const PR={subs:[],members:{},pres:{},key:"",hb:null,open:false,el:null,err:""};
+const PR={subs:[],members:{},pres:{},key:"",hb:null,open:false,el:null,errs:{},retry:{}};
+/* a live-status problem is remembered per group and per direction, and cleared as soon as that read / write works again;
+   errors that belong to a login that has since signed out (or changed) are ignored */
+function prErr(k,e,who){ if(!AUTH.user||AUTH.user.email.toLowerCase()!==who) return; PR.errs[k]=fbErrText(e); prRender(); }
+function prOk(k){ if(PR.errs[k]){ delete PR.errs[k]; prRender(); } }
 const prActive=()=>!!(FB_ON&&FBD&&AUTH.state==="in"&&AUTH.user&&!fbIsMaster()&&(AUTH.groups||[]).length);
 function prStop(){
-  PR.subs.forEach(f=>{ try{ f(); }catch(e){} }); PR.subs=[]; clearInterval(PR.hb); PR.hb=null; PR.members={}; PR.pres={}; PR.key=""; PR.open=false;
+  PR.subs.forEach(f=>{ try{ f(); }catch(e){} }); PR.subs=[]; clearInterval(PR.hb); PR.hb=null; PR.members={}; PR.pres={}; PR.key=""; PR.open=false; PR.errs={}; PR.retry={};
   if(PR.el) PR.el.style.display="none";
 }
 function prBeat(online){
   if(!prActive()) return;
   const gm=AUTH.user.email.toLowerCase(), name=String((AUTH.profile&&AUTH.profile.name)||gm.split("@")[0]).slice(0,30);
-  (AUTH.groups||[]).forEach(g=>FBD.collection("drawGroups").doc(g).collection("presence").doc(gm).set({name,online:online!==false,lastSeen:fbNow()},{merge:true}).catch(e=>{ PR.err=fbErrText(e); prRender(); }));
+  (AUTH.groups||[]).forEach(g=>FBD.collection("drawGroups").doc(g).collection("presence").doc(gm).set({name,online:online!==false,lastSeen:fbNow()},{merge:true}).then(()=>prOk("w:"+g),e=>prErr("w:"+g,e,gm)));
 }
 async function prLoadMembers(){
   for(const g of (AUTH.groups||[])){
@@ -3740,9 +3744,16 @@ function prSync(){                                   // (re)start when my groups
   if(key===PR.key){ mateSync(); return prRender(); }
   prStop(); mateSync(); if(!gs.length) return;
   PR.key=key;
-  gs.forEach(g=>PR.subs.push(FBD.collection("drawGroups").doc(g).collection("presence").onSnapshot(s=>{
-    PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRefresh(); try{ mateScan(g); }catch(e){}
-  },e=>{ PR.err=fbErrText(e); prRender(); })));
+  const who=AUTH.user.email.toLowerCase();
+  const listen=g=>FBD.collection("drawGroups").doc(g).collection("presence").onSnapshot(s=>{   // a failed listener stops for good, so it is started again a little later
+      PR.retry[g]=0; prOk("r:"+g);
+      PR.pres[g]={}; s.docs.forEach(d=>{ PR.pres[g][d.id]=d.data(); }); prRefresh(); try{ mateScan(g); }catch(e){}
+    },e=>{
+      prErr("r:"+g,e,who);
+      const n=PR.retry[g]=(PR.retry[g]||0)+1;
+      if(n<=6) setTimeout(()=>{ if(PR.key===key&&prActive()&&AUTH.user.email.toLowerCase()===who) PR.subs.push(listen(g)); },Math.min(60000,4000*n));
+    });
+  gs.forEach(g=>PR.subs.push(listen(g)));
   prLoadMembers(); prBeat(true);
   PR.hb=setInterval(()=>{ if(document.visibilityState==="visible") prBeat(true); prRefresh(); },60000);
 }
@@ -3791,7 +3802,7 @@ function prRender(){
       <span class="pr-st">${p.on?"online":p.joined?"last seen "+fbAgo(p.ms):"not joined yet"}${sent?" · "+sent:""}</span></div>${acts}</div>${pick}`;
   };
   el.innerHTML=(PR.open?`<div class="pr-panel"><div class="pr-head"><b>👥 My groups</b><span class="pr-st">${online} online · ${list.length} people</span></div>
-      ${PR.err?`<div class="pr-st" style="padding:8px 14px;color:#ffb4b4">⚠ Couldn't read live status (${esc(PR.err)}) – publish the latest firestore.rules in Firebase.</div>`:""}${MATE.note?`<div class="pr-st" style="padding:8px 14px;color:#ffd68a">${esc(MATE.note)}</div>`:""}<div class="pr-list">${list.length?list.map(row).join(""):`<p class="pr-st" style="padding:10px">Nobody else is registered in your groups yet.</p>`}</div>
+      ${Object.keys(PR.errs).length?`<div class="pr-st" style="padding:8px 14px;color:#ffb4b4">⚠ Couldn't ${Object.keys(PR.errs).some(k=>k[0]==="r")?"read":"update"} live status for ${esc([...new Set(Object.keys(PR.errs).map(k=>k.slice(2)))].join(", "))} (${esc(Object.values(PR.errs)[0])}). Retrying… If it stays, ask the master admin to check this login is in the group and the latest firestore.rules are published.</div>`:""}${MATE.note?`<div class="pr-st" style="padding:8px 14px;color:#ffd68a">${esc(MATE.note)}</div>`:""}<div class="pr-list">${list.length?list.map(row).join(""):`<p class="pr-st" style="padding:10px">Nobody else is registered in your groups yet.</p>`}</div>
       ${online?`<div class="pr-foot">🎮 invite to a game · 💬 chat (not saved – gone when you close the tab)</div>`:""}</div>`:"")
     +`<button class="pr-fab" data-prt title="People in my groups"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" aria-hidden="true"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${online?`<span class="pr-badge">${online}</span>`:""}${unread?`<span class="pr-badge un">💬 ${unread}</span>`:""}</button>`;
 }
@@ -3911,7 +3922,7 @@ const MATE_TTL=60000, MATE_KEY="gh_mchat";
 const mateKey=gm=>"k"+mateHash("inv|"+String(gm).toLowerCase());
 const MATE_SEEN=new Set();
 function mateFsWrite(field,gm,val){
-  if(!(FBD&&AUTH.user&&(AUTH.groups||[]).length)) return Promise.resolve(false);
+  if(!(FBD&&AUTH.user&&AUTH.state==="in"&&(AUTH.groups||[]).length)) return Promise.resolve(false);
   const me=mateMe(), FV=firebase.firestore.FieldValue;
   return Promise.all(AUTH.groups.map(g=>FBD.collection("drawGroups").doc(g).collection("presence").doc(me).set({[field]:{[mateKey(gm)]:val===null?FV.delete():val}},{merge:true})))
     .then(()=>true,()=>false);
@@ -6301,6 +6312,7 @@ async function doRecSave(){
 }
 function doAuthLogout(){
   try{ fbSetLive(null); }catch(e){}
+  try{ prBeat(false); prStop(); mateStop(true); }catch(e){}            // stop the group listeners while still signed in, so nothing fails afterwards
   try{ if(NET&&NET.role) leaveRoom(true); }catch(e){}
   trackEnd("left",null);
   const u=AUTH.user&&FBD?FBD.collection("users").doc(AUTH.user.uid).update({online:false}).catch(()=>{}):Promise.resolve();
