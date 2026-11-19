@@ -728,6 +728,22 @@
   .db-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
   .db-txt{font-size:.95rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .db-note{font-size:.8rem;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .db-cnt{font-size:1.1rem;color:var(--warn);white-space:nowrap}
+  .av-card{margin-top:12px}
+  .or-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 18px}
+  .or-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(160deg,#ffffff1c,#ffffff08);border:1px solid #ffffff26}
+  .or-main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .or-main b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .or-st{flex:none;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid}
+  .or-st.wait{color:#2fd18b;border-color:#2fd18b88}.or-st.play{color:#ffd25e;border-color:#ffd25e88}.or-st.full{color:#ff8a8a;border-color:#ff8a8a88}
+  .or-join{flex:none;padding:8px 16px}
+  .av-now{font-size:1.5rem;vertical-align:-.15em;margin-left:6px}
+  .av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+  .av-b{height:44px;font-size:1.5rem;border-radius:12px;border:1px solid var(--border);background:var(--panel2);cursor:pointer;padding:0;line-height:1}
+  .av-b.on{border-color:var(--accent2);box-shadow:0 0 0 2px var(--accent2)}
+  .av-b:disabled{opacity:.25;cursor:not-allowed;filter:grayscale(1)}
+  .db-cnt b{font-size:1.3rem}
+  .db-txt.one{-webkit-line-clamp:1}
   .db-turn .db-roll{font-size:1rem;padding:10px 14px;align-self:flex-start}
   .chip.timer{font-variant-numeric:tabular-nums;min-width:5.2em;text-align:center}
   @media(max-width:600px){
@@ -859,6 +875,15 @@
     .vc-fab .lbl{display:none}
   }
   .rc-top{position:relative}
+  /* rooms: chat + voice sit in a slim bar along the bottom; the page ends above it, so Send / Check buttons can be scrolled clear */
+  body.in-room main{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  body.in-room::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));z-index:65;pointer-events:none;
+    background:linear-gradient(180deg,#0a0d26e6,#070a1ff5);border-top:1px solid #8b93ff33;box-shadow:0 -8px 24px #0008;backdrop-filter:blur(6px)}
+  body.in-room #rcFab{bottom:calc(8px + env(safe-area-inset-bottom))}
+  body.in-room #voice{bottom:calc(8px + env(safe-area-inset-bottom))}
+  body.in-room #voice .vc-fab{height:48px}
+  body.in-room .ch-buddy{bottom:64px}
+  body.in-room #rcTip{bottom:calc(72px + env(safe-area-inset-bottom))}
   /* install button + installed-app polish */
   .install-btn{margin-top:14px;padding:10px 18px;border-radius:999px;border:1px solid #8b93ffaa;background:linear-gradient(160deg,#6c7bff,#4b56d6);color:#fff;font-weight:700;box-shadow:0 8px 24px #0008,0 0 24px -6px #6c7bff}
   .install-btn:hover{filter:brightness(1.08)}
@@ -1077,7 +1102,9 @@
 <script src="firebase-config.js"></script>
 <script>
 /* ================= CONSTANTS & HELPERS ================= */
-const EMOJIS = ["🐒","🐷","🦁","🐼","🐸","🦊","🐯","🐶","🦆"];
+const EMOJIS = ["🐒","🐷","🦁","🐼","🐸","🦊","🐯","🐶","🦆","🐨","🐰","🐻","🐮","🐔","🐧","🦄","🐙","🐢","🦉","🐝","🐬","🦖","🐱","🦋"];
+/* each player in a room has a different emoji: a taken one is swapped for the first free one */
+const freeAv=(R,want,pid)=>{ const used=new Set(R.players.filter(x=>!x.left&&x.pid!==pid).map(x=>x.av)); return !used.has(want)&&EMOJIS.includes(want)?want:(EMOJIS.find(e=>!used.has(e))||want); };
 const COLORS = { "None":"white", "Red":"red", "Green":"limegreen", "Yellow":"yellow" };
 const GTITLE = {number:"🎯 Number Game", spy:"🕵️ Who Is the Spy?", raja:"👑 Raja Rani", Scribblio:"🎨 Scribblio", chess:"♟️ Chess", dots:"🎲 Dots and Boxes", ludo:"🏁 Ludo", rps:"✊ Rock Paper Scissors"};
 const MAXP = {number:10, spy:15, raja:20, Scribblio:12, chess:4, dots:20, ludo:6, rps:10};
@@ -1426,7 +1453,7 @@ function hostOnMsg(conn,m){
       if(R.phase!=="lobby") return rej("This game has already started. Ask the host to go back to the lobby.");
       if(R.players.filter(x=>!x.left).length>=maxPlayers(R)) return rej("The room is full.");
       if(R.players.some(x=>!x.left&&x.name.toLowerCase()===name.toLowerCase())) return rej("That name is already taken in this room.");
-      p={pid,name,av,connected:true,left:false}; R.players.push(p);
+      p={pid,name,av:freeAv(R,av,pid),connected:true,left:false}; R.players.push(p);
     }
     conn._pid=pid; NET.conns[pid]=conn;
     try{ conn.send({t:"joined"}); }catch(e){}
@@ -1572,6 +1599,7 @@ function doAct(R,pid,m){
     case "settings": if(host&&R.phase==="lobby") setSetting(R,m.k,m.v); return;
     case "kick": if(host) kickPlayer(R,String(m.pid||"")); return;
     case "voice": voiceAct(R,pid,m); return;
+    case "setav": { const p=R.players.find(x=>x.pid===pid); if(p&&R.phase==="lobby"&&EMOJIS.includes(m.av)&&freeAv(R,m.av,pid)===m.av){ p.av=m.av; } return; }
     case "emo": emoAct(R,pid,m); return;
     case "rchat": rchatAct(R,pid,m); return;
     case "start": if(host&&R.phase==="lobby") startGame(R,m); return;
@@ -3066,6 +3094,7 @@ function cleanup(notice){
   S=freshState(); if(notice) S.notice=notice;
   if(wasSpec&&AUTH.isAdmin) S.screen="admin";            // a watching admin goes back to the people list
   try{ fbSetLive(null); }catch(e){}
+  try{ prRoom(null); }catch(e){}
   padClear(); render(); try{ voiceDock(); }catch(e){}
 }
 function copyLink(){
@@ -3783,7 +3812,7 @@ function prSync(){                                   // (re)start when my groups
   PR.hb=setInterval(()=>{ if(document.visibilityState==="visible") prBeat(true); prRefresh(); },60000);
 }
 /* presence changed: the room lobby's "Invite mates" list shows who is online, so redraw it too (never mid-game) */
-function prRefresh(){ if(S&&S.screen==="room"&&S.room&&S.room.phase==="lobby") render(); else prRender(); }
+function prRefresh(){ if(S&&((S.screen==="room"&&S.room&&S.room.phase==="lobby")||S.screen==="landing")) render(); else prRender(); }
 /* Everyone in my groups (not me), with live status: {name, gm (their login e-mail), groups, on, joined, ms} – online first. */
 function prPeople(){
   if(!prActive()) return [];
@@ -4254,6 +4283,7 @@ function topbar(title,home){
 function landingHTML(){
   let h=acctBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>Open a room, share the code, and play with friends.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   if(S.notice) h+=`<div class="msg ${S.notice.type}">${esc(S.notice.text)}</div>`;
+  h+=openRoomsHTML();
   h+=`<h3>Play online with a room code</h3><div class="game-grid g3 hg">
     <button class="game-btn" data-a="go" data-g="number"><span class="ico">🎯</span><b>NumberGame</b><span class="d">Guess the secret number in turns. Rounds, timers and attempts are set per room.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" data-a="go" data-g="spy"><span class="ico">🕵️</span><b>Who Is the Spy?</b><span class="d">Secret words on every screen. Cycle clues, call a vote when you suspect someone.</span></button>
@@ -4287,7 +4317,7 @@ function entryHTML(){
   if(!ONLINE) h+=`<div class="msg warn">📡 You're offline – online rooms are unavailable until you're back online.${S.game&&OFFLINE_OK[S.game]?" You can still play on this device below.":""}</div>`;
   h+=`<div class="card2"><h3>You</h3><div class="player-row">
     <input type="text" id="meName" data-keep maxlength="16" placeholder="Your name" value="${esc(S.me.name)}" autocomplete="off">
-    <select id="meAv" data-keep>${EMOJIS.map(e=>`<option ${S.me.av===e?"selected":""}>${e}</option>`).join("")}</select></div></div>`;
+    </div><div class="mut" style="font-size:.82rem;margin-top:6px">You pick your emoji inside the room – each player gets a different one.</div></div>`;
   h+=`<div class="row" style="align-items:stretch">`;
   if(S.game) h+=`<div class="card2"><h3>🆕 Create a room</h3><p class="mut" style="margin:0 0 12px">${esc(BLURB[S.game])}<br><br>You'll choose rounds, timers and other options in the lobby, then share the room code or invite link.</p>
     <button class="btn green block" data-a="create" ${S.busy||!ONLINE?"disabled":""}>Create room</button></div>`;
@@ -4342,11 +4372,20 @@ function roomBodyHTML(v,host){
   if(v.phase==="end") return h+endHTML(v,host);
   return h+(v.game==="spy"?spyGameHTML(v):v.game==="number"?numGameHTML(v):v.game==="Scribblio"?"":v.game==="chess"?chessGameHTML(v):v.game==="dots"?dbGameHTML(v):v.game==="ludo"?luGameHTML(v):v.game==="rps"?rpsGameHTML(v):rrGameHTML(v));
 }
+/* lobby: everyone picks their emoji; ones other players already have are greyed out */
+function avPickHTML(v){
+  if(NET.spec) return "";
+  const me=v.players.find(p=>p.pid===v.me), taken={}; v.players.forEach(p=>{ if(!p.left&&p.pid!==v.me) taken[p.av]=p.name; });
+  return `<div class="card2 av-card"><h3 style="margin:0 0 8px">Your emoji ${me?`<span class="av-now">${me.av}</span>`:""}</h3><div class="av-grid">${EMOJIS.map(e=>{
+    const t=taken[e], on=me&&me.av===e;
+    return `<button type="button" class="av-b ${on?"on":""}" data-a="setav" data-av="${e}" ${t?`disabled title="${esc(t)} has it"`:""} aria-label="${t?e+" – taken by "+esc(t):"Pick "+e}">${e}</button>`; }).join("")}</div></div>`;
+}
 const kickBtn=(v,p)=>v.me===v.hostPid&&p.pid!==v.hostPid&&!p.left&&!NET.local?`<button type="button" class="kick" data-a="kick" data-pid="${esc(p.pid)}" title="Kick ${esc(p.name)} from the room" aria-label="Kick ${esc(p.name)}">✖</button>`:"";
 function lobbyHTML(v,host){
   const st=v.settings, n=v.players.filter(p=>!p.left).length, fields=SETTINGS[v.game].filter(f=>!f.when||f.when(n,st));
   let h="";
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
+  h+=avPickHTML(v);
   h+=mateLobbyHTML(v);
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
@@ -4596,15 +4635,17 @@ function dbGameHTML(v){
     const rolled=g.phase==="draw"&&g.dice.length, nd=Math.max(1,+st.dice||1);
     const dice=rolled?g.dice.map(n=>dbDie(n,spin)).join("")+(g.dice.length>1?`<div class="db-sum">= ${g.total}</div>`:"")
       :Array.from({length:nd},()=>dbDie(0,"")).join("");
-    let txt, btn="";
+    let txt, btn="", cnt="";
     if(g.phase==="roll"){
       txt=mine?`${g.marks[me]} <b>Your turn!</b> Roll – you draw that many lines.`:`⏳ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> is about to roll…`;
       if(mine) btn=`<button class="btn green db-roll" data-a="dbroll">🎲 Roll the dice</button>`;
     } else {
-      txt=mine?`${g.marks[me]} Draw <b>${g.left}</b> more line${g.left===1?"":"s"} – tap a line between two dots.${st.bonus?" Closing a box gives you one extra line.":""}`
-        :`✏️ ${g.marks[cur]} <b>${esc(pName(v,cur))}</b> rolled ${g.total} and has <b>${g.left}</b> line${g.left===1?"":"s"} left to draw.`;
+      // the count gets its own line, so it can never be cut off by a long name
+      cnt=`<div class="db-cnt">✏️ <b>${g.left}</b> line${g.left===1?"":"s"} left${mine?" to draw":""}</div>`;
+      txt=mine?`${g.marks[me]} Your turn – tap a line between two dots.${st.bonus?" Closing a box gives one extra line.":""}`
+        :`${g.marks[cur]} <b>${esc(pName(v,cur))}</b> rolled ${g.total}`;
     }
-    h+=`<div class="db-turn ${mine?"mine":""}"><div class="db-dice ${rolled?"":"idle"}">${dice}</div><div class="db-info">${g.note?`<div class="db-note">${esc(g.note)}</div>`:""}<div class="db-txt">${txt}</div>${btn}</div></div>`;
+    h+=`<div class="db-turn ${mine?"mine":""}"><div class="db-dice ${rolled?"":"idle"}">${dice}</div><div class="db-info">${g.note?`<div class="db-note">${esc(g.note)}</div>`:""}${cnt}<div class="db-txt ${cnt?"one":""}">${txt}</div>${btn}</div></div>`;
   }
   h+=dbBoardHTML(v,mine&&g.phase==="draw");
   if(!play){
@@ -5537,6 +5578,8 @@ function onAppClick(e){
     case "ludoroll": sendAct({a:"ludoroll"}); break;
     case "emoPick": if(t.dataset.k) emoPickOpen(t,t.dataset.k); break;
     case "pwaInstall": pwaInstall(); break;
+    case "setav": { const av=t.dataset.av; if(!EMOJIS.includes(av)) break; S.me.av=av; try{ localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av})); }catch(e){} sendAct({a:"setav",av}); break; }
+    case "joinOpen": joinOpenRoom(t.dataset.code); break;
     case "updNow": updManual(); break;
     case "rcToggle": RC.open=!RC.open; rcRender(); render(); break;
     case "ludomove": sendAct({a:"ludomove",t:+t.dataset.t}); break;
@@ -6337,7 +6380,7 @@ async function doRecSave(){
 }
 function doAuthLogout(){
   try{ fbSetLive(null); }catch(e){}
-  try{ prBeat(false); prStop(); mateStop(true); }catch(e){}            // stop the group listeners while still signed in, so nothing fails afterwards
+  try{ prRoom(null); prBeat(false); prStop(); mateStop(true); }catch(e){}            // stop the group listeners while still signed in, so nothing fails afterwards
   try{ if(NET&&NET.role) leaveRoom(true); }catch(e){}
   trackEnd("left",null);
   const u=AUTH.user&&FBD?FBD.collection("users").doc(AUTH.user.uid).update({online:false}).catch(()=>{}):Promise.resolve();
@@ -6357,8 +6400,44 @@ const fbLiveRoom=u=>u&&u.liveRoom&&u.liveRoom.code&&fbOnline(u)&&Date.now()-fbMs
 function admClearLive(code){
   Object.values(AUTH.adm.users).forEach(u=>{ if(u.liveRoom&&u.liveRoom.code===code) FBD.collection("users").doc(u.id).update({liveRoom:firebase.firestore.FieldValue.delete()}).catch(()=>{}); });
 }
+/* The host's app shares its open online room in its presence entry (only people in its groups can read that), so group mates
+   see it under "Open rooms" on their home page. Cleared when the room closes; a room of a host who went offline is hidden. */
+let PR_ROOM="";
+function prRoom(v){
+  if(!prActive()) return;
+  const R=NET.R, info=v&&R&&NET.role==="host"&&!NET.local&&!NET.spec?{code:R.code,game:R.game,phase:R.phase,n:R.players.filter(p=>!p.left).length,max:maxPlayers(R),host:String(S.me.name||"").slice(0,20)}:null;
+  const key=info?JSON.stringify(info):"";
+  if(key===PR_ROOM) return; PR_ROOM=key;
+  const me=mateMe(), FV=firebase.firestore.FieldValue;
+  (AUTH.groups||[]).forEach(g=>FBD.collection("drawGroups").doc(g).collection("presence").doc(me).set({room:info?Object.assign(info,{at:Date.now()}):FV.delete()},{merge:true}).catch(()=>{}));
+}
+function openRooms(){
+  if(!prActive()) return [];
+  const me=mateMe(), now=Date.now(), seen=new Map();
+  Object.keys(PR.pres).forEach(g=>Object.entries(PR.pres[g]||{}).forEach(([gm,d])=>{
+    if(gm===me||!d||!d.room||!d.room.code) return;
+    const on=d.online&&now-fbMs(d.lastSeen)<150000; if(!on||!GTITLE[d.room.game]) return;
+    if(!seen.has(d.room.code)) seen.set(d.room.code,Object.assign({gm,name:(matePerson(gm)||{}).name||d.room.host||gm.split("@")[0]},d.room));
+  }));
+  return [...seen.values()].sort((a,b)=>(a.phase==="lobby"?0:1)-(b.phase==="lobby"?0:1)||String(a.name).localeCompare(String(b.name)));
+}
+function openRoomsHTML(){
+  const list=openRooms(); if(!list.length) return "";
+  return `<h3 class="home-h" style="margin-top:6px">🟢 Open rooms in your groups</h3><div class="or-list">${list.map(r=>{
+    const wait=r.phase==="lobby", full=r.n>=r.max, can=wait&&!full;
+    return `<div class="or-row"><div class="or-main"><b>${GTITLE[r.game]}</b><span class="pr-st">${esc(r.name)}'s room · ${r.n}/${r.max} players</span></div>
+      <span class="or-st ${can?"wait":full&&wait?"full":"play"}">${can?"waiting":wait?"full":"playing"}</span>
+      <button type="button" class="btn ${can?"green":"secondary"} or-join" data-a="joinOpen" data-code="${esc(r.code)}" ${can?"":"disabled"} title="${can?"Join this room":wait?"The room is full":"You can join when this game ends"}">Join</button></div>`; }).join("")}</div>`;
+}
+function joinOpenRoom(code){
+  if(!/^[A-Z0-9]{4,8}$/.test(String(code||""))) return;
+  if(NET.role) return toast("Leave your current room first.","info");
+  if(!S.me.name){ S.me.name=mateMyName().slice(0,16); try{ localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
+  S.game=null; joinRoom(code);
+}
 function trackRoom(v){
   if(AUTH.state!=="in"||!FBD||!AUTH.user) return;
+  try{ prRoom(v); }catch(e){}
   if(!NET.local) fbSetLive({code:v.code,game:v.game,phase:v.phase,host:v.me===v.hostPid});
   if(v.phase==="play"){
     const key=v.code+"|"+v.game+"|"+(v.hist||[]).length;

@@ -73,7 +73,7 @@ Secret-Santa style draws. Names and emails are entered, a random matching (nobod
 During a game, tap another player's box (Ludo) or card (Chess) and pick one of 12 emojis (😂 😎 🔥 👏 😭 😡 ❤️ 🍅 💣 🎉 😱 🙈) – it flies across the screen from your box to theirs on everyone's device and lands with a pop. Computers can be targets too. (Max one throw every 0.6 s per player.)
 
 ## 💬 Room chat
-Every online room has a floating **💬** button (bottom-left, like the 🎙 voice button on the right) for a chat between everyone in that room – in the lobby and during any game. New messages pop up as a banner and an unread count. Messages are kept only in the host's memory for the room and disappear when the room closes. Offline (this-device) games have no chat.
+Every online room has a **💬** button in a slim bar along the bottom (with 🎙 voice on the right; the page ends above the bar, so Send / Check buttons are never stuck underneath) for a chat between everyone in that room – in the lobby and during any game. New messages pop up as a banner and an unread count. Messages are kept only in the host's memory for the room and disappear when the room closes. Offline (this-device) games have no chat.
 
 ## 🪙 Coin Flip
 Home screen → **Quick play – no room needed**. Tap the coin (or **Flip the coin**): it spins and lands on **Heads** or **Tails**. The side comes from the browser's secure random generator (`crypto.getRandomValues`), so every flip is an independent 50/50. Shows a heads / tails / flips count with percentages and the last 20 flips for this visit (**↺ Reset count** clears it). Nothing is saved, and it works offline.
@@ -92,6 +92,12 @@ GameHub is an installable web app (`manifest.webmanifest` + the service worker +
 
 ## 🔄 Automatic updates
 Every deploy stamps the commit id into `index.html`, `sw.js` and a new `version.json` (see `.github/workflows/deploy-pages.yml`). When someone opens Game Hub or comes back to the tab, it compares its own id with `version.json` (also every 10 minutes while open). If a newer version is out it reloads by itself on the home, coin flip, offline and My activity screens. In a room, a game or a form it shows a small **"A new version is ready"** bar instead – the update loads when they go back home, or straight away with **Update now**. The service worker loads the site's own files network-first, so the fresh copy is used whenever there's a connection, and the saved copy when offline.
+
+## 🟢 Open rooms in your groups
+When someone in your groups hosts an online room, it appears on your home page under **Open rooms in your groups** – game, host, players (e.g. 2/6) and **waiting** / **playing** / **full**. Tap **Join** to go straight in (only while it's waiting; a game in progress shows as *playing* until it's back in the lobby). The host's app shares the room through their presence entry, so only people in the same groups see it, and it disappears when the room closes or the host goes offline.
+
+## 🐒 Emoji per player
+You pick your emoji in the room's lobby, from 24 animals. Emojis other players already have are greyed out, and if you join with one that's taken you're given a free one – so everyone in a room is different.
 
 ## 👥 Mates: game requests & chat
 When you're signed in, the **👥 My groups** button (bottom-right) lists the people in your groups with a live online dot. Online mates get two buttons:
