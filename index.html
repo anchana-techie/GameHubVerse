@@ -672,6 +672,48 @@
   }
   /* coin flip */
   .coin-card{max-width:460px;margin:14px auto 0;text-align:center}
+  /* fortune cookie */
+  .ft-card{max-width:460px;margin:14px auto 0;text-align:center}
+  .ft-stage{position:relative;height:250px;display:flex;align-items:center;justify-content:center}
+  .ft-cookie{background:none;border:0;padding:0;width:210px;cursor:pointer;position:relative;z-index:2}
+  .ft-cookie[disabled]{cursor:default}
+  .ft-cookie svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 12px 18px #0009)}
+  .ft-l,.ft-r{transition:transform .55s cubic-bezier(.2,.8,.3,1.2);transform-box:fill-box}
+  .ft-l{transform-origin:100% 100%}.ft-r{transform-origin:0% 100%}
+  .ft-stage.open .ft-l{transform:translate(-34px,16px) rotate(-24deg)}
+  .ft-stage.open .ft-r{transform:translate(34px,16px) rotate(24deg)}
+  .ft-stage.shake .ft-cookie{animation:ftShake .45s ease-in-out}
+  @keyframes ftShake{0%,100%{transform:none}20%{transform:rotate(-8deg)}40%{transform:rotate(7deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
+  .ft-slip{position:absolute;left:50%;top:50%;width:min(330px,88%);transform:translate(-50%,-40%) scaleX(0);opacity:0;z-index:3;transition:transform .5s .25s cubic-bezier(.2,.9,.3,1.1),opacity .3s .25s;pointer-events:none}
+  .ft-slip p{margin:0;padding:14px 16px;background:#fffdf5;color:#3b2a14;border-radius:6px;font-family:Georgia,"Times New Roman",serif;font-size:1.05rem;line-height:1.4;box-shadow:0 10px 26px #000a,inset 0 0 0 1px #e8dcc0}
+  .ft-stage.open .ft-slip{transform:translate(-50%,-40%) scaleX(1);opacity:1}
+  .ft-lucky{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .ft-lucky>div{display:flex;flex-direction:column;gap:3px;padding:10px 8px;border-radius:12px;background:#ffffff0a;border:1px solid var(--border)}
+  .ft-lucky span{font-size:.75rem;color:var(--muted)}
+  .ft-lucky b{font-size:.98rem;display:flex;align-items:center;justify-content:center;gap:6px}
+  .ft-lucky i{width:14px;height:14px;border-radius:50%;display:inline-block;box-shadow:0 0 0 2px #fff4}
+  .ft-btns{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .ft-btns .btn{padding:12px 18px;font-size:1.02rem}
+  @media(prefers-reduced-motion:reduce){.ft-l,.ft-r,.ft-slip{transition:none}.ft-stage.shake .ft-cookie{animation:none}}
+  /* spin the bottle */
+  .bt-card{max-width:520px;margin:14px auto 0}
+  .bt-stage{max-width:360px;margin:0 auto}
+  .bt-svg{width:100%;height:auto;display:block}
+  .bt-seat rect{fill:#1d2250;stroke:#8b93ff66;stroke-width:1.5}
+  .bt-seat text{fill:#e6e9ff;font-size:13px;font-weight:700;font-family:system-ui,sans-serif}
+  .bt-seat.on rect{fill:#ffd25e;stroke:#fff;stroke-width:2.5}
+  .bt-seat.on text{fill:#2a1e00}
+  .bt-bottle{transform-origin:160px 160px;transform-box:view-box}
+  .bt-out{text-align:center;min-height:2.2rem;margin:6px 0 10px;font-size:1.05rem}
+  .bt-res{font-family:"Fredoka",system-ui,sans-serif;font-size:1.6rem;color:#ffd25e;animation:rpsPop .35s ease-out;display:inline-block}
+  .bt-spin{font-size:1.1rem;padding:14px}
+  .bt-round{text-align:center;font-size:.85rem;margin-top:8px}
+  .bt-counts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+  .bt-add{display:flex;gap:8px}
+  .bt-add input{flex:1;min-width:0;margin:0}
+  .bt-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .bt-name{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px}
+  .bt-name button{border:0;background:#ffffff14;color:#ffb4b4;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:.75rem;padding:0}
   .coin-stage{position:relative;height:230px;display:flex;align-items:center;justify-content:center;perspective:900px}
   .coin-toss{background:none;border:0;padding:0;cursor:pointer;width:170px;height:170px;border-radius:50%;transform-style:preserve-3d}
   .coin-toss[disabled]{cursor:default}
@@ -4299,8 +4341,10 @@ function landingHTML(){
   <div class="game-grid g1 hg" style="margin-top:14px">
     <button class="game-btn wide" data-a="goJoin"><span class="ico">🔑</span><b>Join a room</b><span class="d">Got a room code or invite link from a friend? Enter it here.</span></button>
   </div>
-  <h3 class="home-h" style="margin-top:34px">Quick play – no room needed</h3><div class="game-grid g1 hg">
-    <button class="game-btn wide" style="--glow:#ffd25e" data-a="goCoin"><span class="ico">🪙</span><b>Coin Flip</b><span class="d">Heads or tails? A fair random flip with a running count – just tap and go.</span><span class="offb">📴 works offline</span></button>
+  <h3 class="home-h" style="margin-top:34px">Quick play – no room needed</h3><div class="game-grid hg">
+    <button class="game-btn" style="--glow:#ffd25e" data-a="goCoin"><span class="ico">🪙</span><b>Coin Flip</b><span class="d">Heads or tails? A fair random flip with a running count – just tap and go.</span><span class="offb">📴 works offline</span></button>
+    <button class="game-btn" style="--glow:#f1b75a" data-a="goFortune"><span class="ico">🥠</span><b>Fortune Cookie</b><span class="d">Crack a cookie for your fortune, lucky numbers and lucky colour. Crack again any time.</span><span class="offb">📴 works offline</span></button>
+    <button class="game-btn" style="--glow:#3ddc97" data-a="goBottle"><span class="ico">🍾</span><b>Spin the Bottle</b><span class="d">Add everyone's names – the bottle visits each person once before anyone repeats.</span><span class="offb">📴 works offline</span></button>
   </div>
   <h3 class="home-h" style="margin-top:34px">Secret draws by email</h3><div class="game-grid hg">
     <button class="game-btn" style="--glow:#5ee08a" data-a="goXmas"><span class="ico">🎄</span><b>ChristMom ChristChild</b><span class="d">Secretly match everyone with a Christ Child by email.</span></button>
@@ -4909,6 +4953,8 @@ function mainHTML(){
     case "room": return roomHTML();
     case "offline": return topbar("📴 Offline mode",true)+offlineHTML();
     case "coin": return topbar("🪙 Coin Flip",true)+coinHTML();
+    case "fortune": return topbar("🥠 Fortune Cookie",true)+fortuneHTML();
+    case "bottle": return topbar("🍾 Spin the Bottle",true)+bottleHTML();
     default: return landingHTML();
   }
 }
@@ -5515,6 +5561,7 @@ function doGuess(){
   const t=String(S.ui.guess||"").trim();
   S.ui.guess=""; sendAct({a:"guess",guess:t});
 }
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target&&e.target.id==="botIn"){ e.preventDefault(); botAdd(); } });
 function onAppClick(e){
   const t=e.target.closest("[data-a]"); if(!t||t.disabled) return;
   switch(t.dataset.a){
@@ -5560,11 +5607,19 @@ function onAppClick(e){
     case "goOffline": S.notice=null; S.screen="offline"; try{ history.replaceState(null,"","#/offline-mode"); }catch(x){} render(); break;
     case "createLocal": createLocalRoom(S.game); break;
     case "goCoin": S.notice=null; S.screen="coin"; try{ history.replaceState(null,"","#/coin-flip"); }catch(x){} render(); window.scrollTo(0,0); break;
+    case "goFortune": S.notice=null; S.screen="fortune"; try{ history.replaceState(null,"","#/fortune-cookie"); }catch(x){} render(); window.scrollTo(0,0); break;
+    case "goBottle": S.notice=null; S.screen="bottle"; try{ history.replaceState(null,"","#/spin-the-bottle"); }catch(x){} render(); window.scrollTo(0,0); break;
+    case "ftCrack": ftCrack(); break;
+    case "ftCopy": ftCopy(); break;
+    case "botAdd": botAdd(); break;
+    case "botDel": { const l=botNames(), i=+t.dataset.i; if(!BOT.busy&&l[i]!=null){ l.splice(i,1); botSave(); botReset(); render(); } break; }
+    case "botClear": if(!BOT.busy){ BOT.names=[]; botSave(); botReset(); render(); } break;
+    case "botSpin": botSpin(); break;
     case "coinFlip": coinFlip(); break;
     case "coinReset": COIN.h=0; COIN.t=0; COIN.hist=[]; COIN.last=null; render(); break;
     case "grpPop": grpPopOpen(); break;
     case "chfull": S.ui.chFull=!S.ui.chFull; render(); if(S.ui.chFull) window.scrollTo(0,0); break;
-    case "offStart": if(t.dataset.g==="coin"){ S.screen="coin"; render(); window.scrollTo(0,0); break; } S.game=t.dataset.g; createLocalRoom(S.game,t.dataset.solo); break;
+    case "offStart": if(["coin","fortune","bottle"].includes(t.dataset.g)){ S.screen=t.dataset.g; render(); window.scrollTo(0,0); break; } S.game=t.dataset.g; createLocalRoom(S.game,t.dataset.solo); break;
     case "create": createRoom(S.game); break;
     case "join": joinRoom(S.ui.joinCode||""); break;
     case "copyLink": copyLink(); break;
@@ -5988,9 +6043,9 @@ function clearHash(){ try{ if(location.hash) history.replaceState(null,"",locati
 
 /* ---- #/routes (preview pages + unknown routes → 404) ---- */
 function applyRoute(){
-  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline","#/coin-flip":"coin","#/coin":"coin","#/join":"entry"};
+  const h=(location.hash||"").replace(/\/+$/,""), pages={"#/offline":"offline","#/offline-mode":"offline","#/coin-flip":"coin","#/coin":"coin","#/fortune-cookie":"fortune","#/spin-the-bottle":"bottle","#/join":"entry"};
   SYS.route=null; SYS.badPath="";
-  if(h===""||h==="#"){ if(S&&(S.screen==="offline"||S.screen==="coin")) S.screen="landing"; }
+  if(h===""||h==="#"){ if(S&&["offline","coin","fortune","bottle"].includes(S.screen)) S.screen="landing"; }
   else if(h==="#/join"&&S&&S.screen==="room"){ }          /* already in a room: stay */
   else if(pages[h]){ S.screen=pages[h]; if(pages[h]==="entry") S.game=null; }
   else if(h==="#/loading") SYS.route="loading";
@@ -6106,6 +6161,121 @@ function registerSW(){
 }
 
 /* ---- Offline mode page ---- */
+/* ================= QUICK PLAY: FORTUNE COOKIE + SPIN THE BOTTLE (this device only, no room) ================= */
+const rndInt=n=>{ try{ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%n; }catch(e){ return Math.floor(Math.random()*n); } };
+const shuffleC=a=>{ for(let i=a.length-1;i>0;i--){ const j=rndInt(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+/* ---- Fortune cookie: tap to crack, read the slip, crack another. Every fortune comes once before any repeats. ---- */
+const FORTUNES=["A pleasant surprise is waiting for you this week.", "Your kindness today will come back to you twice over.", "Someone is thinking of you right now – and smiling.", "Good news will reach you from an unexpected direction.", "The little step you take today becomes a big leap tomorrow.", "Your next idea is better than your last one. Write it down.", "A new friendship will brighten your season.", "Luck is on its way – leave the door open.", "You will laugh so hard this week that your stomach hurts.", "Today is a good day to start the thing you keep postponing.", "A small gift will bring you unusual joy.", "Your patience is about to pay off.", "Trust your gut – it has been right more often than you think.", "An old friend will reach out soon.", "Your hard work has been noticed, even if no one has said it yet.", "Adventure is closer than you think – say yes to the next invitation.", "You will find something you thought you had lost.", "Good things come to those who also go and get them.", "Someone admires your courage more than you know.", "The answer you are looking for is in a conversation you will have soon.", "Your smile is your lucky charm today.", "A delicious meal is in your near future.", "You will win the next game you play. Probably.", "Beware of the person who keeps beating you at Ludo – they are lucky today too.", "You are one cup of tea away from a brilliant idea.", "The stars say: stop overthinking and order dessert.", "Your future is so bright, you might need sunglasses.", "A bird in the hand is worth two in the bush, but a cookie in the hand is worth eating.", "You will soon be the main character of a very good story.", "Today you will make someone's day without even trying.", "Your phone battery will last exactly as long as you need it to.", "A nap will solve at least one of your problems.", "Someone will compliment your taste very soon.", "The best is yet to come – and it is wearing your favourite colour.", "Your energy will inspire the people around you.", "You will receive a message that makes you grin at your screen.", "Fortune favours the brave – and the ones who bring snacks.", "A secret admirer is closer than you think.", "You will finally finish something you started long ago.", "Happiness is a direction, not a destination. You are walking the right way.", "A journey of a thousand miles begins with checking the weather.", "You have a talent you haven't discovered yet.", "Today is a great day to be a little bit silly.", "Help someone today and you'll find your own path clearer.", "Your laughter is contagious – spread it generously.", "Money will find its way to you – maybe just a coin on the street, but still.", "The next time you flip a coin, call heads.", "You are stronger than the problem in front of you.", "A good book or a good song will find you at the right moment.", "Your friends are lucky to have you. Remind them sometimes.", "Opportunity is knocking. Please stop wearing headphones.", "You will be the first to finish your plate at the next party.", "Something you've been waiting for is nearly here.", "Your calm will be a gift to someone who is stressed.", "The universe is quietly arranging things in your favour.", "Do the thing that scares you a little – it will be worth it.", "You will soon have a reason to dance.", "A friend will need your advice – your words will matter.", "Every cloud has a silver lining – and some have free Wi-Fi.", "Today you will learn something that changes your mind.", "A lucky streak begins with your very next try.", "Your crush is wondering what you're up to.", "Don't count the days – make the days count.", "The person who beats you at chess today will owe you a treat.", "You will discover a new favourite food this month.", "The early bird gets the worm, but the late one gets more sleep. Choose wisely.", "Your efforts are planting seeds that will bloom next season.", "Someone will thank you for something you've forgotten you did.", "You have more fans than you realise.", "Expect a happy accident before the week ends.", "Your next selfie will be your best one yet.", "You will be in the right place at exactly the right time.", "Kind words you say today will be remembered for years.", "Life is short – eat the cookie and read the fortune twice.", "A long-awaited plan is finally about to come together.", "You will soon receive an invitation you can't refuse.", "Your creativity is at its peak – use it before it wanders off.", "Today, the shortest queue will be yours.", "A wise person once said nothing. You should try it at the next argument.", "Something small you do today will become a lovely memory.", "You will turn a 'no' into a 'yes' very soon.", "The game is not over until you say it is.", "Rest is not quitting. Recharge and come back stronger.", "Good company is coming your way.", "You will soon be invited to share your opinion – and it will count.", "A message from far away will make you happy.", "Your luck doubles whenever you help a friend.", "Treat yourself today. You've earned it.", "That thing you're worried about will turn out fine.", "You will spot a rainbow, a shooting star, or at least a very nice cloud.", "The road ahead is clear – go at your own speed.", "A good laugh is waiting in your group chat.", "Someone will share their snacks with you. Accept graciously.", "Today's challenge is tomorrow's funny story.", "You are exactly where you need to be right now.", "A fresh start is just one decision away.", "Your honesty will open a door this week.", "You will remember a dream that makes you smile.", "Your team wins when you believe in them.", "Big things often arrive in small packages.", "You will make a new friend in an unexpected place.", "Today the dice are on your side – roll with confidence.", "A happy heart makes everything taste better.", "Your next adventure begins with a single 'why not?'.", "Whatever you lost recently, something better is coming.", "You will soon hear a song that becomes your new favourite.", "Be patient – the best fruit takes time to ripen.", "Your presence makes ordinary moments special.", "An unexpected compliment will make your whole day.", "You'll find exactly what you need at the very bottom of the bag.", "Keep going – you are closer to the finish than you think.", "Tonight's dinner will be better than expected.", "Someone you inspire will tell you about it one day.", "You will soon solve a puzzle that has bugged you for ages.", "Your future self is proud of what you're doing today.", "A sweet surprise awaits – possibly another cookie.", "The next person you meet will have something to teach you.", "You will be lucky in games and even luckier in friends.", "Fortune says: drink some water and stretch. Then conquer the world.", "Your best ideas come when you're relaxed – take a walk.", "Good luck is following you. Don't walk too fast.", "You will win an argument by simply staying calm.", "A door that seemed closed will open with a gentle push.", "Someone is saving a seat for you.", "You will soon celebrate something with people you love.", "Your weekend will be better than your plans.", "You will receive good advice from someone younger than you.", "Say thank you today – it will matter more than you know.", "Life is a game – and you're getting better at it every day.", "This cookie predicts a lot of laughter in your near future.", "A forgotten talent will come back to you when you need it.", "Your inbox will bring good news before long.", "You are about to make a very good decision.", "The secret ingredient is always a little more courage.", "The moon is on your side tonight.", "Somebody will ask you for your recipe for happiness.", "You will be remembered for your kindness, not your score.", "Your big break comes when you least expect it – keep showing up.", "Even a small step forward is still a step forward.", "Joy is hiding in the small things today – go find it.", "You will soon look back at today and smile."];
+const LUCKY_COLOURS=[["Sunset orange","#ff8a3c"],["Ocean blue","#3d8bff"],["Mint green","#3ddc97"],["Royal purple","#8b5cf6"],["Cherry red","#ff4d6d"],["Sunny yellow","#ffd23f"],["Sky blue","#6ec3ff"],["Rose pink","#ff7eb6"],["Forest green","#2f9e5b"],["Golden","#e8b13a"],["Silver","#c9d0e0"],["Teal","#1fb5ad"]];
+const FORT={left:null,cur:null,busy:false,n:0};
+function fortBag(){
+  if(FORT.left) return FORT.left;
+  try{ const d=JSON.parse(localStorage.getItem("gh_fortune_left")); if(Array.isArray(d)&&d.length&&d.every(i=>i>=0&&i<FORTUNES.length)) return FORT.left=d; }catch(e){}
+  return FORT.left=shuffleC([...FORTUNES.keys()]);
+}
+function fortNext(){
+  const bag=fortBag(); const i=bag.shift(); if(!bag.length) FORT.left=shuffleC([...FORTUNES.keys()].filter(k=>k!==i));
+  try{ localStorage.setItem("gh_fortune_left",JSON.stringify(FORT.left)); }catch(e){}
+  const nums=new Set(); while(nums.size<6) nums.add(1+rndInt(49));
+  return {text:FORTUNES[i],nums:[...nums].sort((a,b)=>a-b),col:LUCKY_COLOURS[rndInt(LUCKY_COLOURS.length)]};
+}
+const COOKIE_L=`<path d="M100 18 C52 18 14 52 16 96 C18 136 52 166 98 168 L90 138 L104 112 L92 86 L106 60 L94 36 Z" fill="url(#ckG)" stroke="#a8681f" stroke-width="3" stroke-linejoin="round"/><path d="M40 70 C52 92 54 118 44 140" fill="none" stroke="#c7842d" stroke-width="4" stroke-linecap="round" opacity=".6"/>`;
+const COOKIE_R=`<path d="M100 18 C148 18 186 52 184 96 C182 136 148 166 102 168 L90 138 L104 112 L92 86 L106 60 L94 36 Z" fill="url(#ckG)" stroke="#a8681f" stroke-width="3" stroke-linejoin="round"/><path d="M160 70 C148 92 146 118 156 140" fill="none" stroke="#c7842d" stroke-width="4" stroke-linecap="round" opacity=".6"/>`;
+function fortuneHTML(){
+  const f=FORT.cur, open=!!f&&!FORT.busy;
+  return `<div class="card2 ft-card">
+    <div class="ft-stage ${open?"open":""}" id="ftStage">
+      <button type="button" class="ft-cookie" data-a="ftCrack" aria-label="${open?"Crack another cookie":"Crack the cookie"}" ${FORT.busy?"disabled":""}>
+        <svg viewBox="0 0 200 190" aria-hidden="true"><defs><linearGradient id="ckG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0a3"/><stop offset=".55" stop-color="#f1b75a"/><stop offset="1" stop-color="#d48d33"/></linearGradient></defs>
+          <g class="ft-l">${COOKIE_L}</g><g class="ft-r">${COOKIE_R}</g></svg></button>
+      <div class="ft-slip" aria-live="polite">${f?`<p>${esc(f.text)}</p>`:""}</div>
+    </div>
+    ${open?`<div class="ft-lucky"><div><span>Lucky numbers</span><b>${f.nums.join(" · ")}</b></div><div><span>Lucky colour</span><b><i style="background:${f.col[1]}"></i>${esc(f.col[0])}</b></div></div>`
+      :`<p class="mut" style="margin:6px 0 0">${FORT.busy?"Cracking…":"Tap the cookie to crack it open 🥠"}</p>`}
+    <div class="ft-btns"><button class="btn green" data-a="ftCrack" ${FORT.busy?"disabled":""}>${f?"🔁 Another fortune":"🥠 Crack the cookie"}</button>${open?`<button class="btn secondary" data-a="ftCopy">📋 Copy</button>`:""}</div>
+    ${FORT.n?`<p class="mut" style="font-size:.8rem;margin:10px 0 0">${FORT.n} cookie${FORT.n===1?"":"s"} cracked this visit · ${FORTUNES.length} fortunes – each comes once before any repeats.</p>`:`<p class="mut" style="font-size:.8rem;margin:10px 0 0">${FORTUNES.length} fortunes – each comes once before any repeats. Works offline.</p>`}
+  </div>`;
+}
+function ftCrack(){
+  if(FORT.busy) return;
+  const slow=!matchMedia("(prefers-reduced-motion:reduce)").matches, next=fortNext();
+  FORT.busy=true; FORT.cur=null; render();                                   // a whole cookie again
+  const st=document.getElementById("ftStage");
+  if(st&&slow){ st.classList.add("shake"); setTimeout(()=>{ st.classList.remove("shake"); st.classList.add("open"); },450); }
+  try{ navigator.vibrate&&navigator.vibrate([20,30,40]); }catch(e){}
+  setTimeout(()=>{ FORT.busy=false; FORT.cur=next; FORT.n++; if(S.screen==="fortune") render(); },slow?1000:50);
+}
+function ftCopy(){
+  const f=FORT.cur; if(!f) return;
+  const t="🥠 "+f.text+"\nLucky numbers: "+f.nums.join(", ")+" · Lucky colour: "+f.col[0];
+  try{ navigator.clipboard.writeText(t).then(()=>toast("📋 Fortune copied – paste it anywhere.","ok"),()=>toast(t,"info")); }catch(e){ toast(t,"info"); }
+}
+
+/* ---- Spin the bottle: type everyone's name; the bottle visits every person once (random order) before anyone repeats. ---- */
+const BOT_KEY="gh_bottle_names", BOT_MAX=16;
+const BOT={names:null,bag:[],counts:{},deg:0,busy:false,last:null,round:1,done:0,roundOver:false};
+function botNames(){ if(!BOT.names){ try{ const d=JSON.parse(localStorage.getItem(BOT_KEY)); BOT.names=Array.isArray(d)?d.filter(x=>typeof x==="string").slice(0,BOT_MAX):[]; }catch(e){ BOT.names=[]; } } return BOT.names; }
+function botSave(){ try{ localStorage.setItem(BOT_KEY,JSON.stringify(BOT.names)); }catch(e){} }
+function botReset(){ BOT.bag=[]; BOT.counts={}; BOT.last=null; BOT.round=1; BOT.done=0; BOT.roundOver=false; }
+function botAdd(){
+  const inp=document.getElementById("botIn"), n=String(inp?inp.value:"").replace(/\s+/g," ").trim().slice(0,16), list=botNames();
+  if(!n) return;
+  if(list.length>=BOT_MAX) return toast("Up to "+BOT_MAX+" people.","err");
+  const dup=list.find(x=>x.toLowerCase()===n.toLowerCase()); if(dup) return toast(dup+" is already in the circle.","err");
+  list.push(n); botSave(); botReset(); S.ui.botIn=""; render(); setTimeout(()=>{ const i=document.getElementById("botIn"); if(i) i.focus(); },0);
+}
+const botAngle=(i,n)=>-90+i*360/n;                                           // where person i sits (0 = top, clockwise)
+function bottleHTML(){
+  const list=botNames(), n=list.length, R=118;
+  let h=`<div class="card2 bt-card">`;
+  if(n>=2){
+    const pos=list.map((nm,i)=>{ const a=botAngle(i,n)*Math.PI/180; return [160+R*Math.cos(a),160+R*Math.sin(a)]; });
+    h+=`<div class="bt-stage"><svg viewBox="0 0 320 320" class="bt-svg" role="img" aria-label="Spin the bottle circle">
+      <circle cx="160" cy="160" r="150" fill="url(#btT)" stroke="#8b93ff55" stroke-width="2"/><defs><radialGradient id="btT"><stop offset="0" stop-color="#2a3170"/><stop offset="1" stop-color="#141838"/></radialGradient>
+      <linearGradient id="btG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1f8f5a"/><stop offset=".45" stop-color="#5fe0a0"/><stop offset="1" stop-color="#147045"/></linearGradient></defs>
+      ${pos.map((p,i)=>{ const on=BOT.last===i&&!BOT.busy, w=Math.min(110,22+list[i].length*7.2);
+        return `<g class="bt-seat ${on?"on":""}"><rect x="${(p[0]-w/2).toFixed(1)}" y="${(p[1]-14).toFixed(1)}" width="${w.toFixed(1)}" height="28" rx="14"/><text x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" text-anchor="middle" dominant-baseline="central">${esc(list[i])}</text></g>`; }).join("")}
+      <g class="bt-bottle" id="btBottle" style="transform:rotate(${BOT.deg}deg)"><g transform="translate(160 160)">
+        <ellipse cx="0" cy="52" rx="20" ry="7" fill="#0006"/>
+        <path d="M-6 -78 L6 -78 L6 -52 C6 -40 22 -32 22 -12 L22 48 C22 56 16 60 0 60 C-16 60 -22 56 -22 48 L-22 -12 C-22 -32 -6 -40 -6 -52 Z" fill="url(#btG)" stroke="#0c3d27" stroke-width="2.5"/>
+        <rect x="-7" y="-86" width="14" height="10" rx="3" fill="#ffd25e" stroke="#7a5a12" stroke-width="2"/>
+        <rect x="-15" y="0" width="30" height="26" rx="5" fill="#fff" opacity=".85"/><path d="M-12 -24 C-12 -32 -4 -38 -4 -46" stroke="#fff" stroke-width="3" opacity=".45" fill="none" stroke-linecap="round"/></g></g>
+      </svg></div>`;
+    const leftNow=BOT.bag.length;
+    h+=`<div class="bt-out" aria-live="polite">${BOT.busy?`<span class="mut">Spinning…</span>`:BOT.last!=null?`<b class="bt-res">🍾 It's ${esc(list[BOT.last])}!</b>`:`<span class="mut">Tap Spin – it visits everyone once before anyone repeats.</span>`}</div>
+      <button class="btn green block bt-spin" data-a="botSpin" ${BOT.busy?"disabled":""}>🍾 Spin the bottle</button>
+      <div class="bt-round mut">${BOT.roundOver&&!BOT.busy?`🔁 Everyone had a turn – round ${BOT.round+1} next`:`Round ${BOT.round} · ${BOT.done} of ${n} picked${leftNow&&BOT.done?` · ${n-BOT.done} to go`:""}`}</div>
+      ${Object.keys(BOT.counts).length?`<div class="bt-counts">${list.map(nm=>`<span class="chip">${esc(nm)} · ${BOT.counts[nm]||0}</span>`).join("")}</div>`:""}`;
+  } else h+=`<p class="mut" style="margin:0 0 6px">Add at least 2 people to start.</p>`;
+  h+=`<h3 style="margin:16px 0 8px">👥 People (${n}/${BOT_MAX})</h3>
+    <form class="bt-add" data-botform onsubmit="return false"><input type="text" id="botIn" data-keep maxlength="16" placeholder="Type a name" autocomplete="off" enterkeyhint="done" ${n>=BOT_MAX?"disabled":""}><button type="button" class="btn" data-a="botAdd" ${n>=BOT_MAX?"disabled":""}>Add</button></form>
+    <div class="bt-names">${list.map((nm,i)=>`<span class="chip bt-name">${esc(nm)}<button type="button" data-a="botDel" data-i="${i}" aria-label="Remove ${esc(nm)}" ${BOT.busy?"disabled":""}>✖</button></span>`).join("")}</div>
+    ${n?`<button type="button" class="btn secondary" style="margin-top:10px" data-a="botClear" ${BOT.busy?"disabled":""}>Clear all</button>`:""}
+    <p class="mut" style="font-size:.8rem;margin:12px 0 0">Names are remembered on this phone for next time. Works offline.</p></div>`;
+  return h;
+}
+function botSpin(){
+  const list=botNames(), n=list.length; if(BOT.busy||n<2) return;
+  if(!BOT.bag.length){                                                          // a new round: everyone once, in random order
+    if(BOT.done) BOT.round++;
+    BOT.bag=shuffleC([...Array(n).keys()]);
+    if(BOT.last!=null&&BOT.bag[0]===BOT.last) BOT.bag.push(BOT.bag.shift());      // no instant repeat across rounds
+    BOT.done=0; BOT.roundOver=false;
+  }
+  const i=BOT.bag.shift(), slow=!matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const prev=BOT.deg, want=((botAngle(i,n)+90)%360+360)%360, base=prev-((prev%360)+360)%360;
+  BOT.deg=base+360*(4+rndInt(3))+want;                                       // 4–6 full turns, then stop pointing at person i
+  BOT.busy=true; render();
+  const el=document.getElementById("btBottle");                              // spin from where it stood to the new angle
+  if(el){ el.style.transition="none"; el.style.transform=`rotate(${prev}deg)`; void el.getBoundingClientRect(); el.style.transition=slow?"transform 3.2s cubic-bezier(.12,.6,.15,1)":"none"; el.style.transform=`rotate(${BOT.deg}deg)`; }
+  setTimeout(()=>{
+    BOT.busy=false; BOT.last=i; BOT.done++; BOT.counts[list[i]]=(BOT.counts[list[i]]||0)+1; BOT.roundOver=!BOT.bag.length;
+    try{ navigator.vibrate&&navigator.vibrate(60); }catch(e){}
+    if(S.screen==="bottle") render();
+  },slow?3300:60);
+}
+
 /* ---- Coin Flip: no room, just this device. The side comes from crypto.getRandomValues (a fair 50/50, not Math.random). ---- */
 const COIN={h:0,t:0,hist:[],last:null,deg:0,busy:false};
 function coinSide(){
@@ -6154,7 +6324,9 @@ const OFF_YES=[
   {ico:"🎯",name:"Number Game – solo",d:"Crack the secret number on your own. Rounds, difficulty and timers all work.",g:"number"},
   {ico:"🏁",name:"Ludo vs the computer",d:"Choose the 4- or 6-colour board, play against computer colours.",g:"ludo"},
   {ico:"✊",name:"Rock Paper Scissors vs the computer",d:"First to 2, best of 3 – or change the target in the settings.",g:"rps"},
-  {ico:"🪙",name:"Coin Flip",d:"Heads or tails – a fair random flip with a running count. No room needed.",g:"coin"}
+  {ico:"🪙",name:"Coin Flip",d:"Heads or tails – a fair random flip with a running count. No room needed.",g:"coin"},
+  {ico:"🥠",name:"Fortune Cookie",d:"Crack a cookie for a fortune, lucky numbers and a lucky colour – as many times as you like.",g:"fortune"},
+  {ico:"🍾",name:"Spin the Bottle",d:"Type everyone's names – the bottle visits each person once before anyone repeats.",g:"bottle"}
 ];
 const OFF_NO=[
   {ico:"🕵️",name:"Who Is the Spy?",d:"Needs 3+ people, each on their own device to see their secret word."},

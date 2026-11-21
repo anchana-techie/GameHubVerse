@@ -96,6 +96,11 @@ Every deploy stamps the commit id into `index.html`, `sw.js` and a new `version.
 ## 🟢 Open rooms in your groups
 When someone in your groups hosts an online room, it appears on your home page under **Open rooms in your groups** – game, host, players (e.g. 2/6) and **waiting** / **playing** / **full**. Tap **Join** to go straight in (only while it's waiting; a game in progress shows as *playing* until it's back in the lobby). The host's app shares the room through their presence entry, so only people in the same groups see it, and it disappears when the room closes or the host goes offline.
 
+## 🥠 Fortune Cookie & 🍾 Spin the Bottle (Quick play)
+On the home page under **Quick play – no room needed**, next to Coin Flip. Both run on this device only and work offline.
+- **Fortune Cookie:** tap the cookie – it shakes, cracks open and a fortune slip slides out, with **6 lucky numbers** and a **lucky colour**. **Another fortune** cracks a new one as often as you like; **Copy** puts it on the clipboard. 141 original fortunes (lucky, motivational and funny), and each comes once before any repeats.
+- **Spin the Bottle:** type everyone's names (2–16, remembered on this phone). They sit around a circle and the bottle spins 4–6 turns before stopping on someone – **"🍾 It's Priya!"**. It visits **every person once per round** (random order) before anyone repeats, and never lands on the same person twice in a row across rounds. A count per person shows who's been picked.
+
 ## 🐒 Emoji per player
 You pick your emoji in the room's lobby, from 24 animals. Emojis other players already have are greyed out, and if you join with one that's taken you're given a free one – so everyone in a room is different.
 
