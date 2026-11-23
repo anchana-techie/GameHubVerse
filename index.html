@@ -1075,6 +1075,87 @@
   }
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
+  /* ---- playing cards (Ass, Rummy) ---- */
+  .cd{position:relative;display:inline-flex;flex-direction:column;flex:none;width:46px;height:66px;padding:3px 4px;border-radius:7px;background:linear-gradient(170deg,#ffffff,#e9ecf8);color:#1b1f3b;border:1px solid #c3c8e3;box-shadow:0 2px 5px #0007;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;text-align:left;transition:transform .15s,box-shadow .15s,filter .15s;-webkit-tap-highlight-color:transparent;vertical-align:middle}
+  .cd .cd-c{display:flex;flex-direction:column;align-items:center;width:15px;font-size:.92rem;line-height:1;letter-spacing:-.04em}
+  .cd .cd-c i{font-style:normal;font-size:.72rem;margin-top:1px}
+  .cd .cd-s{position:absolute;right:5px;bottom:5px;font-size:1.45rem;line-height:1}
+  .cd.red{color:#d42a43}
+  .cd.jk{background:linear-gradient(170deg,#fff6d8,#ffe39a);color:#7a4b00}
+  .cd.jk .cd-c{font-size:.75rem}
+  .cd.wj{box-shadow:0 0 0 2px #ffd25e,0 2px 5px #0007}
+  .cd.wj::after{content:"WILD";position:absolute;left:50%;bottom:-2px;transform:translate(-50%,50%);background:#ffd25e;color:#3b2a00;font-size:.5rem;font-weight:800;border-radius:4px;padding:0 3px;letter-spacing:.04em}
+  button.cd{cursor:pointer;font:inherit;font-family:"Fredoka",system-ui,sans-serif;font-weight:700}
+  button.cd:disabled{cursor:default}
+  .cd.sel{transform:translateY(-12px);box-shadow:0 0 0 3px var(--accent),0 8px 12px #0009}
+  .cd.dim{filter:brightness(.5) saturate(.6)}
+  .cd.ok{box-shadow:0 0 0 2px var(--ok,#46d6a4),0 4px 10px #0008}
+  button.cd.ok:not(:disabled):hover{transform:translateY(-6px)}
+  .cd.back{background:repeating-linear-gradient(45deg,#3b2f9e 0 6px,#5a4bd1 6px 12px);border-color:#9d92ff;color:#fff}
+  .cd.back .cd-s{right:50%;bottom:50%;transform:translate(50%,50%);font-size:1.6rem}
+  .cd.empty{background:#ffffff10;border:1px dashed #ffffff40;box-shadow:none}
+  .cd.mini{width:34px;height:48px;padding:2px 3px;border-radius:5px;margin:0 2px}
+  .cd.mini .cd-c{font-size:.78rem}.cd.mini .cd-s{font-size:1rem;right:3px;bottom:3px}
+  .red-s{color:#ff6b81}
+  .cs-seats{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .cs-seat{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:.82rem;transition:box-shadow .2s,border-color .2s}
+  .cs-seat.me{border-color:#ffffff55}
+  .cs-seat.turn{border-color:var(--accent);box-shadow:0 0 12px -2px var(--accent)}
+  .cs-seat.done{opacity:.55}
+  .cs-av{font-size:1.05rem}.cs-nm{font-weight:700;max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cs-n{color:var(--muted);white-space:nowrap}
+  .cs-table{margin:10px 0;padding:8px 10px 10px;border-radius:16px;background:radial-gradient(ellipse at 50% 0%,#1f6b4a,#0f3d2b 70%);border:1px solid #3ddc9740;box-shadow:inset 0 0 30px #0007}
+  .cs-led{font-size:.85rem;color:#d9ffe9;text-align:center;margin-bottom:8px}
+  .cs-trick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:76px;align-items:center}
+  .cs-tk{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.7rem;max-width:58px;animation:cdIn .3s ease-out}
+  .cs-tk span{max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d9ffe9}
+  .cs-tk.cut .cd{box-shadow:0 0 0 3px #ff5468,0 4px 10px #0008;transform:rotate(8deg)}
+  .cs-tk.top .cd{box-shadow:0 0 0 3px #ffd25e,0 4px 10px #0008}
+  .cs-empty{font-size:.85rem;color:#d9ffe9b0}
+  @keyframes cdIn{from{transform:translateY(-14px) scale(.8);opacity:0}to{transform:none;opacity:1}}
+  .cs-mine{margin-top:12px;padding:10px 8px 12px;border-radius:16px;background:var(--panel2);border:1px solid var(--border)}
+  .cs-mine.go{border-color:var(--ok,#46d6a4);box-shadow:0 0 16px -6px var(--ok,#46d6a4)}
+  .cs-mine.faded .hand{opacity:.6}
+  .cs-hh{font-size:.85rem;margin:0 4px 4px}
+  .hand{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 10px;padding:14px 4px 6px}
+  .hgrp{display:flex}
+  .hgrp .cd{margin-right:-20px}.hgrp .cd:last-child{margin-right:0}
+  .hgrp-w{display:flex;flex-direction:column;align-items:flex-start}
+  .hg-l{font-size:.68rem;color:var(--muted);margin:5px 2px 0;min-height:1em}
+  .hg-l.ok{color:var(--ok,#46d6a4);font-weight:700}
+  .rm-gl{display:flex;flex-wrap:wrap;gap:10px 10px;margin-top:6px}
+  .rm-gl.sm .cd{width:34px;height:48px;padding:2px 3px;border-radius:5px}
+  .rm-gl.sm .cd .cd-c{font-size:.78rem}.rm-gl.sm .cd .cd-s{font-size:1rem;right:3px;bottom:3px}
+  .rm-gl.sm .hgrp .cd{margin-right:-14px}.rm-gl.sm .hgrp .cd:last-child{margin-right:0}
+  .rm-table{display:flex;gap:16px;justify-content:center;align-items:flex-end;margin:12px 0;padding:14px 10px 12px;border-radius:16px;background:radial-gradient(ellipse at 50% 0%,#1f6b4a,#0f3d2b 70%);border:1px solid #3ddc9740}
+  .rm-pile{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.75rem;color:#d9ffe9}
+  .rm-pile .cd{width:54px;height:76px}
+  .rm-pile .cd .cd-c{font-size:1.05rem;width:17px}.rm-pile .cd .cd-s{font-size:1.7rem}
+  .rm-pile.wild{margin-left:6px}
+  .rm-pile button.cd:not(:disabled){animation:cdPulse 1.4s ease-in-out infinite}
+  @keyframes cdPulse{50%{box-shadow:0 0 0 3px var(--ok,#46d6a4),0 0 18px var(--ok,#46d6a4)}}
+  .rm-last{font-size:.85rem;color:var(--muted);display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin:4px 0}
+  .rm-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .rm-btns .btn{padding:9px 12px;font-size:.9rem}
+  .rm-hint{margin:8px 0 0;padding:8px 10px;font-size:.88rem}
+  .rm-res{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .rm-row{padding:8px 10px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--border)}
+  .rm-row.win{border-color:var(--ok,#46d6a4)}
+  .rm-row.out{opacity:.7}
+  .rm-rh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.9rem}
+  .rm-pt{font-weight:700}
+  .as-big{font-size:1.1rem}
+  .as-turn{font-weight:600}
+  @media(max-width:600px){
+    .cd{width:40px;height:58px}
+    .cd .cd-c{font-size:.85rem;width:13px}.cd .cd-c i{font-size:.66rem}
+    .cd .cd-s{font-size:1.2rem;right:4px;bottom:4px}
+    .hgrp .cd{margin-right:-19px}
+    .hand{gap:12px 8px;padding:14px 0 6px}
+    .rm-table{gap:12px}
+    .cs-seat{font-size:.78rem;padding:3px 8px}
+  }
+  @media(prefers-reduced-motion:reduce){.cs-tk,.rm-pile button.cd{animation:none!important}}
   @keyframes dbTumble{0%{transform:rotate(0) scale(.5);opacity:.3}60%{transform:rotate(540deg) scale(1);opacity:1}100%{transform:rotate(720deg) scale(1)}}
   @media(prefers-reduced-motion:reduce){.db-die{animation:none!important}}
 
@@ -1148,9 +1229,9 @@ const EMOJIS = ["🐒","🐷","🦁","🐼","🐸","🦊","🐯","🐶","🦆","
 /* each player in a room has a different emoji: a taken one is swapped for the first free one */
 const freeAv=(R,want,pid)=>{ const used=new Set(R.players.filter(x=>!x.left&&x.pid!==pid).map(x=>x.av)); return !used.has(want)&&EMOJIS.includes(want)?want:(EMOJIS.find(e=>!used.has(e))||want); };
 const COLORS = { "None":"white", "Red":"red", "Green":"limegreen", "Yellow":"yellow" };
-const GTITLE = {number:"🎯 Number Game", spy:"🕵️ Who Is the Spy?", raja:"👑 Raja Rani", Scribblio:"🎨 Scribblio", chess:"♟️ Chess", dots:"🎲 Dots and Boxes", ludo:"🏁 Ludo", rps:"✊ Rock Paper Scissors"};
-const MAXP = {number:10, spy:15, raja:20, Scribblio:12, chess:4, dots:20, ludo:6, rps:10};
-const MINP = {number:1, spy:3, raja:3, Scribblio:2, chess:1, dots:2, ludo:1, rps:1};
+const GTITLE = {number:"🎯 Number Game", spy:"🕵️ Who Is the Spy?", raja:"👑 Raja Rani", Scribblio:"🎨 Scribblio", chess:"♟️ Chess", dots:"🎲 Dots and Boxes", ludo:"🏁 Ludo", rps:"✊ Rock Paper Scissors", ass:"🫏 Ass (Kazhutha)", rummy:"🃏 Rummy"};
+const MAXP = {number:10, spy:15, raja:20, Scribblio:12, chess:4, dots:20, ludo:6, rps:10, ass:15, rummy:15};
+const MINP = {number:1, spy:3, raja:3, Scribblio:2, chess:1, dots:2, ludo:1, rps:1, ass:2, rummy:2};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const spyMax = n => Math.max(1, Math.floor((n-1)/2));
@@ -1230,6 +1311,15 @@ const SETTINGS={
     {k:"target",l:"2 players: a match is won by being first to",o:[[1,"1 throw win"],[2,"2 throw wins (best of 3)"],[3,"3 throw wins (best of 5)"],[4,"4 throw wins (best of 7)"]],when:(n,st)=>Math.max(2,n+(+st.cpu))<=2},
     {k:"throwTime",l:"Time to choose",o:[[10,"10 sec"],[15,"15 sec"],[20,"20 sec"],[30,"30 sec"],[0,"No limit"]]}
   ],
+  ass:[
+    {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
+    {k:"turnTime",l:"Time to play a card (then the game plays for you)",o:[[15,"15 sec"],[20,"20 sec"],[30,"30 sec"],[45,"45 sec"],[60,"1 min"],[0,"No limit"]]}
+  ],
+  rummy:[
+    {k:"rounds",l:"Pools (games to play)",o:ROUNDS},
+    {k:"pool",l:"Pool – reach this many points and you're out",o:[[101,"101 pool (drop 20 / 40)"],[201,"201 pool (drop 25 / 50)"]]},
+    {k:"turnTime",l:"Time for each turn (then the game plays for you; 3 missed turns = drop)",o:[[20,"20 sec"],[30,"30 sec"],[45,"45 sec"],[60,"1 min"],[90,"90 sec"],[0,"No limit"]]}
+  ],
   chess:[
     {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
     {k:"players",l:"Number of players (empty seats are played by the computer)",o:[[2,"2 players – classic 8×8"],[3,"3 players – hexagon board"],[4,"4 players – cross board"]]},
@@ -1251,6 +1341,8 @@ const DEFAULTS={
   dots:{rounds:1,cols:5,rows:5,dice:1,bonus:0,turnTime:45},
   ludo:{rounds:1,board:4,fill:"bots",level:2,turnTime:30},
   rps:{rounds:1,cpu:0,target:2,throwTime:15},
+  ass:{rounds:3,turnTime:30},
+  rummy:{rounds:1,pool:101,turnTime:45},
   chess:{rounds:1,players:2,theme:"cosmic",solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
 };
 const BLURB={
@@ -1261,6 +1353,8 @@ const BLURB={
   dots:"Roll the dice, then draw that many lines between the dots. Close a box and it’s yours – your own emoji is stamped inside and it counts as a point. When every box is taken the round is over. Everyone gets a different emoji.",
   ludo:"Classic Ludo for up to 6 players. Roll a 6 to bring a token out, go once round the board and up your home column, and finish with an exact roll. Land on a lone opponent to send their token back to the yard (the ★ squares and start squares are safe). A 6, a capture or a token home gives you another roll – three 6s in a row lose the turn. The host chooses a 4- or 6-colour board and whether colours nobody sits on are played by the computer or left empty. A player who leaves or is kicked is out and their tokens vanish.",
   rps:"Everyone chooses ✊ rock, ✋ paper or ✌️ scissors in secret, then all throws are revealed together. With 2 players it is first to the chosen number of wins. With 3 or more, the players who lose the throw are knocked out until one is left; if all three signs (or only one) appear it is a draw and everyone throws again. Alone, you play the computer.",
+  ass:"Kazhutha for 2–15 players. All 52 cards are dealt and the holder of the A♠ starts with it. Everyone must follow the suit that was led. If all follow, the cards are thrown away and the highest card leads next. If someone has none of that suit they cut with any card – the trick stops and whoever played the highest card of the led suit picks up all those cards. Empty your hand to escape; the last player left holding cards is the Ass 🫏. Escapers score by order.",
+  rummy:"13-card Indian Rummy, Pool 101, for 2–15 players (more decks are added for bigger groups). Draw from the closed or open pile, then throw one card. Make sets and sequences – you need at least two sequences, one of them pure (no joker). Every card of the wild-joker rank, and the printed jokers, can stand in for any card. Declare when your whole hand is grouped. The others add the points of their unmatched cards (max 80); dropping costs 20 before your first draw, 40 later. Reach 101 and you're out – last one standing wins the pool.",
   chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces slowly fade away on the hexagon, turn grey on the cross board) and can step back through the moves with ◀ ▶ to see how it happened. The host chooses the board and piece colour set."
 };
 
@@ -1553,6 +1647,8 @@ function gameView(R,pid){
   if(g.kind==="db") return JSON.parse(JSON.stringify(g));
   if(g.kind==="lu"){ const v=JSON.parse(JSON.stringify(g)); v.ghosts=v.ghosts.filter(x=>Date.now()-x.at<5600); return v; }
   if(g.kind==="rps") return rpsView(R,pid);
+  if(g.kind==="as") return asView(R,pid);
+  if(g.kind==="rm") return rmView(R,pid);
   if(g.kind==="spy"){
     const v={kind:"spy",phase:g.phase,ids:g.ids,clues:g.clues,cyc:g.cyc,turn:g.turn,deadline:g.deadline,locked:g.locked,
       elim:g.elim,last:g.last,caller:g.caller,
@@ -1680,6 +1776,8 @@ function doAct(R,pid,m){
   else if(R.game==="dots") dbAct(R,pid,m);
   else if(R.game==="ludo") luAct(R,pid,m);
   else if(R.game==="rps") rpsAct(R,pid,m);
+  else if(R.game==="ass") asAct(R,pid,m);
+  else if(R.game==="rummy") rmAct(R,pid,m);
   else rrAct(R,pid,m);
 }
 const maxPlayers=R=>R.game==="chess"?(+R.settings.players||2):R.game==="ludo"?(+R.settings.board||4):MAXP[R.game];
@@ -1717,7 +1815,7 @@ function startGame(R,m){
   }
   R.round=1; R.scores={}; R.base={}; R.hist=[]; R.msg=null; R.phase="play"; deal(R);
 }
-function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else if(R.game==="dots") dbDeal(R); else if(R.game==="ludo") luDeal(R); else if(R.game==="rps") rpsDeal(R); else rrDeal(R); }
+function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else if(R.game==="dots") dbDeal(R); else if(R.game==="ludo") luDeal(R); else if(R.game==="rps") rpsDeal(R); else if(R.game==="ass") asDeal(R); else if(R.game==="rummy") rmDeal(R); else rrDeal(R); }
 function abort(R,msg,leaver){
   // "too few players" scene: the player who left is ejected (unless the host kicked them – that scene is already queued), then the room is shown
   ejPush(R,{none:true,eb:"NOT ENOUGH PLAYERS",h:"Less players than required.",s:"Taking you to the room…",tone:"bad",T:7000});
@@ -1748,6 +1846,11 @@ function afterLeave(R,pid){
   } else if(R.game==="dots"){
     if(act.length<2) abort(R,"A player left, so the game was stopped (Dots and Boxes needs at least 2 players).",pid);
     else if(g.ids[g.turn]===pid) dbNext(R);
+  } else if(R.game==="ass"){
+    if(act.length<2) abort(R,"A player left, so the game was stopped (Ass needs at least 2 players).",pid);
+    else asOut(R,pid);
+  } else if(R.game==="rummy"){
+    rmOut(R,pid);
   } else {
     const role=g.roles[pid]!=null?RR_ROLES[g.roles[pid]].key:null;
     if(act.length<3) abort(R,"A player left, so the game was stopped (Raja Rani needs at least 3 players).",pid);
@@ -1757,7 +1860,7 @@ function afterLeave(R,pid){
 function hostTick(){
   const R=NET.R; if(!R||R.phase!=="play"||!R.g||(R.g.phase==="reveal"&&R.game!=="Scribblio")) return;
   let ch=false; const now=Date.now();
-  try{ ch=R.game==="chess"?chTick(R,now):R.game==="spy"?spyTick(R,now):R.game==="number"?numTick(R,now):R.game==="Scribblio"?skTick(R,now):R.game==="dots"?dbTick(R,now):R.game==="ludo"?luTick(R,now):R.game==="rps"?rpsTick(R,now):rrTick(R,now); }catch(e){ sysReport(e,"game"); }
+  try{ ch=R.game==="chess"?chTick(R,now):R.game==="spy"?spyTick(R,now):R.game==="number"?numTick(R,now):R.game==="Scribblio"?skTick(R,now):R.game==="dots"?dbTick(R,now):R.game==="ludo"?luTick(R,now):R.game==="rps"?rpsTick(R,now):R.game==="ass"?asTick(R,now):R.game==="rummy"?rmTick(R,now):rrTick(R,now); }catch(e){ sysReport(e,"game"); }
   if(ch) pushState();
 }
 function addScore(R,pts){ Object.keys(pts).forEach(pid=>{ R.scores[pid]=(R.scores[pid]||0)+pts[pid]; }); }
@@ -2204,6 +2307,343 @@ function rpsView(R,pid){
     picked:Object.keys(g.picks),mine:g.picks[pid]===undefined?null:g.picks[pid]};
   if(g.phase!=="pick"&&g.last) v.shown=g.last.shown;
   return v;
+}
+
+/* ---------- PLAYING CARDS (shared by Ass and Rummy) ----------
+   A card is one number: deck*80 + suit*16 + rank. Rank 2..14 (11 J, 12 Q, 13 K, 14 A); a printed joker is suit 4, rank 15.
+   Suits 0 ♠, 1 ♥, 2 ♣, 3 ♦ (so a hand sorted by suit alternates black and red). With several decks, identical cards get different numbers. */
+const cR=c=>c%16, cS=c=>Math.floor((c%80)/16);
+const SUIT=["♠","♥","♣","♦"], SUITN=["spades","hearts","clubs","diamonds"], RANKN={11:"J",12:"Q",13:"K",14:"A",15:"Joker"};
+const rName=r=>RANKN[r]||String(r);
+const cName=c=>cR(c)===15?"🃏 Joker":rName(cR(c))+SUIT[cS(c)];
+function mkDecks(n,jokers){ const a=[]; for(let d=0;d<n;d++){ for(let s=0;s<4;s++) for(let r=2;r<=14;r++) a.push(d*80+s*16+r); if(jokers) a.push(d*80+79); } return a; }
+const cardSort=(a,b)=>(cS(a)-cS(b))||(cR(a)-cR(b))||(a-b);
+
+/* ---------- ASS (Kazhutha) ----------
+   One deck is dealt out completely. The holder of A♠ leads it. Players play in seat order and must follow the led suit.
+   - everyone followed: the trick is thrown away and the highest card leads the next trick
+   - someone can't follow: they "cut" with any card, the trick stops at once and the player with the highest card of the
+     led suit picks up all the cards of the trick, then leads.
+   Empty your hand and you escape; the last player still holding cards is the Ass. Escapers score by order: first out gets
+   one point less than the number of players, the next one less again, … the Ass gets nothing.                                */
+function asDeal(R){
+  const hum=R.players.filter(p=>!p.left);
+  const seats=hum.map(p=>({pid:p.pid,name:p.name,av:p.av,hand:[],out:0,left:false}));
+  const deck=shuffle(mkDecks(1,false)), st=Math.floor(Math.random()*seats.length);
+  deck.forEach((c,i)=>seats[(st+i)%seats.length].hand.push(c));
+  const lead=seats.findIndex(s=>s.hand.includes(14));     // 14 = A♠ of deck 0
+  R.g={kind:"as",phase:"play",seats,turn:lead,lead,trick:[],part:[],led:-1,first:true,last:null,next:-1,order:[],disc:0,tricks:0,deadline:0,tStart:0,until:0,res:null};
+  asArm(R);
+}
+const asActive=g=>g.seats.map((s,i)=>i).filter(i=>!g.seats[i].left&&g.seats[i].hand.length>0);
+function asArm(R){ const g=R.g, t=+R.settings.turnTime; g.tStart=Date.now(); g.deadline=t?g.tStart+t*1000:0; }
+function asLegal(g,i){
+  const h=g.seats[i].hand;
+  if(!g.trick.length){ if(g.first&&h.includes(14)) return [14]; return h.slice(); }
+  const f=h.filter(c=>cS(c)===g.led); return f.length?f:h.slice();
+}
+const asDone=g=>g.part.every(j=>g.seats[j].left||g.trick.some(t=>t.i===j));
+function asNextIn(g,i){ const P=g.part, k=P.indexOf(i); for(let d=1;d<=P.length;d++){ const j=P[(k+d)%P.length]; if(!g.seats[j].left&&!g.trick.some(t=>t.i===j)) return j; } return -1; }
+function asAct(R,pid,m){
+  const g=R.g; if(m.a!=="asplay"||g.phase!=="play") return;
+  const s=g.seats[g.turn]; if(!s||s.pid!==pid) return;
+  const c=+m.c; if(!s.hand.includes(c)) return;
+  if(!asLegal(g,g.turn).includes(c)) return tell(R,pid,g.first&&!g.trick.length?"Start with the A♠.":"You must follow the suit that was led while you still have it.");
+  asPlay(R,c);
+}
+function asPlay(R,c){
+  const g=R.g, i=g.turn, s=g.seats[i];
+  if(!g.trick.length){ g.part=asActive(g); g.led=cS(c); g.lead=i; g.first=false; }
+  s.hand.splice(s.hand.indexOf(c),1);
+  g.trick.push({i,c});
+  const cut=cS(c)!==g.led;
+  if(cut||asDone(g)) return asEndTrick(R,cut);
+  g.turn=asNextIn(g,i); asArm(R);
+}
+function asEndTrick(R,cut){
+  const g=R.g, now=Date.now();
+  const led=g.trick.filter(t=>cS(t.c)===g.led&&!g.seats[t.i].left);
+  const top=led.length?led.reduce((a,b)=>cR(b.c)>cR(a.c)?b:a):null;
+  g.tricks++;
+  if(cut&&top){ const pk=g.seats[top.i]; g.trick.forEach(t=>pk.hand.push(t.c)); g.last={cut:true,by:g.trick[g.trick.length-1].i,picker:top.i,n:g.trick.length,suit:g.led,at:now}; }
+  else { g.disc+=g.trick.length; g.last={cut:false,top:top?top.i:-1,n:g.trick.length,suit:g.led,at:now}; }
+  g.trick.forEach(t=>{ const s=g.seats[t.i]; if(!s.left&&!s.hand.length&&!s.out){ g.order.push(t.i); s.out=g.order.length; } });
+  g.next=top?top.i:g.lead;
+  g.phase="show"; g.until=now+(cut?2600:1700); g.deadline=0;
+}
+function asNext(R){
+  const g=R.g; g.trick=[]; g.part=[]; g.led=-1;
+  const act=asActive(g);
+  if(act.length<=1) return asEnd(R,act.length?act[0]:-1);
+  let L=g.next; if(!act.includes(L)){ const k=act.find(j=>j>L); L=k===undefined?act[0]:k; }
+  g.lead=L; g.turn=L; g.phase="play"; asArm(R);
+}
+function asEnd(R,assI){
+  const g=R.g, n=g.seats.length, pts={};
+  g.order.forEach((i,k)=>{ const s=g.seats[i]; if(s.pid&&!s.left) pts[s.pid]=Math.max(1,n-1-k); });
+  addScore(R,pts);
+  g.res={ass:assI,pts}; g.phase="reveal"; g.deadline=0; g.trick=[]; g.part=[];
+}
+function asAuto(g){
+  const L=asLegal(g,g.turn).slice().sort((a,b)=>cR(a)-cR(b));
+  if(g.trick.length&&cS(L[0])!==g.led) return L[L.length-1];   // cutting: get rid of the biggest card
+  return L[0];
+}
+function asTick(R,now){
+  const g=R.g;
+  if(g.phase==="show"){ if(now>=g.until){ asNext(R); return true; } return false; }
+  if(g.phase!=="play") return false;
+  const s=g.seats[g.turn]; if(!s) return false;
+  if((g.deadline&&now>g.deadline)||(gone(R,s.pid)&&now-g.tStart>8000)){ asPlay(R,asAuto(g)); return true; }
+  return false;
+}
+function asOut(R,pid){
+  const g=R.g; if(!g||g.phase==="reveal") return;
+  const i=g.seats.findIndex(s=>s.pid===pid); if(i<0) return;
+  const s=g.seats[i]; if(s.left) return;
+  s.left=true; g.disc+=s.hand.length; s.hand=[];
+  if(g.phase!=="play") return;                           // between tricks: asNext sorts it out
+  const act=asActive(g);
+  if(act.length<=1){ asEnd(R,act.length?act[0]:-1); return; }
+  if(g.trick.length&&asDone(g)){ asEndTrick(R,false); return; }
+  if(g.turn===i){
+    if(g.trick.length) g.turn=asNextIn(g,i);
+    else { const k=act.find(j=>j>i); g.turn=k===undefined?act[0]:k; g.lead=g.turn; }
+    asArm(R);
+  }
+}
+function asView(R,pid){
+  const g=R.g, me=g.seats.findIndex(s=>s.pid===pid);
+  return {kind:"as",phase:g.phase,turn:g.turn,lead:g.lead,trick:g.trick,led:g.led,last:g.last,deadline:g.deadline,disc:g.disc,tricks:g.tricks,res:g.res,
+    first:g.first&&!g.trick.length,
+    seats:g.seats.map(s=>({pid:s.pid,name:s.name,av:s.av,n:s.hand.length,out:s.out,left:s.left})),
+    me, hand:me>=0?g.seats[me].hand.slice().sort(cardSort):[], legal:me>=0&&g.phase==="play"&&g.turn===me?asLegal(g,me):[]};
+}
+
+/* ---------- RUMMY (13-card Indian Rummy, Pool 101 / 201) ----------
+   13 cards each; one card is turned up as the wild joker – every card of that rank is a joker this deal (a printed joker turned
+   up makes the Aces wild). On your turn draw from the closed or the open pile, then discard one card, or declare with it.
+   A declaration needs every card in sets/sequences of 3+, at least two sequences and at least one pure sequence (no joker).
+   The others score the points of their unmatched cards (max 80). Dropping before your first draw costs 20, later 40.
+   Points add up over the deals; reach the pool limit (101) and you're out. The last player left wins the pool.              */
+const RM_DECKS=n=>n<=6?2:n<=9?3:n<=12?4:5;
+const rmVal=(c,wild)=>{ const r=cR(c); return r===15||r===wild?0:r>=10?10:r; };
+/* best arrangement of a hand. mode 0: sets, pure and impure sequences; mode 1: pure sequences only.
+   Returns an array indexed by category (pure? 3:0) + min(sequences,2) of {k: points*100 + loose cards, m: melds}.          */
+function rmSolve(cards,wild,mode){
+  const isJk=c=>cR(c)===15, isW=c=>cR(c)===wild;
+  let J0=0; const nat=[];
+  cards.forEach(c=>{ if(isJk(c)) J0++; else nat.push(c); });
+  nat.sort((a,b)=>(isW(b)-isW(a))||cardSort(a,b));          // wild cards first: each decides "joker or natural" before the rest
+  const memo=new Map();
+  function f(rest,J){
+    const key=rest.join(",")+"|"+J; const hit=memo.get(key); if(hit) return hit;
+    const out=[null,null,null,null,null,null];
+    const put=(cat,k,m)=>{ if(!out[cat]||k<out[cat].k) out[cat]={k,m}; };
+    if(!rest.length){
+      if(!J) put(0,0,[]); else if(J>=3&&mode===0) put(0,0,[{t:"set",n:[],j:J}]); else put(0,J,[{t:"dead",n:[],j:J}]);
+      memo.set(key,out); return out;
+    }
+    const c=rest[0], tail=rest.slice(1);
+    const comb=(sub,meld,addK)=>{ sub.forEach((e,cat)=>{ if(!e) return; let p=cat>=3?1:0, s=cat%3;
+      if(meld&&meld.t==="pure"){ p=1; s=Math.min(2,s+1); } else if(meld&&meld.t==="seq") s=Math.min(2,s+1);
+      put(p*3+s,e.k+addK,meld?[meld].concat(e.m):e.m); }); };
+    comb(f(tail,J),{t:"dead",n:[c],j:0},rmVal(c,wild)*100+1);   // leave it unmatched
+    if(isW(c)&&mode===0) comb(f(tail,J+1),null,0);              // use the wild card as a joker
+    const take=used=>tail.filter((_,ix)=>!used.has(ix));
+    if(mode===0){                                               // sets: same rank, different suits, 3 or 4 cards
+      const r=cR(c), suits=new Set([cS(c)]), same=[];
+      tail.forEach((x,ix)=>{ if(cR(x)===r&&!suits.has(cS(x))){ suits.add(cS(x)); same.push(ix); } });
+      const subs=[[]]; same.forEach(ix=>{ const L=subs.length; for(let q=0;q<L;q++) if(subs[q].length<3) subs.push(subs[q].concat(ix)); });
+      subs.forEach(sb=>{ const k=1+sb.length; for(let j=Math.max(0,3-k);j<=Math.min(J,4-k);j++) comb(f(take(new Set(sb)),J-j),{t:"set",n:[c].concat(sb.map(ix=>tail[ix])),j},0); });
+    }
+    // sequences of the same suit through c (A is low in A-2-3 or high in Q-K-A)
+    const s=cS(c), pr=cR(c), poss=pr===14?[1,14]:[pr];
+    const at=p=>{ const rr=p===1?14:p, L=[]; tail.forEach((x,ix)=>{ if(cS(x)===s&&cR(x)===rr) L.push(ix); }); return L; };
+    const sameRank=ix=>{ const x=tail[ix]; return tail.some((y,iy)=>iy!==ix&&cR(y)===cR(x)&&cS(y)!==cS(x)); };
+    poss.forEach(p=>{
+      const A={}; for(let q=Math.max(1,p-12);q<=Math.min(14,p+12);q++) if(q!==p) A[q]=at(q);
+      for(let lo=Math.max(1,p-12);lo<=p;lo++){
+        let miss=0; for(let q=lo;q<p;q++) if(!A[q].length) miss++;
+        if(miss>J||(mode===1&&miss)) continue;
+        for(let hi=Math.max(p,lo+2);hi<=Math.min(14,lo+12);hi++){
+          let m2=miss; for(let q=p+1;q<=hi;q++) if(!A[q].length) m2++;
+          if(m2>J) break; if(mode===1&&m2) break;
+          const P=[]; for(let q=lo;q<=hi;q++) if(q!==p) P.push(q);
+          const rec=(k,used,j)=>{
+            if(j>J||(mode===1&&j)) return;
+            if(k===P.length){ const t=j?"seq":"pure"; comb(f(take(new Set(used)),J-j),{t,n:[c].concat(used.map(ix=>tail[ix])),j},0); return; }
+            const free=A[P[k]].find(ix=>!used.includes(ix));
+            if(free!==undefined){ rec(k+1,used.concat(free),j); if(j<J&&sameRank(free)) rec(k+1,used,j+1); }   // a joker may stand in when the natural card is wanted in a set
+            else rec(k+1,used,j+1);
+          };
+          rec(0,[],0);
+        }
+      }
+    });
+    memo.set(key,out); return out;
+  }
+  return f(nat,J0);
+}
+/* turn the solver's melds into real card groups: jokers that the melds used are handed out from the cards no meld claimed */
+function rmGroups(cards,m,wild){
+  const claimed=new Set(), groups=[], dead=[];
+  (m||[]).forEach(x=>x.n.forEach(c=>claimed.add(c)));
+  const pool=cards.filter(c=>!claimed.has(c));
+  (m||[]).forEach(x=>{ if(x.t==="dead"){ dead.push(...x.n); return; } groups.push({t:x.t,cards:x.n.concat(pool.splice(0,x.j))}); });
+  dead.push(...pool);
+  groups.forEach(g=>{ g.cards.sort(cardSort); const k=rmKind(g.cards,wild); if(k) g.t=k; });
+  if(dead.length) groups.push({t:"dead",cards:dead.sort(cardSort)});
+  return groups;
+}
+function rmEval(cards,wild){
+  const A=rmSolve(cards,wild,0), tot=cards.reduce((a,c)=>a+rmVal(c,wild),0), full=A[5];
+  const valid=cards.length===13&&!!full&&full.k===0;
+  let pts=tot, m=null;
+  if(full&&Math.floor(full.k/100)<=pts){ pts=Math.floor(full.k/100); m=full.m; }
+  const B=rmSolve(cards,wild,1), pb=[B[3],B[4],B[5]].filter(Boolean).reduce((a,b)=>!a||b.k<a.k?b:a,null);
+  if(pb&&Math.floor(pb.k/100)<pts){ pts=Math.floor(pb.k/100); m=pb.m; }
+  if(!m){ const best=[A[5],A[4],A[3]].find(Boolean)||A.filter(Boolean).reduce((a,b)=>!a||b.k<a.k?b:a,null); m=best&&best.m; }
+  return {valid,pts:Math.min(80,pts),groups:rmGroups(cards,m,wild)};
+}
+/* what one hand-made group is: "pure", "seq", "set" or null */
+function rmKind(cards,wild){
+  if(cards.length<3) return null;
+  const jk=c=>cR(c)===15||cR(c)===wild;
+  const run=(list,jokers)=>{ if(!list.length) return false; const s=cS(list[0]); if(list.some(c=>cS(c)!==s)) return false;
+    for(const hiA of [false,true]){ const rs=list.map(c=>cR(c)===14&&!hiA?1:cR(c)).sort((a,b)=>a-b);
+      if(new Set(rs).size!==rs.length) continue; if(rs[rs.length-1]-rs[0]+1<=rs.length+jokers&&list.length+jokers<=14) return true; } return false; };
+  const nat=cards.filter(c=>cR(c)!==15);
+  if(nat.length===cards.length&&run(nat,0)) return "pure";
+  const real=cards.filter(c=>!jk(c)), j=cards.length-real.length;
+  if(run(real,j)) return "seq";
+  if(cards.length<=4&&(!real.length||(real.every(c=>cR(c)===cR(real[0]))&&new Set(real.map(cS)).size===real.length))) return "set";
+  if(!real.length) return "set";
+  return null;
+}
+function rmArm(R){ const g=R.g, t=+R.settings.turnTime; g.tStart=Date.now(); g.deadline=t?g.tStart+t*1000:0; }
+const rmLive=g=>g.seats.map((s,i)=>i).filter(i=>!g.seats[i].elim&&!g.seats[i].left);
+const rmIn=g=>rmLive(g).filter(i=>!g.seats[i].drop);
+const rmAfter=(list,i)=>{ const k=list.find(j=>j>i); return k===undefined?list[0]:k; };
+function rmDeal(R){
+  const hum=R.players.filter(p=>!p.left);
+  R.g={kind:"rm",phase:"turn",seats:hum.map(p=>({pid:p.pid,name:p.name,av:p.av,score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null})),
+    limit:+R.settings.pool||101,dealNo:0,dealer:Math.floor(Math.random()*hum.length),turn:0,step:"draw",open:[],closed:[],wildC:null,wild:0,decks:2,
+    lastDisc:null,lastDraw:null,deadline:0,tStart:0,until:0,winner:-1,how:"",poolOver:false,res:null};
+  rmNewDeal(R);
+}
+function rmNewDeal(R){
+  const g=R.g, live=rmLive(g); g.dealNo++;
+  g.dealer=rmAfter(live,g.dealer);
+  g.decks=RM_DECKS(live.length);
+  const deck=shuffle(mkDecks(g.decks,true));
+  g.seats.forEach(s=>{ s.hand=[]; s.drop=0; s.drew=false; s.miss=0; s.wrong=false; s.dpts=null; s.groups=null; });
+  for(let k=0;k<13;k++) live.forEach(i=>g.seats[i].hand.push(deck.pop()));
+  g.wildC=deck.pop(); g.wild=cR(g.wildC)===15?14:cR(g.wildC);
+  g.open=[deck.pop()]; g.closed=deck;
+  g.turn=rmAfter(live,g.dealer); g.step="draw"; g.phase="turn"; g.winner=-1; g.how=""; g.lastDisc=null; g.lastDraw=null;
+  rmArm(R);
+}
+function rmAct(R,pid,m){
+  const g=R.g;
+  if(m.a==="rmnext"){ if(pid===R.hostPid&&g.phase==="result") rmAfterResult(R); return; }
+  if(g.phase!=="turn") return;
+  const i=g.turn, s=g.seats[i]; if(!s||s.pid!==pid) return;
+  const c=+m.c;
+  if(m.a==="rmdraw"&&g.step==="draw"){ s.miss=0; rmDraw(R,m.from==="open"?"open":"closed"); }
+  else if(m.a==="rmdisc"&&g.step==="discard"&&s.hand.includes(c)){ s.miss=0; rmDiscard(R,c); }
+  else if(m.a==="rmdecl"&&g.step==="discard"&&s.hand.includes(c)) rmDeclare(R,c);
+  else if(m.a==="rmdrop"&&g.step==="draw") rmDrop(R,i);
+}
+function rmDraw(R,from){
+  const g=R.g, s=g.seats[g.turn];
+  if(from==="open"&&g.open.length){ const c=g.open.pop(); s.hand.push(c); g.lastDraw={i:g.turn,from,c}; }
+  else {
+    if(!g.closed.length){ const top=g.open.pop(); g.closed=shuffle(g.open); g.open=top===undefined?[]:[top]; }
+    if(!g.closed.length) return;
+    s.hand.push(g.closed.pop()); g.lastDraw={i:g.turn,from:"closed"};
+  }
+  s.drew=true; g.step="discard";
+}
+function rmDiscard(R,c){
+  const g=R.g, s=g.seats[g.turn];
+  s.hand.splice(s.hand.indexOf(c),1); g.open.push(c); g.lastDisc={i:g.turn,c};
+  rmAdvance(R);
+}
+function rmAdvance(R){ const g=R.g, ins=rmIn(g); if(ins.length<=1) return rmDealEnd(R,ins.length?ins[0]:-1,"drop"); g.turn=rmAfter(ins,g.turn); g.step="draw"; rmArm(R); }
+function rmDropCost(g,s){ return g.limit===201?(s.drew?50:25):(s.drew?40:20); }
+function rmDrop(R,i){
+  const g=R.g, s=g.seats[i]; s.drop=rmDropCost(g,s);
+  const ins=rmIn(g);
+  if(ins.length<=1) return rmDealEnd(R,ins.length?ins[0]:-1,"drop");
+  if(g.turn===i){ g.turn=rmAfter(ins,i); g.step="draw"; rmArm(R); }
+}
+function rmDeclare(R,c){
+  const g=R.g, i=g.turn, s=g.seats[i], rest=s.hand.filter((x,k)=>k!==s.hand.indexOf(c));
+  const ev=rmEval(rest,g.wild);
+  if(!ev.valid){                                         // wrong declaration: full 80 points and out of this deal
+    s.drop=80; s.wrong=true; tell(R,s.pid,"That wasn't a valid declaration – 80 points.");
+    g.open.push(c); s.hand=rest; g.lastDisc={i,c};
+    const ins=rmIn(g); if(ins.length<=1) return rmDealEnd(R,ins.length?ins[0]:-1,"drop");
+    g.turn=rmAfter(ins,i); g.step="draw"; rmArm(R); return;
+  }
+  s.hand=rest; s.groups=ev.groups; g.open.push(c);
+  rmDealEnd(R,i,"declare");
+}
+function rmDealEnd(R,w,how){
+  const g=R.g; g.phase="result"; g.deadline=0; g.winner=w; g.how=how;
+  g.seats.forEach((s,i)=>{
+    if(s.elim||s.left){ s.dpts=null; return; }
+    let pts;
+    if(i===w){ pts=0; if(!s.groups) s.groups=s.hand.length===13?rmEval(s.hand,g.wild).groups:null; }
+    else if(s.drop){ pts=s.drop; s.groups=null; }
+    else { const ev=rmEval(s.hand,g.wild); pts=ev.pts; s.groups=ev.groups; }
+    s.dpts=pts; s.score+=pts;
+    if(s.score>=g.limit) s.elim=true;
+  });
+  g.poolOver=rmLive(g).length<=1;
+  g.until=Date.now()+30000;
+}
+function rmAfterResult(R){ const g=R.g; if(g.poolOver) rmEnd(R); else rmNewDeal(R); }
+function rmEnd(R){
+  const g=R.g, live=rmLive(g), w=live.length?live[0]:-1, pts={};
+  if(w>=0&&g.seats[w].pid) pts[g.seats[w].pid]=1;
+  addScore(R,pts);
+  g.res={winner:w,pts}; g.phase="reveal"; g.deadline=0;
+}
+function rmTick(R,now){
+  const g=R.g;
+  if(g.phase==="result"){ if(now>=g.until){ rmAfterResult(R); return true; } return false; }
+  if(g.phase!=="turn") return false;
+  const s=g.seats[g.turn]; if(!s) return false;
+  if((g.deadline&&now>g.deadline)||(gone(R,s.pid)&&now-g.tStart>15000)){
+    s.miss++;
+    if(g.step==="draw"&&s.miss>=3){ rmDrop(R,g.turn); return true; }        // three turns missed in a row: dropped
+    if(g.step==="draw") rmDraw(R,"closed");
+    rmDiscard(R,s.hand[s.hand.length-1]);                                 // throw the card that was just drawn
+    return true;
+  }
+  return false;
+}
+function rmOut(R,pid){
+  const g=R.g; if(!g||g.phase==="reveal") return;
+  const i=g.seats.findIndex(s=>s.pid===pid); if(i<0) return;
+  const s=g.seats[i]; if(s.left) return;
+  s.left=true; s.hand=[];
+  if(rmLive(g).length<=1&&g.phase!=="result"){ rmEnd(R); return; }
+  if(g.phase==="result"){ g.poolOver=rmLive(g).length<=1; return; }
+  const ins=rmIn(g);
+  if(ins.length<=1){ rmDealEnd(R,ins.length?ins[0]:-1,"drop"); return; }
+  if(g.turn===i){ g.turn=rmAfter(ins,i); g.step="draw"; rmArm(R); }
+}
+function rmView(R,pid){
+  const g=R.g, me=g.seats.findIndex(s=>s.pid===pid), res=g.phase!=="turn";
+  return {kind:"rm",phase:g.phase,dealNo:g.dealNo,turn:g.turn,step:g.step,dealer:g.dealer,deadline:g.deadline,limit:g.limit,decks:g.decks,
+    wildC:g.wildC,wild:g.wild,open:g.open.length?g.open[g.open.length-1]:null,openN:g.open.length,closedN:g.closed.length,
+    lastDisc:g.lastDisc,lastDraw:g.lastDraw,winner:g.winner,how:g.how,poolOver:g.poolOver,until:g.until,res:g.res,
+    seats:g.seats.map(s=>({pid:s.pid,name:s.name,av:s.av,score:s.score,elim:s.elim,left:s.left,drop:s.drop,wrong:!!s.wrong,n:s.hand.length,
+      dpts:res?s.dpts:null,groups:res?s.groups:null})),
+    me, hand:me>=0?g.seats[me].hand.slice():[], drew:me>=0&&g.seats[me].drew};
 }
 
 /* ---------- RAJA RANI ---------- */
@@ -4010,7 +4450,7 @@ function rcTipShow(x){
    - Chats live in this tab only (sessionStorage): they survive a refresh and are gone when the tab or browser is closed, or on sign-out.
    - A second Game Hub tab of the same person can send but not receive (the id is taken by the first tab). */
 const MATE={peer:null,ready:false,dup:false,owner:"",starting:false,conns:{},pend:{},sent:{},inbox:[],chat:{},open:null,unread:{},pick:null,after:null,note:"",tick:null,el:null,cel:null,nel:null,nt:null};
-const MATE_GAMES=["spy","raja","Scribblio","chess","dots","ludo","rps","number"];
+const MATE_GAMES=["spy","raja","Scribblio","chess","dots","ludo","rps","ass","rummy","number"];
 const MATE_TTL=60000, MATE_KEY="gh_mchat";
 /* Backup route for game requests: the request (and the accept / decline) is also written to the sender's own presence entry in
    their groups, which every mate's app already listens to. So a request arrives even when the direct link can't be made
@@ -4337,6 +4777,8 @@ function landingHTML(){
   <div class="game-grid g2 hg">
     <button class="game-btn" style="--glow:#ff5468" data-a="go" data-g="ludo"><span class="ico">🏁</span><b>Ludo</b><span class="d">Up to 6 players on a 4- or 6-colour board. Computer fills empty colours if you like.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" style="--glow:#4aa3ff" data-a="go" data-g="rps"><span class="ico">✊</span><b>Rock Paper Scissors</b><span class="d">Throw in secret, reveal together. Duel a friend or the computer, or knock out a crowd.</span><span class="offb">📴 works offline</span></button>
+    <button class="game-btn" style="--glow:#c58cff" data-a="go" data-g="ass"><span class="ico">🫏</span><b>Ass (Kazhutha)</b><span class="d">2–15 players. Follow suit or cut – empty your hand to escape. The last one holding cards is the Ass.</span></button>
+    <button class="game-btn" style="--glow:#3ddc97" data-a="go" data-g="rummy"><span class="ico">🃏</span><b>Rummy</b><span class="d">13-card Indian Rummy, Pool 101, for 2–15 players. Sets, sequences, wild jokers – last one standing wins.</span></button>
   </div>
   <div class="game-grid g1 hg" style="margin-top:14px">
     <button class="game-btn wide" data-a="goJoin"><span class="ico">🔑</span><b>Join a room</b><span class="d">Got a room code or invite link from a friend? Enter it here.</span></button>
@@ -4409,12 +4851,12 @@ function specBarHTML(v){
 }
 function roomBodyHTML(v,host){
   let h="";
-  h+=`<div class="card2 roomcard ${v.phase==="play"&&(v.game==="ludo"||v.game==="chess")?"in-board":""}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  h+=`<div class="card2 roomcard ${v.phase==="play"&&["ludo","chess","ass","rummy"].includes(v.game)?"in-board":""}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
     ${NET.local?`<div><div class="mut" style="font-size:.8rem">Offline game</div><div class="code" style="font-size:1.2rem;letter-spacing:.04em">📴 This device only</div></div>`:`<div><div class="mut" style="font-size:.8rem">Room code</div><div class="code">${esc(v.code)}</div></div>`}
     <div class="scoreboard" style="margin:0">${v.players.map(p=>`<span class="chip ${p.connected?"":"off"} ${p.left?"gone":""}">${p.av} ${esc(p.name)}${p.pid===v.hostPid?" 👑":""}${p.pid===v.me&&!NET.spec?" (you)":""}${p.left?" · left":!p.connected?" · offline":""}${kickBtn(v,p)}</span>`).join("")}</div></div>`;
   if(v.phase==="lobby") return h+lobbyHTML(v,host);
   if(v.phase==="end") return h+endHTML(v,host);
-  return h+(v.game==="spy"?spyGameHTML(v):v.game==="number"?numGameHTML(v):v.game==="Scribblio"?"":v.game==="chess"?chessGameHTML(v):v.game==="dots"?dbGameHTML(v):v.game==="ludo"?luGameHTML(v):v.game==="rps"?rpsGameHTML(v):rrGameHTML(v));
+  return h+(v.game==="spy"?spyGameHTML(v):v.game==="number"?numGameHTML(v):v.game==="Scribblio"?"":v.game==="chess"?chessGameHTML(v):v.game==="dots"?dbGameHTML(v):v.game==="ludo"?luGameHTML(v):v.game==="rps"?rpsGameHTML(v):v.game==="ass"?asGameHTML(v):v.game==="rummy"?rmGameHTML(v):rrGameHTML(v));
 }
 /* lobby: everyone picks their emoji; ones other players already have are greyed out */
 function avPickHTML(v){
@@ -4467,7 +4909,7 @@ function endHTML(v,host){
   const winners=rows.filter(r=>r[1]===max&&max>0).map(r=>r[0]);
   let h=`<h3 style="margin-top:18px">🏁 Game ${hist.length+1} over</h3>`;
   h+=winners.length
-    ?`<div class="msg ok" style="font-size:1.1rem">🏆 ${winners.map(p=>p.av+" <b>"+esc(p.name)+"</b>").join(", ")} ${winners.length>1?"win":"wins"} with ${max} points! 🎉</div>`
+    ?`<div class="msg ok" style="font-size:1.1rem">🏆 ${winners.map(p=>p.av+" <b>"+esc(p.name)+"</b>").join(", ")} ${winners.length>1?"win":"wins"} with ${max} point${max===1?"":"s"}! 🎉</div>`
     :`<div class="msg info">No points were scored.</div>`;
   h+=boardHTML({players:v.players,scores:Object.fromEntries(rows.map(r=>[r[0].pid,r[1]])),g:null});
   if(series){
@@ -4940,6 +5382,136 @@ function rpsGameHTML(v){
     h+=boardHTML(v)+nextControls(v,host);
   }
   return h;
+}
+
+/* ---- Card games (Ass, Rummy) ---- */
+function cardHTML(c,o){
+  o=o||{}; const r=cR(c), s=cS(c), jk=r===15, red=s===1||s===3, wj=!jk&&!!o.wild&&r===o.wild;
+  const lab=jk?"Joker":rName(r)+" of "+SUITN[s]+(wj?" (wild joker)":"");
+  const inner=jk?`<span class="cd-c">🃏</span><span class="cd-s">🃏</span>`:`<span class="cd-c">${rName(r)}<i>${SUIT[s]}</i></span><span class="cd-s">${SUIT[s]}</span>`;
+  const cls=`cd${red?" red":""}${jk?" jk":""}${wj?" wj":""}${o.sel?" sel":""}${o.dim?" dim":""}${o.cls?" "+o.cls:""}`;
+  return o.a?`<button type="button" class="${cls}" data-a="${o.a}" data-c="${c}"${o.dis?" disabled":""} aria-label="${lab}">${inner}</button>`
+    :`<span class="${cls}" role="img" aria-label="${lab}">${inner}</span>`;
+}
+const ordN=n=>n+(n%100>=11&&n%100<=13?"th":["th","st","nd","rd"][n%10]||"th");
+function csSeatsHTML(v,seats,cur,info){
+  return `<div class="cs-seats">${seats.map((s,i)=>{ const p=v.players.find(x=>x.pid===s.pid);
+    return `<div class="cs-seat${i===cur?" turn":""}${info(s,i).done?" done":""}${s.pid===v.me?" me":""}"><span class="cs-av">${esc(s.av)}</span><span class="cs-nm">${esc(s.name)}${s.pid===v.me?" (you)":""}${p&&!p.connected&&!s.left?" · 📴":""}</span><span class="cs-n">${info(s,i).t}</span>${!s.left&&p?kickBtn(v,p):""}</div>`; }).join("")}</div>`;
+}
+
+/* Ass */
+function asGameHTML(v){
+  const g=v.g, st=v.settings, me=g.me, host=v.me===v.hostPid, mine=me>=0?g.seats[me]:null, myTurn=g.phase==="play"&&g.turn===me;
+  const nm=i=>i>=0&&g.seats[i]?`${esc(g.seats[i].av)} <b>${esc(g.seats[i].name)}</b>`:"?";
+  let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${st.rounds}</span><span class="chip">Trick ${g.tricks+(g.phase==="play"?1:0)}</span><span class="chip">🗑 ${g.disc} thrown away</span>${timerHTML(g.phase==="play"?g.deadline:0)}</div>`;
+  h+=csSeatsHTML(v,g.seats,g.phase==="play"?g.turn:-1,(s,i)=>({done:!!(s.out||s.left),
+    t:s.left?"left":g.phase==="reveal"&&g.res&&g.res.ass===i?"🫏 Ass":s.out?`🏃 ${ordN(s.out)} out`:`🂠 ${s.n}`}));
+  if(g.phase==="reveal"){
+    const a=g.res.ass;
+    h+=a>=0?`<div class="msg warn as-big">🫏 ${nm(a)} is the Ass!</div>`:`<div class="msg info">Everyone escaped at the same time – no Ass this round!</div>`;
+    if(g.seats.some(s=>s.out)) h+=`<div class="mut" style="font-size:.88rem;margin:6px 0">Escape order: ${g.seats.map((s,i)=>[s,i]).filter(x=>x[0].out).sort((x,y)=>x[0].out-y[0].out).map(([s])=>`${ordN(s.out)} ${esc(s.av)} ${esc(s.name)}`).join(" · ")}</div>`;
+    return h+boardHTML(v)+nextControls(v,host);
+  }
+  const led=g.led>=0?`<b class="${g.led===1||g.led===3?"red-s":""}">${SUIT[g.led]}</b>`:"";
+  if(g.phase==="show"&&g.last){
+    const L=g.last, su=`<b class="${L.suit===1||L.suit===3?"red-s":""}">${SUIT[L.suit]}</b>`;
+    h+=L.cut?`<div class="msg warn">✂️ ${nm(L.by)} had no ${su} and cut! ${nm(L.picker)} played the highest ${su} and picks up all ${L.n} cards.</div>`
+      :`<div class="msg ok">✅ Everyone followed ${su} – the ${L.n} cards are thrown away. ${L.top>=0?nm(L.top)+" played the highest and leads next.":""}</div>`;
+  } else if(myTurn){
+    const has=g.trick.length&&g.hand.some(c=>cS(c)===g.led);
+    h+=`<div class="msg ok as-turn">👉 ${g.first?"You have the A♠ – play it to start the game!":!g.trick.length?"Your lead – play any card.":has?`Your turn – follow ${led}.`:`You have no ${led} – cut with any card! The highest ${led} picks up the trick.`}</div>`;
+  } else if(mine&&(mine.out||mine.left)) h+=`<div class="msg ok">🏃 You escaped! Watching the others…</div>`;
+  else h+=`<div class="msg info">⏳ ${g.first?nm(g.turn)+" has the A♠ and starts…":"Waiting for "+nm(g.turn)+"…"}</div>`;
+  // the table: cards of the current trick
+  const L=g.phase==="show"?g.last:null, topI=L?(L.cut?L.picker:L.top):-1;
+  h+=`<div class="cs-table"><div class="cs-led">${g.trick.length?"Led suit "+led:"New trick"}</div><div class="cs-trick">${g.trick.length?g.trick.map(t=>{
+    const cut=cS(t.c)!==g.led;
+    return `<div class="cs-tk${cut?" cut":""}${t.i===topI&&!cut?" top":""}">${cardHTML(t.c)}<span>${esc(g.seats[t.i].name)}</span></div>`; }).join(""):`<div class="mut cs-empty">${g.first?"The game starts with the A♠":"Waiting for the lead…"}</div>`}</div></div>`;
+  if(mine&&!mine.out&&!mine.left&&g.hand.length){
+    const legal=new Set(g.legal), groups=[0,1,2,3].map(s=>g.hand.filter(c=>cS(c)===s)).filter(a=>a.length);
+    h+=`<div class="cs-mine${myTurn?" go":""}"><div class="cs-hh">Your cards · <b>${g.hand.length}</b>${myTurn?' <span class="pink">– tap a bright card</span>':""}</div><div class="hand">${groups.map(a=>`<div class="hgrp">${a.map(c=>cardHTML(c,myTurn?{a:"asplay",dis:!legal.has(c),dim:!legal.has(c),cls:legal.has(c)?"ok":""}:{})).join("")}</div>`).join("")}</div></div>`;
+  }
+  return h;
+}
+
+/* Rummy: the grouping of your own cards lives only on your screen */
+function rmSuitGroups(hand,wild){
+  const jk=hand.filter(c=>cR(c)===15||cR(c)===wild), rest=hand.filter(c=>!jk.includes(c));
+  const g=[0,1,2,3].map(s=>rest.filter(c=>cS(c)===s).sort(cardSort)).filter(a=>a.length);
+  if(jk.length) g.push(jk.sort(cardSort));
+  return g;
+}
+function rmMyGroups(v){
+  const g=v.g, hand=g.hand, key=v.code+":"+v.round+":"+g.dealNo;
+  let u=S.ui.rmG; if(!u||u.key!==key){ u=S.ui.rmG={key,groups:rmSuitGroups(hand,g.wild)}; S.ui.rmSel=[]; }
+  const inHand=new Set(hand), seen=new Set();
+  const groups=u.groups.map(a=>a.filter(c=>inHand.has(c)&&!seen.has(c)&&seen.add(c))).filter(a=>a.length);
+  const extra=hand.filter(c=>!seen.has(c)); if(extra.length) groups.push(extra);
+  u.groups=groups; S.ui.rmSel=(S.ui.rmSel||[]).filter(c=>inHand.has(c));
+  return groups;
+}
+const RM_C={};
+function rmCached(k,fn){ if(!(k in RM_C)){ if(Object.keys(RM_C).length>60) for(const x in RM_C) delete RM_C[x]; RM_C[k]=fn(); } return RM_C[k]; }
+const rmCanDecl=(hand,c,wild)=>rmCached("d"+wild+":"+c+":"+hand.slice().sort((a,b)=>a-b).join(","),()=>rmEval(hand.filter((x,k)=>k!==hand.indexOf(c)),wild).valid);
+const RM_KIND={pure:"Pure sequence ✓",seq:"Sequence",set:"Set"};
+function rmGroupsHTML(groups,wild,small){
+  return `<div class="rm-gl${small?" sm":""}">${groups.map(gr=>`<div class="hgrp-w"><div class="hgrp">${gr.cards.map(c=>cardHTML(c,{wild})).join("")}</div><div class="hg-l${gr.t!=="dead"?" ok":""}">${gr.t==="dead"?"unmatched":RM_KIND[gr.t]}</div></div>`).join("")}</div>`;
+}
+function rmGameHTML(v){
+  const g=v.g, st=v.settings, me=g.me, host=v.me===v.hostPid, mine=me>=0?g.seats[me]:null;
+  const myTurn=g.phase==="turn"&&g.turn===me, inDeal=!!mine&&!mine.elim&&!mine.left&&!mine.drop;
+  const nm=i=>i>=0&&g.seats[i]?`${esc(g.seats[i].av)} <b>${esc(g.seats[i].name)}</b>`:"?";
+  let h=`<div class="scoreboard"><span class="chip">Pool ${v.round}/${st.rounds}</span><span class="chip">Deal ${g.dealNo}</span><span class="chip">Out at ${g.limit}</span><span class="chip">${g.decks} decks</span>${timerHTML(g.phase==="turn"?g.deadline:g.phase==="result"?g.until:0)}</div>`;
+  h+=csSeatsHTML(v,g.seats,g.phase==="turn"?g.turn:-1,(s,i)=>({done:s.elim||s.left||!!s.drop,
+    t:s.left?"left":s.elim?`💀 ${s.score}`:`${s.score}/${g.limit}${s.drop&&g.phase==="turn"?" · 🏳":""}${i===g.dealer&&g.phase==="turn"?" · D":""}`}));
+  if(g.phase==="reveal"){
+    const w=g.res.winner;
+    h+=w>=0?`<div class="msg ok as-big">🏆 ${nm(w)} wins the pool!</div>`:`<div class="msg info">The pool is over.</div>`;
+    h+=`<div class="mut" style="font-size:.88rem;margin:6px 0">Pool points: ${g.seats.slice().sort((a,b)=>a.score-b.score).map(s=>`${esc(s.av)} ${esc(s.name)} <b>${s.score}</b>${s.left?" (left)":""}`).join(" · ")}</div>`;
+    return h+boardHTML(v)+nextControls(v,host);
+  }
+  if(g.phase==="result"){
+    const w=g.winner;
+    h+=w<0?`<div class="msg info">Deal over.</div>`:g.how==="declare"?`<div class="msg ok as-big">🏆 ${nm(w)} declared and wins deal ${g.dealNo}!</div>`:`<div class="msg ok as-big">🏆 Everyone else dropped – ${nm(w)} wins deal ${g.dealNo}.</div>`;
+    h+=`<div class="rm-res">${g.seats.map((s,i)=>[s,i]).filter(([s])=>s.dpts!==null).sort((a,b)=>(a[1]===w?-1:b[1]===w?1:a[0].dpts-b[0].dpts)).map(([s,i])=>`<div class="rm-row${i===w?" win":""}${s.elim?" out":""}"><div class="rm-rh"><span>${esc(s.av)} <b>${esc(s.name)}</b>${s.pid===v.me?" (you)":""}</span><span class="rm-pt">${i===w?"🏆 0":"+"+s.dpts} <span class="mut">→ ${s.score}${s.elim?" 💀 out":""}</span></span></div>${s.groups?rmGroupsHTML(s.groups,g.wild,true):`<div class="mut" style="font-size:.82rem">${s.wrong?"❌ Wrong declaration":"🏳 Dropped"}</div>`}</div>`).join("")}</div>`;
+    h+=host?`<button class="btn green block" style="margin-top:14px" data-a="rmnext">${g.poolOver?"🏁 See who won the pool":"▶ Next deal"}</button><div class="mut" style="font-size:.82rem;margin-top:6px">Starts by itself when the timer runs out.</div>`
+      :`<div class="msg info" style="margin-top:14px">⏳ The next deal starts soon…</div>`;
+    return h;
+  }
+  // whose turn and what just happened
+  const ld=g.lastDraw, dc=g.lastDisc;
+  const last=dc?`${nm(dc.i)} threw ${cardHTML(dc.c,{wild:g.wild,cls:"mini"})}`:ld&&ld.from==="open"?`${nm(ld.i)} took ${cardHTML(ld.c,{wild:g.wild,cls:"mini"})} from the open pile`:"";
+  if(myTurn) h+=`<div class="msg ok as-turn">👉 ${g.step==="draw"?"Your turn – take a card from the closed pile or the open pile.":"Now pick one card to throw away – or to declare with, if the rest of your hand is complete."}</div>`;
+  else if(mine&&mine.elim) h+=`<div class="msg info">💀 You're out of this pool – watching.</div>`;
+  else if(mine&&mine.drop) h+=`<div class="msg info">🏳 You dropped this deal (+${mine.drop}) – watching until the next one.</div>`;
+  else h+=`<div class="msg info">⏳ ${nm(g.turn)} is ${g.step==="draw"?"drawing":"choosing a card to throw"}…</div>`;
+  if(last&&!(ld&&ld.i===me&&!dc)) h+=`<div class="rm-last">${last}${ld&&ld.from==="open"&&dc&&ld.i!==dc.i?"":""}</div>`;
+  const canDraw=myTurn&&g.step==="draw";
+  h+=`<div class="rm-table">
+    <div class="rm-pile"><button type="button" class="cd back" data-a="rmdraw" data-from="closed" ${canDraw?"":"disabled"} aria-label="Closed pile"><span class="cd-s">🂠</span></button><span>Closed · ${g.closedN}</span></div>
+    <div class="rm-pile">${g.open!==null?cardHTML(g.open,{a:"rmdraw",wild:g.wild,dis:!canDraw,cls:canDraw?"ok":""}).replace('data-c=','data-from="open" data-c='):`<span class="cd empty"></span>`}<span>Open pile</span></div>
+    <div class="rm-pile wild">${cardHTML(g.wildC,{wild:g.wild})}<span>Wild: all ${rName(g.wild)}s</span></div></div>`;
+  if(mine&&!mine.elim&&!mine.left&&g.hand.length){
+    const groups=rmMyGroups(v), sel=new Set(S.ui.rmSel), one=S.ui.rmSel.length===1?S.ui.rmSel[0]:null;
+    const canDisc=myTurn&&g.step==="discard", decl=canDisc&&one!==null&&rmCanDecl(g.hand,one,g.wild);
+    const anyDecl=canDisc&&rmCached("a"+g.wild+":"+g.hand.slice().sort((a,b)=>a-b).join(","),()=>g.hand.some(c=>rmCanDecl(g.hand,c,g.wild)));
+    const pts=g.hand.length===13?rmCached("p"+g.wild+":"+g.hand.slice().sort((a,b)=>a-b).join(","),()=>rmEval(g.hand,g.wild).pts):null;
+    h+=`<div class="cs-mine${myTurn?" go":""}${inDeal?"":" faded"}"><div class="cs-hh">Your cards · <b>${g.hand.length}</b>${pts!==null?` <span class="mut">· unmatched points now: <b>${pts}</b></span>`:""}</div>
+      <div class="hand rm-hand">${groups.map(a=>{ const k=rmKind(a,g.wild); return `<div class="hgrp-w"><div class="hgrp">${a.map(c=>cardHTML(c,{a:"rmsel",wild:g.wild,sel:sel.has(c)})).join("")}</div><div class="hg-l${k?" ok":""}">${k?RM_KIND[k]:a.length>=3?"✗ not a meld":""}</div></div>`; }).join("")}</div>
+      ${anyDecl&&!decl?`<div class="msg ok rm-hint">✨ Your hand can be declared – pick the card to finish with.</div>`:""}${decl?`<div class="msg ok rm-hint">✅ Without ${cName(one)} your hand is complete – press Declare to win the deal!</div>`:""}
+      <div class="rm-btns">
+        ${inDeal&&canDisc?`<button class="btn" data-a="rmdisc" ${one!==null?"":"disabled"}>🗑 ${one!==null?"Throw "+cName(one):"Throw (pick 1 card)"}</button><button class="btn green" data-a="rmdecl" ${decl?"":"disabled"}>🏆 Declare</button>`:""}
+        ${S.ui.rmSel.length>=2?`<button class="btn secondary" data-a="rmgroup">🗂 Group ${S.ui.rmSel.length}</button>`:""}
+        <button class="btn secondary" data-a="rmauto">🔀 Auto arrange</button><button class="btn secondary" data-a="rmsort">♠ By suit</button>
+        ${inDeal&&canDraw?`<button class="btn secondary${S.ui.rmDropAsk?" danger":""}" data-a="rmdrop">🏳 ${S.ui.rmDropAsk?"Tap again to drop":"Drop (+"+rmDropCost(g,{drew:g.drew})+")"}</button>`:""}
+      </div><div class="mut" style="font-size:.78rem;margin-top:6px">Tap cards to select them, then Group them into sets and sequences. Need at least 2 sequences, one of them pure (no joker).</div></div>`;
+  }
+  return h;
+}
+function rmGroupSel(){
+  const u=S.ui.rmG, sel=S.ui.rmSel||[]; if(!u||sel.length<2) return;
+  const set=new Set(sel); u.groups=u.groups.map(a=>a.filter(c=>!set.has(c))).filter(a=>a.length);
+  u.groups.push(sel.slice().sort(cardSort)); S.ui.rmSel=[]; render();
 }
 
 function mainHTML(){
@@ -5639,6 +6211,15 @@ function onAppClick(e){
     case "rcToggle": RC.open=!RC.open; rcRender(); render(); break;
     case "ludomove": sendAct({a:"ludomove",t:+t.dataset.t}); break;
     case "rpsthrow": sendAct({a:"rpsthrow",v:+t.dataset.v}); break;
+    case "asplay": sendAct({a:"asplay",c:+t.dataset.c}); break;
+    case "rmsel": { const c=+t.dataset.c, a=S.ui.rmSel=S.ui.rmSel||[], k=a.indexOf(c); if(k>=0) a.splice(k,1); else a.push(c); S.ui.rmDropAsk=false; render(); break; }
+    case "rmdraw": S.ui.rmDropAsk=false; sendAct({a:"rmdraw",from:t.dataset.from}); break;
+    case "rmdisc": case "rmdecl": { const a=S.ui.rmSel||[]; if(a.length!==1) break; sendAct({a:t.dataset.a,c:a[0]}); S.ui.rmSel=[]; break; }
+    case "rmgroup": rmGroupSel(); break;
+    case "rmauto": { const v=S.room; if(!v||!v.g||v.g.kind!=="rm") break; rmMyGroups(v); S.ui.rmG.groups=rmEval(v.g.hand,v.g.wild).groups.map(x=>x.cards); S.ui.rmSel=[]; render(); break; }
+    case "rmsort": { const v=S.room; if(!v||!v.g||v.g.kind!=="rm") break; rmMyGroups(v); S.ui.rmG.groups=rmSuitGroups(v.g.hand,v.g.wild); S.ui.rmSel=[]; render(); break; }
+    case "rmdrop": if(!S.ui.rmDropAsk){ S.ui.rmDropAsk=true; render(); } else { S.ui.rmDropAsk=false; sendAct({a:"rmdrop"}); } break;
+    case "rmnext": sendAct({a:"rmnext"}); break;
     case "dbline": sendAct({a:"dbline",t:t.dataset.t,i:+t.dataset.i}); break;
     case "chcell": chClick(+t.dataset.c); break;
     case "chpromo": chPromote(+t.dataset.p); break;
