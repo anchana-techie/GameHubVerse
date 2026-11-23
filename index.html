@@ -1231,7 +1231,7 @@ const freeAv=(R,want,pid)=>{ const used=new Set(R.players.filter(x=>!x.left&&x.p
 const COLORS = { "None":"white", "Red":"red", "Green":"limegreen", "Yellow":"yellow" };
 const GTITLE = {number:"🎯 Number Game", spy:"🕵️ Who Is the Spy?", raja:"👑 Raja Rani", Scribblio:"🎨 Scribblio", chess:"♟️ Chess", dots:"🎲 Dots and Boxes", ludo:"🏁 Ludo", rps:"✊ Rock Paper Scissors", ass:"🫏 Ass (Kazhutha)", rummy:"🃏 Rummy"};
 const MAXP = {number:10, spy:15, raja:20, Scribblio:12, chess:4, dots:20, ludo:6, rps:10, ass:15, rummy:15};
-const MINP = {number:1, spy:3, raja:3, Scribblio:2, chess:1, dots:2, ludo:1, rps:1, ass:2, rummy:2};
+const MINP = {number:1, spy:3, raja:3, Scribblio:2, chess:1, dots:2, ludo:1, rps:1, ass:1, rummy:1};
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const spyMax = n => Math.max(1, Math.floor((n-1)/2));
@@ -1353,8 +1353,8 @@ const BLURB={
   dots:"Roll the dice, then draw that many lines between the dots. Close a box and it’s yours – your own emoji is stamped inside and it counts as a point. When every box is taken the round is over. Everyone gets a different emoji.",
   ludo:"Classic Ludo for up to 6 players. Roll a 6 to bring a token out, go once round the board and up your home column, and finish with an exact roll. Land on a lone opponent to send their token back to the yard (the ★ squares and start squares are safe). A 6, a capture or a token home gives you another roll – three 6s in a row lose the turn. The host chooses a 4- or 6-colour board and whether colours nobody sits on are played by the computer or left empty. A player who leaves or is kicked is out and their tokens vanish.",
   rps:"Everyone chooses ✊ rock, ✋ paper or ✌️ scissors in secret, then all throws are revealed together. With 2 players it is first to the chosen number of wins. With 3 or more, the players who lose the throw are knocked out until one is left; if all three signs (or only one) appear it is a draw and everyone throws again. Alone, you play the computer.",
-  ass:"Kazhutha for 2–15 players. All 52 cards are dealt and the holder of the A♠ starts with it. Everyone must follow the suit that was led. If all follow, the cards are thrown away and the highest card leads next. If someone has none of that suit they cut with any card – the trick stops and whoever played the highest card of the led suit picks up all those cards. Empty your hand to escape; the last player left holding cards is the Ass 🫏. Escapers score by order.",
-  rummy:"13-card Indian Rummy, Pool 101, for 2–15 players (more decks are added for bigger groups). Draw from the closed or open pile, then throw one card. Make sets and sequences – you need at least two sequences, one of them pure (no joker). Every card of the wild-joker rank, and the printed jokers, can stand in for any card. Declare when your whole hand is grouped. The others add the points of their unmatched cards (max 80); dropping costs 20 before your first draw, 40 later. Reach 101 and you're out – last one standing wins the pool.",
+  ass:"Kazhutha for 2–15 players. All 52 cards are dealt and the holder of the A♠ starts with it. Everyone must follow the suit that was led. If all follow, the cards are thrown away and the highest card leads next. If someone has none of that suit they cut with any card – the trick stops and whoever played the highest card of the led suit picks up all those cards. Empty your hand to escape; the last player left holding cards is the Ass 🫏. Escapers score by order. Alone, you play the computer.",
+  rummy:"13-card Indian Rummy, Pool 101, for 2–15 players (more decks are added for bigger groups). Draw from the closed or open pile, then throw one card. Make sets and sequences – you need at least two sequences, one of them pure (no joker). Every card of the wild-joker rank, and the printed jokers, can stand in for any card. Declare when your whole hand is grouped. The others add the points of their unmatched cards (max 80); dropping costs 20 before your first draw, 40 later. Reach 101 and you're out – last one standing wins the pool. Alone, you play the computer.",
   chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces slowly fade away on the hexagon, turn grey on the cross board) and can step back through the moves with ◀ ▶ to see how it happened. The host chooses the board and piece colour set."
 };
 
@@ -1430,7 +1430,7 @@ function saveMe(){
 
 /* ================= NETWORKING (PeerJS: the host's browser is the server) ================= */
 const NET={peer:null,role:null,code:"",conns:{},hostConn:null,R:null,timer:null,leaving:false,settled:false,local:false,abortJoin:null,spec:false,watchers:{}};
-const OFFLINE_OK={number:1,chess:1,ludo:1,rps:1};
+const OFFLINE_OK={number:1,chess:1,ludo:1,rps:1,ass:1,rummy:1};
 function genCode(){ const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<5;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
 function needPeer(retry){
   if(typeof Peer!=="undefined") return true;
@@ -2329,6 +2329,7 @@ const cardSort=(a,b)=>(cS(a)-cS(b))||(cR(a)-cR(b))||(a-b);
 function asDeal(R){
   const hum=R.players.filter(p=>!p.left);
   const seats=hum.map(p=>({pid:p.pid,name:p.name,av:p.av,hand:[],out:0,left:false}));
+  if(seats.length===1) seats.push({pid:null,bot:true,name:"Computer",av:"🤖",hand:[],out:0,left:false});   // alone: you play the computer
   const deck=shuffle(mkDecks(1,false)), st=Math.floor(Math.random()*seats.length);
   deck.forEach((c,i)=>seats[(st+i)%seats.length].hand.push(c));
   const lead=seats.findIndex(s=>s.hand.includes(14));     // 14 = A♠ of deck 0
@@ -2389,11 +2390,28 @@ function asAuto(g){
   if(g.trick.length&&cS(L[0])!==g.led) return L[L.length-1];   // cutting: get rid of the biggest card
   return L[0];
 }
+/* the computer: cuts with its biggest card; when following it gets rid of the biggest card that can't win the trick
+   (or the biggest one at all when it plays last and the trick is thrown away anyway); it leads low from its longest suit */
+function asBot(g){
+  const L=asLegal(g,g.turn).slice().sort((a,b)=>cR(a)-cR(b)), hi=L[L.length-1];
+  if(!g.trick.length){
+    if(L.length===1) return L[0];
+    const by=[0,1,2,3].map(x=>L.filter(c=>cS(c)===x)).filter(a=>a.length).sort((a,b)=>b.length-a.length);
+    return by[0][0];
+  }
+  if(cS(L[0])!==g.led) return hi;
+  const top=Math.max(...g.trick.filter(t=>cS(t.c)===g.led).map(t=>cR(t.c)));
+  const under=L.filter(c=>cR(c)<top);
+  if(under.length) return under[under.length-1];
+  const left=g.part.filter(j=>!g.seats[j].left&&!g.trick.some(t=>t.i===j)).length;
+  return left<=1?hi:L[0];
+}
 function asTick(R,now){
   const g=R.g;
   if(g.phase==="show"){ if(now>=g.until){ asNext(R); return true; } return false; }
   if(g.phase!=="play") return false;
   const s=g.seats[g.turn]; if(!s) return false;
+  if(s.bot){ if(now-g.tStart>1100){ asPlay(R,asBot(g)); return true; } return false; }
   if((g.deadline&&now>g.deadline)||(gone(R,s.pid)&&now-g.tStart>8000)){ asPlay(R,asAuto(g)); return true; }
   return false;
 }
@@ -2527,8 +2545,10 @@ const rmIn=g=>rmLive(g).filter(i=>!g.seats[i].drop);
 const rmAfter=(list,i)=>{ const k=list.find(j=>j>i); return k===undefined?list[0]:k; };
 function rmDeal(R){
   const hum=R.players.filter(p=>!p.left);
-  R.g={kind:"rm",phase:"turn",seats:hum.map(p=>({pid:p.pid,name:p.name,av:p.av,score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null})),
-    limit:+R.settings.pool||101,dealNo:0,dealer:Math.floor(Math.random()*hum.length),turn:0,step:"draw",open:[],closed:[],wildC:null,wild:0,decks:2,
+  const seats=hum.map(p=>({pid:p.pid,name:p.name,av:p.av,score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null}));
+  if(seats.length===1) seats.push({pid:null,bot:true,name:"Computer",av:"🤖",score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null});
+  R.g={kind:"rm",phase:"turn",seats,
+    limit:+R.settings.pool||101,dealNo:0,dealer:Math.floor(Math.random()*seats.length),turn:0,step:"draw",open:[],closed:[],wildC:null,wild:0,decks:2,
     lastDisc:null,lastDraw:null,deadline:0,tStart:0,until:0,winner:-1,how:"",poolOver:false,res:null};
   rmNewDeal(R);
 }
@@ -2541,7 +2561,7 @@ function rmNewDeal(R){
   for(let k=0;k<13;k++) live.forEach(i=>g.seats[i].hand.push(deck.pop()));
   g.wildC=deck.pop(); g.wild=cR(g.wildC)===15?14:cR(g.wildC);
   g.open=[deck.pop()]; g.closed=deck;
-  g.turn=rmAfter(live,g.dealer); g.step="draw"; g.phase="turn"; g.winner=-1; g.how=""; g.lastDisc=null; g.lastDraw=null;
+  g.turn=rmAfter(live,g.dealer); g.step="draw"; g.phase="turn"; g.botAt=0; g.winner=-1; g.how=""; g.lastDisc=null; g.lastDraw=null;
   rmArm(R);
 }
 function rmAct(R,pid,m){
@@ -2611,11 +2631,31 @@ function rmEnd(R){
   addScore(R,pts);
   g.res={winner:w,pts}; g.phase="reveal"; g.deadline=0;
 }
+/* the computer: takes the open card when it lowers its unmatched points, otherwise draws blind; then throws the card that
+   leaves the fewest unmatched points (never a joker), and declares as soon as its hand is complete */
+function rmBestThrow(hand,wild){
+  let best=null;
+  hand.forEach((c,k)=>{ if(rmVal(c,wild)===0&&hand.some(x=>rmVal(x,wild)>0)) return;
+    const ev=rmEval(hand.filter((_,j)=>j!==k),wild), sc=(ev.valid?-1000:ev.pts)*100-rmVal(c,wild);
+    if(!best||sc<best.sc) best={c,sc,valid:ev.valid,pts:ev.pts}; });
+  return best;
+}
+function rmBot(R){
+  const g=R.g, s=g.seats[g.turn];
+  if(g.step==="draw"){
+    const top=g.open.length?g.open[g.open.length-1]:null, now=rmEval(s.hand,g.wild).pts;
+    const take=top!==null&&(rmVal(top,g.wild)===0||(()=>{ const b=rmBestThrow(s.hand.concat(top),g.wild); return b.c!==top&&(b.valid||b.pts<now); })());
+    rmDraw(R,take?"open":"closed"); return;
+  }
+  const b=rmBestThrow(s.hand,g.wild);
+  if(b.valid) rmDeclare(R,b.c); else rmDiscard(R,b.c);
+}
 function rmTick(R,now){
   const g=R.g;
   if(g.phase==="result"){ if(now>=g.until){ rmAfterResult(R); return true; } return false; }
   if(g.phase!=="turn") return false;
   const s=g.seats[g.turn]; if(!s) return false;
+  if(s.bot){ if(now-Math.max(g.botAt||0,g.tStart)>1300){ rmBot(R); g.botAt=Date.now(); return true; } return false; }
   if((g.deadline&&now>g.deadline)||(gone(R,s.pid)&&now-g.tStart>15000)){
     s.miss++;
     if(g.step==="draw"&&s.miss>=3){ rmDrop(R,g.turn); return true; }        // three turns missed in a row: dropped
@@ -4777,8 +4817,8 @@ function landingHTML(){
   <div class="game-grid g2 hg">
     <button class="game-btn" style="--glow:#ff5468" data-a="go" data-g="ludo"><span class="ico">🏁</span><b>Ludo</b><span class="d">Up to 6 players on a 4- or 6-colour board. Computer fills empty colours if you like.</span><span class="offb">📴 works offline</span></button>
     <button class="game-btn" style="--glow:#4aa3ff" data-a="go" data-g="rps"><span class="ico">✊</span><b>Rock Paper Scissors</b><span class="d">Throw in secret, reveal together. Duel a friend or the computer, or knock out a crowd.</span><span class="offb">📴 works offline</span></button>
-    <button class="game-btn" style="--glow:#c58cff" data-a="go" data-g="ass"><span class="ico">🫏</span><b>Ass (Kazhutha)</b><span class="d">2–15 players. Follow suit or cut – empty your hand to escape. The last one holding cards is the Ass.</span></button>
-    <button class="game-btn" style="--glow:#3ddc97" data-a="go" data-g="rummy"><span class="ico">🃏</span><b>Rummy</b><span class="d">13-card Indian Rummy, Pool 101, for 2–15 players. Sets, sequences, wild jokers – last one standing wins.</span></button>
+    <button class="game-btn" style="--glow:#c58cff" data-a="go" data-g="ass"><span class="ico">🫏</span><b>Ass (Kazhutha)</b><span class="d">2–15 players, or you vs the computer. Follow suit or cut – the last one holding cards is the Ass.</span><span class="offb">📴 works offline</span></button>
+    <button class="game-btn" style="--glow:#3ddc97" data-a="go" data-g="rummy"><span class="ico">🃏</span><b>Rummy</b><span class="d">13-card Indian Rummy, Pool 101, for 2–15 players or you vs the computer. Last one standing wins.</span><span class="offb">📴 works offline</span></button>
   </div>
   <div class="game-grid g1 hg" style="margin-top:14px">
     <button class="game-btn wide" data-a="goJoin"><span class="ico">🔑</span><b>Join a room</b><span class="d">Got a room code or invite link from a friend? Enter it here.</span></button>
@@ -4807,7 +4847,7 @@ function entryHTML(){
   h+=`<div class="row" style="align-items:stretch">`;
   if(S.game) h+=`<div class="card2"><h3>🆕 Create a room</h3><p class="mut" style="margin:0 0 12px">${esc(BLURB[S.game])}<br><br>You'll choose rounds, timers and other options in the lobby, then share the room code or invite link.</p>
     <button class="btn green block" data-a="create" ${S.busy||!ONLINE?"disabled":""}>Create room</button></div>`;
-  if(S.game&&OFFLINE_OK[S.game]) h+=`<div class="card2"><h3>📴 Play on this device</h3><p class="mut" style="margin:0 0 12px">No internet needed – ${S.game==="chess"?"play the computer, or pass the device around.":S.game==="ludo"?"play Ludo against the computer.":S.game==="rps"?"play Rock Paper Scissors against the computer.":"practise the Number Game on your own."}<br><br>Nothing is shared with other players.</p>
+  if(S.game&&OFFLINE_OK[S.game]) h+=`<div class="card2"><h3>📴 Play on this device</h3><p class="mut" style="margin:0 0 12px">No internet needed – ${S.game==="chess"?"play the computer, or pass the device around.":S.game==="ludo"?"play Ludo against the computer.":S.game==="rps"?"play Rock Paper Scissors against the computer.":S.game==="ass"?"play Ass against the computer.":S.game==="rummy"?"play Rummy against the computer.":"practise the Number Game on your own."}<br><br>Nothing is shared with other players.</p>
     <button class="btn block" data-a="createLocal">Start offline game</button></div>`;
   h+=`<div class="card2"><h3>🔑 Join a room</h3><label>Room code</label>
     <input type="text" id="joinCode" data-keep maxlength="6" placeholder="ABCDE" autocomplete="off" style="text-transform:uppercase;letter-spacing:.25em;font-size:1.2rem" value="${esc(S.ui.joinCode||"")}">
@@ -4873,7 +4913,7 @@ function lobbyHTML(v,host){
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
   h+=avPickHTML(v);
   h+=mateLobbyHTML(v);
-  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
+  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")&&n===1?`<div class="msg info" style="margin-top:12px">🤖 <b>Just you?</b> You'll play against the computer.${NET.local?"":" As soon as a friend joins, it's people only."}</div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
   if(host){
     h+=`<div class="sgrid">${fields.map(f=>{
@@ -6905,6 +6945,8 @@ const OFF_YES=[
   {ico:"🎯",name:"Number Game – solo",d:"Crack the secret number on your own. Rounds, difficulty and timers all work.",g:"number"},
   {ico:"🏁",name:"Ludo vs the computer",d:"Choose the 4- or 6-colour board, play against computer colours.",g:"ludo"},
   {ico:"✊",name:"Rock Paper Scissors vs the computer",d:"First to 2, best of 3 – or change the target in the settings.",g:"rps"},
+  {ico:"🫏",name:"Ass vs the computer",d:"Kazhutha one-on-one: follow suit or cut, and don't be the one left holding cards.",g:"ass"},
+  {ico:"🃏",name:"Rummy vs the computer",d:"13-card Pool 101 against the computer – sets, sequences and wild jokers.",g:"rummy"},
   {ico:"🪙",name:"Coin Flip",d:"Heads or tails – a fair random flip with a running count. No room needed.",g:"coin"},
   {ico:"🥠",name:"Fortune Cookie",d:"Crack a cookie for a fortune, lucky numbers and a lucky colour – as many times as you like.",g:"fortune"},
   {ico:"🍾",name:"Spin the Bottle",d:"Type everyone's names – the bottle visits each person once before anyone repeats.",g:"bottle"}
