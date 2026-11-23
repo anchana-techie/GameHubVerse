@@ -1108,7 +1108,7 @@
   .cs-led{font-size:.85rem;color:#d9ffe9;text-align:center;margin-bottom:8px}
   .cs-trick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:76px;align-items:center}
   .cs-tk{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.7rem;max-width:58px;animation:cdIn .3s ease-out}
-  .cs-tk span{max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d9ffe9}
+  .cs-tk .cs-tn{max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d9ffe9}
   .cs-tk.cut .cd{box-shadow:0 0 0 3px #ff5468,0 4px 10px #0008;transform:rotate(8deg)}
   .cs-tk.top .cd{box-shadow:0 0 0 3px #ffd25e,0 4px 10px #0008}
   .cs-empty{font-size:.85rem;color:#d9ffe9b0}
@@ -5466,7 +5466,7 @@ function asGameHTML(v){
   const L=g.phase==="show"?g.last:null, topI=L?(L.cut?L.picker:L.top):-1;
   h+=`<div class="cs-table"><div class="cs-led">${g.trick.length?"Led suit "+led:"New trick"}</div><div class="cs-trick">${g.trick.length?g.trick.map(t=>{
     const cut=cS(t.c)!==g.led;
-    return `<div class="cs-tk${cut?" cut":""}${t.i===topI&&!cut?" top":""}">${cardHTML(t.c)}<span>${esc(g.seats[t.i].name)}</span></div>`; }).join(""):`<div class="mut cs-empty">${g.first?"The game starts with the A♠":"Waiting for the lead…"}</div>`}</div></div>`;
+    return `<div class="cs-tk${cut?" cut":""}${t.i===topI&&!cut?" top":""}">${cardHTML(t.c)}<span class="cs-tn">${esc(g.seats[t.i].name)}</span></div>`; }).join(""):`<div class="mut cs-empty">${g.first?"The game starts with the A♠":"Waiting for the lead…"}</div>`}</div></div>`;
   if(mine&&!mine.out&&!mine.left&&g.hand.length){
     const legal=new Set(g.legal), groups=[0,1,2,3].map(s=>g.hand.filter(c=>cS(c)===s)).filter(a=>a.length);
     h+=`<div class="cs-mine${myTurn?" go":""}"><div class="cs-hh">Your cards · <b>${g.hand.length}</b>${myTurn?' <span class="pink">– tap a bright card</span>':""}</div><div class="hand">${groups.map(a=>`<div class="hgrp">${a.map(c=>cardHTML(c,myTurn?{a:"asplay",dis:!legal.has(c),dim:!legal.has(c),cls:legal.has(c)?"ok":""}:{})).join("")}</div>`).join("")}</div></div>`;
