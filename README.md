@@ -173,9 +173,3 @@ Preview any page: `#/loading`, `#/error`, `#/no-internet`, `#/404`, `#/offline-m
 - `README.md` – this file.
 - `firebase-config.js`, `firestore.rules`, `FIREBASE_SETUP.md` – optional accounts, invites and admin view (Firebase).
 - `docs/ARCHITECTURE.md`, `docs/architecture.svg` – architecture diagram and documentation.
-
-## 👋 Guests and login requests
-- On the sign-in screen anyone can tap **Continue as guest** (name optional). Guests play everything that runs against the computer – Chess, Number Game, Ludo, RPS, Ass, Rummy and the quick-play games. Nothing is stored in Firebase for a guest; guest mode is remembered on that device until they tap **Sign in**.
-- Online rooms, joining with a code, mates & chat, groups and the secret draws show as 🔒 and lead to the **Request a login** form (also a tab on the sign-in screen): name, e-mail, how they know about Game Hub (portfolio website, friend, family, colleague, shared link, other) and an optional message.
-- Requests are saved in `accessRequests/<email>` – anyone can create one (one per e-mail, size-limited), only admins can read them. Admins see them on the Admin page under **📨 Login requests** (the Admin button shows a red count): **Invite** adds the e-mail to the invite list, **Write e-mail** opens a ready-made e-mail with the site link and steps, **Delete** removes the request.
-- ⚠️ Publish the updated `firestore.rules` in the Firebase console – without the `accessRequests` rule, requests can't be sent.
