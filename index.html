@@ -1075,6 +1075,20 @@
   }
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
+  /* ---- guests & login requests ---- */
+  .guest-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;border-color:#3ddc9766}
+  .guest-cta>div{display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1}
+  .game-btn.locked{opacity:.62;filter:saturate(.5)}
+  .game-grid.hg>.game-btn.locked .offb::before{content:"🔒"}
+  .req-m a{color:var(--accent2)}
+  .req-badge{display:inline-block;min-width:1.4em;padding:0 6px;border-radius:999px;background:#ff5468;color:#fff;font-size:.78rem;font-weight:800;line-height:1.5;text-align:center;margin-left:4px}
+  .req-list{display:flex;flex-direction:column;gap:8px}
+  .req-row{padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--border)}
+  .req-row.new{border-color:#ff546888}
+  .req-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .req-m{font-size:.85rem;margin-top:4px;word-break:break-word}
+  .req-msg{font-size:.88rem;margin-top:6px;font-style:italic;color:var(--muted)}
+  .req-b{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.req-b .btn{padding:7px 12px;font-size:.85rem}
   /* ---- playing cards (Ass, Rummy) ---- */
   .cd{position:relative;display:inline-flex;flex-direction:column;flex:none;width:46px;height:66px;padding:3px 4px;border-radius:7px;background:linear-gradient(170deg,#ffffff,#e9ecf8);color:#1b1f3b;border:1px solid #c3c8e3;box-shadow:0 2px 5px #0007;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;text-align:left;transition:transform .15s,box-shadow .15s,filter .15s;-webkit-tap-highlight-color:transparent;vertical-align:middle}
   .cd .cd-c{display:flex;flex-direction:column;align-items:center;width:15px;font-size:.92rem;line-height:1;letter-spacing:-.04em}
@@ -1484,6 +1498,7 @@ function iceConfig(){
 }
 
 function createRoom(game){
+  if(isGuest()){ guestLock("Online rooms with friends need an account."); return; }
   if(!needPeer(()=>createRoom(game))||!saveMe()) return;
   S.busy="Creating room…"; render();
   const tryMake=n=>{
@@ -1514,6 +1529,7 @@ function createRoom(game){
 }
 
 function joinRoom(code,spec){
+  if(isGuest()){ guestLock("Joining a friend's room needs an account."); return; }
   if(!needPeer(()=>joinRoom(code,spec))) return;
   code=String(code||"").trim().toUpperCase();
   if(!spec&&!saveMe()) { clearSession(); return; }
@@ -4803,6 +4819,7 @@ function topbar(title,home){
   return `<div class="topbar"><h1 class="title">${title}</h1><div style="display:flex;gap:8px">${home?`<button class="btn secondary" data-a="home">🏠 Home</button>`:""}</div></div>`;
 }
 function landingHTML(){
+  if(isGuest()) return guestLandingHTML();
   let h=acctBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>Open a room, share the code, and play with friends.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   if(S.notice) h+=`<div class="msg ${S.notice.type}">${esc(S.notice.text)}</div>`;
   h+=openRoomsHTML();
@@ -5556,7 +5573,9 @@ function rmGroupSel(){
 
 function mainHTML(){
   const gate=authGate(); if(gate) return gate;
+  if(isGuest()&&["entry","xmas","diwali","mystats","admin","drawreg"].includes(S.screen)){ S.reqWhy=S.screen==="entry"?"Joining a friend's room needs an account.":"This part of Game Hub needs an account."; S.screen="request"; }
   switch(S.screen){
+    case "request": return topbar("📨 Request a login",true)+requestPageHTML();
     case "admin": return AUTH.isAdmin?topbar("🛡 Admin – people & activity",true)+adminHTML():landingHTML();
     case "mystats": return topbar("📊 My activity",true)+myStatsHTML();
     case "xmas": return topbar("🎄 ChristMom ChristChild",true)+xmasHTML();
@@ -6090,7 +6109,7 @@ function buildSpace(){
 }
 
 function render(){
-  try{ fbAdminSync(); trackSweep(); prRender(); }catch(e){ console.error(e); }
+  try{ fbAdminSync(); reqAdminSync(); trackSweep(); prRender(); }catch(e){ console.error(e); }
   try{ renderMain(); }catch(e){ sysReport(e,"game"); }
   try{ renderSys(); }catch(e){ console.error(e); }
   try{ rcRender(); fxRun(); }catch(e){ console.error(e); }
@@ -6178,6 +6197,13 @@ function onAppClick(e){
   const t=e.target.closest("[data-a]"); if(!t||t.disabled) return;
   switch(t.dataset.a){
     case "home": goHome(); break;
+    case "guestEnter": guestEnter(); break;
+    case "guestExit": guestExit(); break;
+    case "guestLock": guestLock(t.dataset.why); break;
+    case "reqOpen": S.req=null; guestLock(""); break;
+    case "reqSend": reqSend(); break;
+    case "reqInvite": reqInvite(t.dataset.e); break;
+    case "reqDel": reqDel(t.dataset.e); break;
     case "authMode": AUTH.mode=t.dataset.mode; AUTH.fg=null; AUTH.err=null; AUTH.info=null; render(); break;
     case "authLogin": doAuthLogin(); break;
     case "authRegister": doAuthRegister(); break;
@@ -6186,7 +6212,7 @@ function onAppClick(e){
     case "authFgBack": AUTH.fg=null; AUTH.err=null; render(); break;
     case "recSave": doRecSave(); break;
     case "authLogout": doAuthLogout(); break;
-    case "authRetry": fbInit(); break;
+    case "authRetry": if(FBA&&FBA.currentUser) fbOnUser(FBA.currentUser); else if(FBA) location.reload(); else fbInit(); break;
     case "goAdmin": S.notice=null; S.screen="admin"; render(); break;
     case "goMyStats": S.notice=null; S.screen="mystats"; AUTH.my.act=null; render(); if(AUTH.user&&FBD){ admLoadAct(AUTH.user.uid,AUTH.my,"act"); FBD.collection("recovery").doc(AUTH.user.email.toLowerCase()).get().then(d=>{ AUTH.my.rec=d.exists; render(); }).catch(()=>{}); } break;
     case "admInvite": admInvite(); break;
@@ -6201,7 +6227,7 @@ function onAppClick(e){
       if(NET.role) cleanup(); joinRoom(c,true); break; }
     case "admBack": cleanup(); break;
     case "admCopy": try{ navigator.clipboard.writeText("You're invited to Game Hub: "+admLink()+" – choose Register and use "+t.dataset.key); toast("Invite message copied – paste it to them.","ok"); }catch(x){ toast(admLink(),"info"); } break;
-    case "go": S.notice=null; S.game=t.dataset.g; S.screen="entry"; render(); break;
+    case "go": if(isGuest()){ guestLock("Online rooms with friends need an account."); break; } S.notice=null; S.game=t.dataset.g; S.screen="entry"; render(); break;
     case "goJoin": S.notice=null; S.game=null; S.screen="entry"; render(); break;
     case "admTab": S.admTab=t.dataset.t; render(); if(S.admTab==="settings"&&fbIsMaster()) drawRegLoad(); break;
     case "drAdd": drawRegAdd(); break;
@@ -7020,7 +7046,7 @@ function fbErrText(e){
   const c=e&&e.code||"";
   return ({"auth/invalid-credential":"Wrong e-mail or password.","auth/wrong-password":"Wrong e-mail or password.","auth/user-not-found":"Wrong e-mail or password.","auth/invalid-email":"That e-mail address doesn't look right.",
     "auth/email-already-in-use":"This e-mail already has an account – use Sign in (or Forgot password).","auth/weak-password":"Choose a password of at least 6 characters.","auth/too-many-requests":"Too many tries – wait a few minutes and try again.",
-    "auth/network-request-failed":"No connection – check your internet.","permission-denied":"Not allowed (check the Firestore rules are published)."})[c]||(e&&e.message)||"Something went wrong.";
+    "auth/network-request-failed":"No connection – check your internet.","permission-denied":"Not allowed (check the Firestore rules are published).","gh-timeout":"Game Hub's server didn't answer – your network may be blocking it. Try again, switch Wi-Fi/mobile data, or turn on Secure DNS in Chrome settings."})[c]||(e&&e.message)||"Something went wrong.";
 }
 async function fbInit(){
   if(!FB_ON||FBA) return;
@@ -7043,15 +7069,17 @@ async function fbReject(u,why){
   AUTH.err=why==="removed"?"This account was removed by the admin. Ask them to invite you again.":"This e-mail hasn't been invited. Ask the admin to invite you first.";
   try{ await u.delete(); }catch(e){ try{ await FBA.signOut(); }catch(x){} }
 }
+/* a database call that hangs (blocked connection, flaky network) must not leave "Checking your account…" up forever */
+const fbT=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(Object.assign(new Error("Game Hub's server didn't answer in time."),{code:"gh-timeout"})),ms||15000))]);
 async function fbOnUser(u){
-  if(!u){ if(AUTH.state==="in") console.warn("[auth] signed out (state was \"in\") – "+(AUTH.err||"no error recorded")); fbStop(); try{ mateStop(true); }catch(e){} AUTH.groups=[]; AUTH.user=null; AUTH.profile=null; AUTH.isAdmin=false; AUTH.state="out"; AUTH.busy=false; render(); return; }
-  AUTH.user=u; AUTH.isAdmin=false;
+  if(!u){ if(AUTH.state==="in") console.warn("[auth] signed out (state was \"in\") – "+(AUTH.err||"no error recorded")); fbStop(); try{ mateStop(true); }catch(e){} AUTH.groups=[]; AUTH.user=null; AUTH.profile=null; AUTH.isAdmin=false; AUTH.state=lsGet(GUEST_KEY)?"guest":"out"; if(AUTH.state==="guest") S.me.name=S.me.name||lsGet(GUEST_KEY+"_name")||"Guest"; AUTH.busy=false; render(); return; }
+  AUTH.user=u; AUTH.isAdmin=false; lsSet(GUEST_KEY,null);
   AUTH.state="loading"; render();
   try{
     const email=u.email.toLowerCase(), ref=FBD.collection("users").doc(u.uid), tag="gh_login_"+u.uid;
-    let snap=await ref.get(), first=false;
+    let snap=await fbT(ref.get()), first=false;
     if(!snap.exists){
-      const is=await FBD.collection("invites").doc(email).get(), inv=is.exists?is.data():null;
+      const is=await fbT(FBD.collection("invites").doc(email).get()), inv=is.exists?is.data():null;
       if(!inv||inv.status!=="invited") return fbReject(u,inv&&inv.status);
       const name=String(AUTH.pendingName||u.displayName||email.split("@")[0]).slice(0,30);
       await ref.set({email,name,role:"user",createdAt:fbNow(),lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:1,device:fbDevice(),stats:{},gamesPlayed:0,totalSeconds:0});
@@ -7062,17 +7090,18 @@ async function fbOnUser(u){
       let seen=false; try{ seen=!!sessionStorage.getItem(tag); }catch(e){}
       if(!seen){
         try{ sessionStorage.setItem(tag,"1"); }catch(e){}
-        await ref.update({lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:fbInc(1),device:fbDevice()});
+        await fbT(ref.update({lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:fbInc(1),device:fbDevice()}));
         fbLogTo(u.uid,"login",{device:fbDevice()});
       } else ref.update({lastSeen:fbNow(),online:true}).catch(()=>{});
     }
-    snap=await ref.get(); AUTH.profile=snap.data()||{name:u.displayName||email,email};
+    snap=await fbT(ref.get()); AUTH.profile=snap.data()||{name:u.displayName||email,email};
     AUTH.isAdmin=AUTH.profile.role==="admin";                        // admin = role "admin" on the profile (users/<uid>.role), like any other role
     AUTH.err=null; AUTH.state="in"; AUTH.pendingName="";
     if(S&&!S.me.name){ S.me.name=String(AUTH.profile.name||"").slice(0,16); try{ if(!localStorage.getItem("ngg_me")) localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
     fbStart(u,ref); authGroupsLoad();
   }catch(e){
-    if(!ONLINE||(e&&/unavailable|offline/i.test(e.code||e.message||""))){ AUTH.state="offline"; AUTH.profile=null; }
+    if(e&&e.code==="gh-timeout"){ AUTH.state="error"; AUTH.err=null; try{ sessionStorage.removeItem("gh_login_"+u.uid); }catch(x){} console.warn("[auth] sign-in timed out"); }
+    else if(!ONLINE||(e&&/unavailable|offline/i.test(e.code||e.message||""))){ AUTH.state="offline"; AUTH.profile=null; }
     else { AUTH.err=fbErrText(e); try{ await FBA.signOut(); }catch(x){} }
   }
   AUTH.busy=false; render();
@@ -7100,7 +7129,7 @@ async function doAuthLogin(){
   const email=authVal("authEmail").toLowerCase(), pass=String(S.ui.authPass||"");
   if(!email||!pass){ AUTH.err="Enter your e-mail and password."; return render(); }
   AUTH.busy=true; AUTH.err=null; AUTH.info=null; render();
-  try{ await FBA.signInWithEmailAndPassword(email,pass); }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
+  try{ await fbT(FBA.signInWithEmailAndPassword(email,pass),20000); }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
 }
 async function doAuthRegister(){
   const name=authVal("authName").slice(0,30), email=authVal("authEmail").toLowerCase(), p1=String(S.ui.authPass||""), p2=String(S.ui.authPass2||""), q=String(S.ui.authQ||RC_QS[0]), ans=String(S.ui.authAns||"");
@@ -7112,7 +7141,7 @@ async function doAuthRegister(){
     const d=await FBD.collection("invites").doc(email).get();
     if(!d.exists||d.data().status!=="invited"){ AUTH.err="This e-mail hasn't been invited. Ask the admin to invite you first."; AUTH.busy=false; return render(); }
     AUTH.pendingName=name;
-    const cred=await FBA.createUserWithEmailAndPassword(email,p1);
+    const cred=await fbT(FBA.createUserWithEmailAndPassword(email,p1),20000);
     try{ await cred.user.updateProfile({displayName:name}); }catch(e){}
     try{ await rcSave(email,q,ans,p1); }catch(e){ console.error(e); }
   }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
@@ -7157,7 +7186,7 @@ async function doAuthFgReset(){
   let old=null;
   try{ old=await rcOpen(ans,fg.doc); }catch(e){ AUTH.err="That answer isn't right."; AUTH.busy=false; return render(); }
   try{
-    const cred=await FBA.signInWithEmailAndPassword(fg.email,old);
+    const cred=await fbT(FBA.signInWithEmailAndPassword(fg.email,old),20000);
     await cred.user.updatePassword(p1);
     await rcSave(fg.email,fg.doc.q,ans,p1);
     AUTH.info="Password changed – you're signed in.";
@@ -7333,12 +7362,130 @@ function admRows(){
 }
 
 /* ---- screens ---- */
-function authGate(){ return AUTH.on&&AUTH.state!=="off"&&AUTH.state!=="offline"&&AUTH.state!=="in"?authHTML():null; }
+
+/* ================= GUESTS and ACCESS REQUESTS =================
+   "Continue as guest" needs no account: nothing is written to Firebase, the guest only gets the games that run on the
+   device against the computer (the same ones as Offline mode). Everything that needs other people is shown locked and
+   leads to the request form. A request is saved in accessRequests/<email> (anyone may create one, only admins read it);
+   admins see the list on the Admin page with a one-tap Invite and then send the login details by e-mail themselves.   */
+const GUEST_KEY="gh_guest", REQ_KEY="gh_req_sent";
+const REQ_HOW=["Saw it on the portfolio website","A friend","Family","Colleague / work","Someone shared the link with me","Other"];
+const isGuest=()=>AUTH.state==="guest";
+const lsGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const lsSet=(k,v)=>{ try{ v===null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} };
+function guestEnter(){
+  const n=authVal("guestName").slice(0,20)||lsGet(GUEST_KEY+"_name")||"Guest";
+  S.me.name=n; S.ui.meName=n; lsSet(GUEST_KEY,"1"); lsSet(GUEST_KEY+"_name",n); lsSet("ngg_me",JSON.stringify({name:n,av:S.me.av}));
+  AUTH.state="guest"; AUTH.err=null; AUTH.info=null; S.screen="landing"; S.notice=null; render(); window.scrollTo(0,0);
+}
+function guestExit(mode){ lsSet(GUEST_KEY,null); AUTH.state="out"; AUTH.mode=mode||"login"; S.screen="landing"; render(); window.scrollTo(0,0); }
+function guestLock(what){
+  S.screen="request"; S.reqWhy=what||"This needs an account."; render(); window.scrollTo(0,0);
+}
+/* the form, used on the sign-in screen and on the guest's request page */
+function reqFormHTML(){
+  const sent=lsGet(REQ_KEY), R=S.req||{};
+  if(R.done) return `<div class="msg ok">✅ <b>Request sent!</b> The admin will e-mail your login details to <b>${esc(R.done)}</b>. Until then you can keep playing as a guest.</div>`;
+  const inp=(id,label,type,ph,max,ac)=>`<label>${label}</label><input type="${type}" id="${id}" data-keep maxlength="${max}" autocomplete="${ac||"off"}" placeholder="${ph}" value="${esc(S.ui[id]||"")}">`;
+  return `${sent?`<div class="msg info">You already sent a request from <b>${esc(sent)}</b>. The admin will get back to you – you only need to send another one if something changed.</div>`:""}
+    ${R.err?`<div class="msg err">${esc(R.err)}</div>`:""}
+    ${inp("reqName","Your name *","text","Your full name",40,"name")}${inp("reqEmail","E-mail *","email","you@example.com",100,"email")}
+    <label>How do you know about Game Hub? *</label><select id="reqHow" data-keep>${["",...REQ_HOW].map(o=>`<option value="${esc(o)}" ${(S.ui.reqHow||"")===o?"selected":""}>${o?esc(o):"Choose one…"}</option>`).join("")}</select>
+    <label>Message (optional)</label><textarea id="reqMsg" data-keep maxlength="500" rows="3" placeholder="Anything the admin should know – e.g. who you'd like to play with">${esc(S.ui.reqMsg||"")}</textarea>
+    <button class="btn green block" style="margin-top:12px" data-a="reqSend" ${R.busy?"disabled":""}>${R.busy?"Sending…":"📨 Send request"}</button>
+    <p class="mut" style="font-size:.82rem;margin:8px 0 0">Your details are only seen by the Game Hub admins, who use them to send you a login.</p>`;
+}
+async function reqSend(){
+  const name=authVal("reqName").slice(0,40), email=authVal("reqEmail").toLowerCase().slice(0,100), how=authVal("reqHow"), msg=authVal("reqMsg").slice(0,500);
+  const R=S.req=S.req||{}; R.err=null;
+  if(!name) R.err="Please type your name.";
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) R.err="Please type a valid e-mail address.";
+  else if(!REQ_HOW.includes(how)) R.err="Please choose how you know about Game Hub.";
+  else if(!FBD) R.err="Requests need an internet connection – try again when you're online.";
+  if(R.err) return render();
+  R.busy=true; render();
+  try{
+    await FBD.collection("accessRequests").doc(email).set({name,email,how,msg,status:"new",at:fbNow()});
+    R.done=email; lsSet(REQ_KEY,email); ["reqName","reqEmail","reqHow","reqMsg"].forEach(k=>{ S.ui[k]=""; });
+  }catch(e){
+    R.err=/permission/i.test(String((e&&e.code)||"")+" "+String(e&&e.message))
+      ?"A request from this e-mail is already waiting – the admin will get back to you."
+      :"Couldn't send the request ("+fbErrText(e)+"). Check your connection and try again.";
+  }
+  R.busy=false; render();
+}
+function requestPageHTML(){
+  return `<div class="card2" style="max-width:520px;margin:14px auto 0"><h3 style="margin-top:0">📨 Request your own login</h3>
+    ${S.reqWhy?`<div class="msg info">🔒 ${esc(S.reqWhy)}</div>`:""}
+    <p class="mut" style="margin:0 0 6px">With a login you can open rooms and play with friends, join groups, take part in the secret draws and chat with your mates.</p>${reqFormHTML()}
+    <button class="btn secondary block" style="margin-top:10px" data-a="home">← Back to the games</button></div>`;
+}
+function guestBarHTML(){
+  return `<div class="acct-bar"><div class="ab-l"><span class="chip">👋 ${esc(S.me.name||"Guest")} · Guest</span></div><div class="ab-r">
+    <button class="btn secondary" data-a="reqOpen">📨 Request a login</button><button class="btn secondary" data-a="guestExit">Sign in</button></div></div>`;
+}
+const GUEST_LOCKED=[
+  {ico:"🌐",name:"Online rooms with friends",d:"NumberGame, Spy, Raja Rani, Scribblio, Dots and Boxes – and Chess, Ludo, Ass and Rummy with real people.",why:"Playing with friends in online rooms needs an account."},
+  {ico:"🔑",name:"Join with a room code",d:"Got a code from a friend? Join their room.",why:"Joining a friend's room needs an account."},
+  {ico:"🤝",name:"Mates & chat",d:"See who's online, send game requests and chat one-to-one.",why:"Mates and chat need an account."},
+  {ico:"🎄",name:"Groups & secret draws",d:"ChristMom ChristChild and Diwali Daddy Diwali Kid draws for your group.",why:"Groups and the secret draws need an account."}
+];
+function guestLandingHTML(){
+  const sent=lsGet(REQ_KEY);
+  let h=guestBarHTML()+`<header class="hero"><h1>Game Hub</h1><p>You're a guest – try the games against the computer.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
+  h+=`<div class="card2 guest-cta"><div><b>Like it? 🎉</b><span class="mut">${sent?"Your request is with the admin – they'll e-mail you a login.":"Get your own login to play with friends, join groups and the secret draws."}</span></div><button class="btn green" data-a="reqOpen">📨 ${sent?"Request again":"Request a login"}</button></div>`;
+  h+=`<h3>Play against the computer</h3><div class="game-grid g2 hg">${OFF_YES.map(c=>`<button class="game-btn" data-a="offStart" data-g="${c.g}" ${c.solo?`data-solo="${c.solo}"`:""}><span class="ico">${c.ico}</span><b>${esc(c.name)}</b><span class="d">${esc(c.d)}</span></button>`).join("")}</div>`;
+  h+=`<h3 style="margin-top:22px">🔒 With a login</h3><div class="game-grid g2 hg">${GUEST_LOCKED.map(c=>`<button class="game-btn locked" data-a="guestLock" data-why="${esc(c.why)}"><span class="ico">${c.ico}</span><b>${esc(c.name)}</b><span class="d">${esc(c.d)}</span><span class="offb">🔒 Request a login</span></button>`).join("")}</div>`;
+  return h;
+}
+
+/* ---- admin: the requests list ---- */
+const REQ={sub:null,list:[],err:null};
+function reqAdminSync(){
+  const need=AUTH.state==="in"&&AUTH.isAdmin&&!!FBD;
+  if(need&&!REQ.sub){
+    REQ.sub=FBD.collection("accessRequests").onSnapshot(s=>{ REQ.list=s.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>fbMs(b.at)-fbMs(a.at)); REQ.err=null; render(); },
+      e=>{ REQ.err=fbErrText(e); REQ.sub=null; render(); });
+  } else if(!need&&REQ.sub){ try{ REQ.sub(); }catch(e){} REQ.sub=null; REQ.list=[]; }
+}
+const reqNew=()=>REQ.list.filter(r=>r.status==="new").length;
+function reqMail(r){
+  const body=`Hi ${r.name},\n\nThanks for your interest in Game Hub! Your e-mail ${r.email} has been invited.\n\n1. Open ${admLink()}\n2. Tap "Register" and use this e-mail address\n3. Choose your password and a recovery question\n\nHave fun!`;
+  return `mailto:${encodeURIComponent(r.email)}?subject=${encodeURIComponent("Your Game Hub login")}&body=${encodeURIComponent(body)}`;
+}
+function reqAdminHTML(){
+  const L=REQ.list;
+  let h=`<div class="card2" style="margin-top:14px"><h3 style="margin-top:0">📨 Login requests${reqNew()?` <span class="req-badge">${reqNew()} new</span>`:""}</h3>`;
+  if(REQ.err) h+=`<div class="msg err">${esc(REQ.err)} – publish the latest firestore.rules (it has the new accessRequests rule).</div>`;
+  if(!L.length) return h+`<p class="mut" style="margin:0">No requests yet. Guests can send one from the sign-in screen or from inside the guest mode.</p></div>`;
+  h+=`<p class="mut" style="margin:0 0 8px">Invite adds the e-mail to the invite list. Then send them the login e-mail – "Write e-mail" opens one ready to send.</p><div class="req-list">`;
+  h+=L.map(r=>{ const st=r.status==="invited"?`<span class="chip" style="color:var(--ok)">✅ Invited</span>`:`<span class="chip pink">🆕 New</span>`;
+    return `<div class="req-row${r.status==="new"?" new":""}"><div class="req-h"><b>${esc(r.name||"?")}</b> ${st}</div>
+      <div class="req-m"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a> · ${esc(r.how||"")} · <span class="mut">${r.at?esc(new Date(fbMs(r.at)).toLocaleString()):""}</span></div>
+      ${r.msg?`<div class="req-msg">“${esc(r.msg)}”</div>`:""}
+      <div class="req-b">${r.status==="new"?`<button class="btn green" data-a="reqInvite" data-e="${esc(r.id)}">✉️ Invite</button>`:""}<a class="btn secondary" href="${reqMail(r)}" target="_blank" rel="noopener">📝 Write e-mail</a><button class="btn secondary" data-a="reqDel" data-e="${esc(r.id)}">🗑 Delete</button></div></div>`; }).join("");
+  return h+`</div></div>`;
+}
+async function reqInvite(email){
+  const r=REQ.list.find(x=>x.id===email); if(!r) return;
+  try{
+    const cur=AUTH.adm.invites.find(i=>i.id===email), has=Object.values(AUTH.adm.users).some(u=>u.email===email);
+    if(!has&&!(cur&&cur.status==="invited")) await FBD.collection("invites").doc(email).set({email,name:(r.name||"").slice(0,30),status:"invited",invitedAt:fbNow(),invitedBy:AUTH.user.email});
+    await FBD.collection("accessRequests").doc(email).update({status:"invited",invitedAt:fbNow(),invitedBy:AUTH.user.email});
+    toast(has?"They already have an account – marked as done.":"Invited "+email+". Now send them the login e-mail.","ok");
+  }catch(e){ toast(fbErrText(e),"err"); }
+}
+async function reqDel(email){ try{ await FBD.collection("accessRequests").doc(email).delete(); toast("Request deleted.","ok"); }catch(e){ toast(fbErrText(e),"err"); } }
+
+function authGate(){ return AUTH.on&&AUTH.state!=="off"&&AUTH.state!=="offline"&&AUTH.state!=="in"&&AUTH.state!=="guest"?authHTML():null; }
 function authHTML(){
   const A=AUTH, hero=`<header class="hero"><h1>Game Hub</h1><p>Sign in to play.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   const msg=(A.err?`<div class="msg err">${esc(A.err)}</div>`:"")+(A.info?`<div class="msg info">${esc(A.info)}</div>`:"");
-  if(A.state==="loading") return hero+`<div class="card2" style="text-align:center"><h3>🚀 Checking your account…</h3><p class="mut">Connecting to Game Hub</p></div>`;
-  if(A.state==="error") return hero+`<div class="card2"><div class="msg err">Couldn't reach the account service. Check your connection and try again.</div><button class="btn block" data-a="authRetry">Try again</button></div>`;
+  const out=`<button class="btn secondary block" style="margin-top:10px" data-a="guestEnter">🎮 Play as a guest meanwhile</button>`;
+  if(A.state==="loading"){ if(!A.loadAt) A.loadAt=Date.now(); const slow=Date.now()-A.loadAt>8000; if(!slow){ clearTimeout(A.loadT); A.loadT=setTimeout(()=>{ A.loadT=null; if(AUTH.state==="loading") render(); },8100-(Date.now()-A.loadAt)); }
+    return hero+`<div class="card2" style="text-align:center"><h3>🚀 Checking your account…</h3><p class="mut">Connecting to Game Hub</p>${slow?`<p class="mut" style="font-size:.85rem">This is taking longer than usual…</p><button class="btn block" data-a="authRetry">Try again</button>${out}`:""}</div>`; }
+  A.loadAt=0;
+  if(A.state==="error") return hero+`<div class="card2"><div class="msg err">Couldn't reach Game Hub's account server. Check your connection and try again – if it keeps happening, try turning off ad-blockers or VPN for this site.</div><button class="btn block" data-a="authRetry">Try again</button>${out}</div>`;
   const m=A.mode, inp=(id,label,type,ph,extra)=>`<label>${label}</label><input type="${type}" id="${id}" data-keep autocomplete="${extra||"off"}" placeholder="${ph||""}" value="${esc(S.ui[id]||"")}">`;
   let f="";
   if(m==="register") f=`<div class="msg info">Only e-mails the admin has invited can register.</div>${inp("authName","Your name","text","Name shown in games","name")}${inp("authEmail","Invited e-mail","email","you@example.com","email")}${inp("authPass","Choose a password","password","At least 6 characters","new-password")}${inp("authPass2","Repeat the password","password","","new-password")}
@@ -7349,8 +7496,12 @@ function authHTML(){
   else if(m==="forgot") f=`<p class="mut" style="margin:0 0 6px">Type your e-mail and answer your recovery question to choose a new password.</p>${inp("authEmail","E-mail","email","you@example.com","email")}<button class="btn block" style="margin-top:12px" data-a="authFgFind" ${A.busy?"disabled":""}>Continue</button>`;
   else f=`${inp("authEmail","E-mail","email","you@example.com","email")}${inp("authPass","Password","password","","current-password")}
     <button class="btn green block" style="margin-top:12px" data-a="authLogin" ${A.busy?"disabled":""}>Sign in</button>`;
+  if(m==="request") f=`<p class="mut" style="margin:0 0 6px">No login yet? Tell us who you are and the admin will e-mail you one.</p>${reqFormHTML()}`;
   const tab=(k,l)=>`<button class="btn ${m===k?"":"secondary"}" data-a="authMode" data-mode="${k}">${l}</button>`;
-  return hero+`<div class="card2" style="max-width:480px;margin:0 auto"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">${tab("login","Sign in")}${tab("register","Register")}${tab("forgot","Forgot password")}</div>${msg}${f}</div>`;
+  const guest=`<div class="card2 guest-card" style="max-width:480px;margin:14px auto 0"><h3 style="margin-top:0">👋 Just looking around?</h3><p class="mut" style="margin:0 0 6px">Play the games against the computer as a guest – no account needed. Like it? Request a login any time.</p>
+    <label>Your name (optional)</label><input type="text" id="guestName" data-keep maxlength="20" autocomplete="off" placeholder="Shown in the games" value="${esc(S.ui.guestName!==undefined?S.ui.guestName:(lsGet(GUEST_KEY+"_name")||""))}">
+    <button class="btn block" style="margin-top:10px" data-a="guestEnter">🎮 Continue as guest</button></div>`;
+  return hero+`<div class="card2" style="max-width:480px;margin:0 auto"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">${tab("login","Sign in")}${tab("register","Register")}${tab("forgot","Forgot password")}${tab("request","📨 Request a login")}</div>${m==="request"?"":msg}${f}</div>`+guest;
 }
 function acctBarHTML(){
   if(!AUTH.on) return "";
@@ -7358,7 +7509,7 @@ function acctBarHTML(){
   if(AUTH.state!=="in") return "";
   const p=AUTH.profile||{};
   return `<div class="acct-bar"><div class="ab-l"><span class="chip">👤 ${esc(p.name||AUTH.user.email)}${AUTH.isAdmin?(fbIsMaster()?" · 👑 Master admin":" · 🛡 Admin"):""}</span>${(AUTH.groups&&AUTH.groups.length)?`<button type="button" class="chip grp-chip" data-a="grpPop" aria-haspopup="dialog">🏷 Groups (${AUTH.groups.length})</button>`:""}</div><div class="ab-r">
-    <button class="btn secondary" data-a="goMyStats">📊 My activity</button>${AUTH.isAdmin?`<button class="btn secondary" data-a="goAdmin">🛡 Admin</button>`:""}<button class="btn secondary" data-a="authLogout">Sign out</button></div></div>`;
+    <button class="btn secondary" data-a="goMyStats">📊 My activity</button>${AUTH.isAdmin?`<button class="btn secondary" data-a="goAdmin">🛡 Admin${reqNew()?` <span class="req-badge">${reqNew()}</span>`:""}</button>`:""}<button class="btn secondary" data-a="authLogout">Sign out</button></div></div>`;
 }
 const gameLabel=g=>GTITLE[g]||g;
 /* "🏷 Groups (n)" chip → a pop-up listing my group names (scrolls when there are many) */
@@ -7412,6 +7563,7 @@ function adminHTML(){
     <button class="btn green" style="margin-top:10px" data-a="admInvite">Send invite</button></div>`;
   if(settings) return h+invite+`<h3 class="home-h" style="margin-top:26px">📇 Register players &amp; groups (for the email draws)</h3>`+(fbIsMaster()?drawRegHTML():`<div class="msg info">Registering players and groups is for the master admin only.</div>`);
   h+=`<div class="adm-cards">${card("Active accounts",all.filter(u=>u.role!=="admin").length)}${card("Invited, not registered",A.invites.filter(i=>i.status==="invited"&&!all.some(u=>u.email===i.id)).length)}${card("Online now",all.filter(fbOnline).length)}${card("Active last 7 days",all.filter(u=>now-fbMs(u.lastLoginAt)<6048e5).length)}${card("Games played",all.reduce((a,u)=>a+(u.gamesPlayed||0),0))}${card("Total play time",fbDur(all.reduce((a,u)=>a+(u.totalSeconds||0),0)))}${card("Most played",top?esc(gameLabel(top)):"–")}</div>`;
+  h+=reqAdminHTML();
   h+=`<div class="card2" style="margin-top:14px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h3 style="margin:0">👥 People (${rows.length})</h3>
     <input type="text" id="admQ" data-keep autocomplete="off" placeholder="Search name or e-mail" style="max-width:260px" value="${esc(S.ui.admQ||"")}"></div>`;
   if(!rows.length) h+=`<p class="mut">Nobody yet – invite someone under UserSettings.</p>`;
