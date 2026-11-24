@@ -7046,7 +7046,7 @@ function fbErrText(e){
   const c=e&&e.code||"";
   return ({"auth/invalid-credential":"Wrong e-mail or password.","auth/wrong-password":"Wrong e-mail or password.","auth/user-not-found":"Wrong e-mail or password.","auth/invalid-email":"That e-mail address doesn't look right.",
     "auth/email-already-in-use":"This e-mail already has an account – use Sign in (or Forgot password).","auth/weak-password":"Choose a password of at least 6 characters.","auth/too-many-requests":"Too many tries – wait a few minutes and try again.",
-    "auth/network-request-failed":"No connection – check your internet.","permission-denied":"Not allowed (check the Firestore rules are published)."})[c]||(e&&e.message)||"Something went wrong.";
+    "auth/network-request-failed":"No connection – check your internet.","permission-denied":"Not allowed (check the Firestore rules are published).","gh-timeout":"Game Hub's server didn't answer – your network may be blocking it. Try again, switch Wi-Fi/mobile data, or turn on Secure DNS in Chrome settings."})[c]||(e&&e.message)||"Something went wrong.";
 }
 async function fbInit(){
   if(!FB_ON||FBA) return;
@@ -7129,7 +7129,7 @@ async function doAuthLogin(){
   const email=authVal("authEmail").toLowerCase(), pass=String(S.ui.authPass||"");
   if(!email||!pass){ AUTH.err="Enter your e-mail and password."; return render(); }
   AUTH.busy=true; AUTH.err=null; AUTH.info=null; render();
-  try{ await FBA.signInWithEmailAndPassword(email,pass); }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
+  try{ await fbT(FBA.signInWithEmailAndPassword(email,pass),20000); }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
 }
 async function doAuthRegister(){
   const name=authVal("authName").slice(0,30), email=authVal("authEmail").toLowerCase(), p1=String(S.ui.authPass||""), p2=String(S.ui.authPass2||""), q=String(S.ui.authQ||RC_QS[0]), ans=String(S.ui.authAns||"");
@@ -7141,7 +7141,7 @@ async function doAuthRegister(){
     const d=await FBD.collection("invites").doc(email).get();
     if(!d.exists||d.data().status!=="invited"){ AUTH.err="This e-mail hasn't been invited. Ask the admin to invite you first."; AUTH.busy=false; return render(); }
     AUTH.pendingName=name;
-    const cred=await FBA.createUserWithEmailAndPassword(email,p1);
+    const cred=await fbT(FBA.createUserWithEmailAndPassword(email,p1),20000);
     try{ await cred.user.updateProfile({displayName:name}); }catch(e){}
     try{ await rcSave(email,q,ans,p1); }catch(e){ console.error(e); }
   }catch(e){ AUTH.err=fbErrText(e); AUTH.busy=false; render(); }
@@ -7186,7 +7186,7 @@ async function doAuthFgReset(){
   let old=null;
   try{ old=await rcOpen(ans,fg.doc); }catch(e){ AUTH.err="That answer isn't right."; AUTH.busy=false; return render(); }
   try{
-    const cred=await FBA.signInWithEmailAndPassword(fg.email,old);
+    const cred=await fbT(FBA.signInWithEmailAndPassword(fg.email,old),20000);
     await cred.user.updatePassword(p1);
     await rcSave(fg.email,fg.doc.q,ans,p1);
     AUTH.info="Password changed – you're signed in.";
