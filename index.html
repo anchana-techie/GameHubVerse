@@ -6212,7 +6212,7 @@ function onAppClick(e){
     case "authFgBack": AUTH.fg=null; AUTH.err=null; render(); break;
     case "recSave": doRecSave(); break;
     case "authLogout": doAuthLogout(); break;
-    case "authRetry": fbInit(); break;
+    case "authRetry": if(FBA&&FBA.currentUser) fbOnUser(FBA.currentUser); else if(FBA) location.reload(); else fbInit(); break;
     case "goAdmin": S.notice=null; S.screen="admin"; render(); break;
     case "goMyStats": S.notice=null; S.screen="mystats"; AUTH.my.act=null; render(); if(AUTH.user&&FBD){ admLoadAct(AUTH.user.uid,AUTH.my,"act"); FBD.collection("recovery").doc(AUTH.user.email.toLowerCase()).get().then(d=>{ AUTH.my.rec=d.exists; render(); }).catch(()=>{}); } break;
     case "admInvite": admInvite(); break;
@@ -7069,15 +7069,17 @@ async function fbReject(u,why){
   AUTH.err=why==="removed"?"This account was removed by the admin. Ask them to invite you again.":"This e-mail hasn't been invited. Ask the admin to invite you first.";
   try{ await u.delete(); }catch(e){ try{ await FBA.signOut(); }catch(x){} }
 }
+/* a database call that hangs (blocked connection, flaky network) must not leave "Checking your account…" up forever */
+const fbT=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(Object.assign(new Error("Game Hub's server didn't answer in time."),{code:"gh-timeout"})),ms||15000))]);
 async function fbOnUser(u){
   if(!u){ if(AUTH.state==="in") console.warn("[auth] signed out (state was \"in\") – "+(AUTH.err||"no error recorded")); fbStop(); try{ mateStop(true); }catch(e){} AUTH.groups=[]; AUTH.user=null; AUTH.profile=null; AUTH.isAdmin=false; AUTH.state=lsGet(GUEST_KEY)?"guest":"out"; if(AUTH.state==="guest") S.me.name=S.me.name||lsGet(GUEST_KEY+"_name")||"Guest"; AUTH.busy=false; render(); return; }
   AUTH.user=u; AUTH.isAdmin=false; lsSet(GUEST_KEY,null);
   AUTH.state="loading"; render();
   try{
     const email=u.email.toLowerCase(), ref=FBD.collection("users").doc(u.uid), tag="gh_login_"+u.uid;
-    let snap=await ref.get(), first=false;
+    let snap=await fbT(ref.get()), first=false;
     if(!snap.exists){
-      const is=await FBD.collection("invites").doc(email).get(), inv=is.exists?is.data():null;
+      const is=await fbT(FBD.collection("invites").doc(email).get()), inv=is.exists?is.data():null;
       if(!inv||inv.status!=="invited") return fbReject(u,inv&&inv.status);
       const name=String(AUTH.pendingName||u.displayName||email.split("@")[0]).slice(0,30);
       await ref.set({email,name,role:"user",createdAt:fbNow(),lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:1,device:fbDevice(),stats:{},gamesPlayed:0,totalSeconds:0});
@@ -7088,17 +7090,18 @@ async function fbOnUser(u){
       let seen=false; try{ seen=!!sessionStorage.getItem(tag); }catch(e){}
       if(!seen){
         try{ sessionStorage.setItem(tag,"1"); }catch(e){}
-        await ref.update({lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:fbInc(1),device:fbDevice()});
+        await fbT(ref.update({lastLoginAt:fbNow(),lastSeen:fbNow(),online:true,loginCount:fbInc(1),device:fbDevice()}));
         fbLogTo(u.uid,"login",{device:fbDevice()});
       } else ref.update({lastSeen:fbNow(),online:true}).catch(()=>{});
     }
-    snap=await ref.get(); AUTH.profile=snap.data()||{name:u.displayName||email,email};
+    snap=await fbT(ref.get()); AUTH.profile=snap.data()||{name:u.displayName||email,email};
     AUTH.isAdmin=AUTH.profile.role==="admin";                        // admin = role "admin" on the profile (users/<uid>.role), like any other role
     AUTH.err=null; AUTH.state="in"; AUTH.pendingName="";
     if(S&&!S.me.name){ S.me.name=String(AUTH.profile.name||"").slice(0,16); try{ if(!localStorage.getItem("ngg_me")) localStorage.setItem("ngg_me",JSON.stringify({name:S.me.name,av:S.me.av})); }catch(e){} }
     fbStart(u,ref); authGroupsLoad();
   }catch(e){
-    if(!ONLINE||(e&&/unavailable|offline/i.test(e.code||e.message||""))){ AUTH.state="offline"; AUTH.profile=null; }
+    if(e&&e.code==="gh-timeout"){ AUTH.state="error"; AUTH.err=null; try{ sessionStorage.removeItem("gh_login_"+u.uid); }catch(x){} console.warn("[auth] sign-in timed out"); }
+    else if(!ONLINE||(e&&/unavailable|offline/i.test(e.code||e.message||""))){ AUTH.state="offline"; AUTH.profile=null; }
     else { AUTH.err=fbErrText(e); try{ await FBA.signOut(); }catch(x){} }
   }
   AUTH.busy=false; render();
@@ -7478,8 +7481,11 @@ function authGate(){ return AUTH.on&&AUTH.state!=="off"&&AUTH.state!=="offline"&
 function authHTML(){
   const A=AUTH, hero=`<header class="hero"><h1>Game Hub</h1><p>Sign in to play.</p>${pwaCanOffer()?`<button type="button" class="btn install-btn" data-a="pwaInstall">📲 Install GameHub</button>`:""}</header>`;
   const msg=(A.err?`<div class="msg err">${esc(A.err)}</div>`:"")+(A.info?`<div class="msg info">${esc(A.info)}</div>`:"");
-  if(A.state==="loading") return hero+`<div class="card2" style="text-align:center"><h3>🚀 Checking your account…</h3><p class="mut">Connecting to Game Hub</p></div>`;
-  if(A.state==="error") return hero+`<div class="card2"><div class="msg err">Couldn't reach the account service. Check your connection and try again.</div><button class="btn block" data-a="authRetry">Try again</button></div>`;
+  const out=`<button class="btn secondary block" style="margin-top:10px" data-a="guestEnter">🎮 Play as a guest meanwhile</button>`;
+  if(A.state==="loading"){ if(!A.loadAt) A.loadAt=Date.now(); const slow=Date.now()-A.loadAt>8000; if(!slow){ clearTimeout(A.loadT); A.loadT=setTimeout(()=>{ A.loadT=null; if(AUTH.state==="loading") render(); },8100-(Date.now()-A.loadAt)); }
+    return hero+`<div class="card2" style="text-align:center"><h3>🚀 Checking your account…</h3><p class="mut">Connecting to Game Hub</p>${slow?`<p class="mut" style="font-size:.85rem">This is taking longer than usual…</p><button class="btn block" data-a="authRetry">Try again</button>${out}`:""}</div>`; }
+  A.loadAt=0;
+  if(A.state==="error") return hero+`<div class="card2"><div class="msg err">Couldn't reach Game Hub's account server. Check your connection and try again – if it keeps happening, try turning off ad-blockers or VPN for this site.</div><button class="btn block" data-a="authRetry">Try again</button>${out}</div>`;
   const m=A.mode, inp=(id,label,type,ph,extra)=>`<label>${label}</label><input type="${type}" id="${id}" data-keep autocomplete="${extra||"off"}" placeholder="${ph||""}" value="${esc(S.ui[id]||"")}">`;
   let f="";
   if(m==="register") f=`<div class="msg info">Only e-mails the admin has invited can register.</div>${inp("authName","Your name","text","Name shown in games","name")}${inp("authEmail","Invited e-mail","email","you@example.com","email")}${inp("authPass","Choose a password","password","At least 6 characters","new-password")}${inp("authPass2","Repeat the password","password","","new-password")}
