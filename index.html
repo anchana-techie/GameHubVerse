@@ -1327,10 +1327,12 @@ const SETTINGS={
   ],
   ass:[
     {k:"rounds",l:"Rounds (games to play)",o:ROUNDS},
+    {k:"seats",l:"Table size – empty seats are played by the computer",o:[[0,"Just the people in the room"],...[2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n=>[n,n+" players"])]},
     {k:"turnTime",l:"Time to play a card (then the game plays for you)",o:[[15,"15 sec"],[20,"20 sec"],[30,"30 sec"],[45,"45 sec"],[60,"1 min"],[0,"No limit"]]}
   ],
   rummy:[
     {k:"rounds",l:"Pools (games to play)",o:ROUNDS},
+    {k:"seats",l:"Table size – empty seats are played by the computer",o:[[0,"Just the people in the room"],...[2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n=>[n,n+" players"])]},
     {k:"pool",l:"Pool – reach this many points and you're out",o:[[101,"101 pool (drop 20 / 40)"],[201,"201 pool (drop 25 / 50)"]]},
     {k:"turnTime",l:"Time for each turn (then the game plays for you; 3 missed turns = drop)",o:[[20,"20 sec"],[30,"30 sec"],[45,"45 sec"],[60,"1 min"],[90,"90 sec"],[0,"No limit"]]}
   ],
@@ -1355,8 +1357,8 @@ const DEFAULTS={
   dots:{rounds:1,cols:5,rows:5,dice:1,bonus:0,turnTime:45},
   ludo:{rounds:1,board:4,fill:"bots",level:2,turnTime:30},
   rps:{rounds:1,cpu:0,target:2,throwTime:15},
-  ass:{rounds:3,turnTime:30},
-  rummy:{rounds:1,pool:101,turnTime:45},
+  ass:{rounds:3,seats:0,turnTime:30},
+  rummy:{rounds:1,seats:0,pool:101,turnTime:45},
   chess:{rounds:1,players:2,theme:"cosmic",solo:"computer",level:2,side:"white",seat:"random",clock:10,inc:3,hints:1}
 };
 const BLURB={
@@ -1367,8 +1369,8 @@ const BLURB={
   dots:"Roll the dice, then draw that many lines between the dots. Close a box and it’s yours – your own emoji is stamped inside and it counts as a point. When every box is taken the round is over. Everyone gets a different emoji.",
   ludo:"Classic Ludo for up to 6 players. Roll a 6 to bring a token out, go once round the board and up your home column, and finish with an exact roll. Land on a lone opponent to send their token back to the yard (the ★ squares and start squares are safe). A 6, a capture or a token home gives you another roll – three 6s in a row lose the turn. The host chooses a 4- or 6-colour board and whether colours nobody sits on are played by the computer or left empty. A player who leaves or is kicked is out and their tokens vanish.",
   rps:"Everyone chooses ✊ rock, ✋ paper or ✌️ scissors in secret, then all throws are revealed together. With 2 players it is first to the chosen number of wins. With 3 or more, the players who lose the throw are knocked out until one is left; if all three signs (or only one) appear it is a draw and everyone throws again. Alone, you play the computer.",
-  ass:"Kazhutha for 2–15 players. All 52 cards are dealt and the holder of the A♠ starts with it. Everyone must follow the suit that was led. If all follow, the cards are thrown away and the highest card leads next. If someone has none of that suit they cut with any card – the trick stops and whoever played the highest card of the led suit picks up all those cards. Empty your hand to escape; the last player left holding cards is the Ass 🫏. Escapers score by order. Alone, you play the computer.",
-  rummy:"13-card Indian Rummy, Pool 101, for 2–15 players (more decks are added for bigger groups). Draw from the closed or open pile, then throw one card. Make sets and sequences – you need at least two sequences, one of them pure (no joker). Every card of the wild-joker rank, and the printed jokers, can stand in for any card. Declare when your whole hand is grouped. The others add the points of their unmatched cards (max 80); dropping costs 20 before your first draw, 40 later. Reach 101 and you're out – last one standing wins the pool. Alone, you play the computer.",
+  ass:"Kazhutha for 2–15 players. All 52 cards are dealt and the holder of the A♠ starts with it. Everyone must follow the suit that was led. If all follow, the cards are thrown away and the highest card leads next. If someone has none of that suit they cut with any card – the trick stops and whoever played the highest card of the led suit picks up all those cards. Empty your hand to escape; the last player left holding cards is the Ass 🫏. Escapers score by order. The host can pick a table size – empty seats are played by the computer (alone, you always get one).",
+  rummy:"13-card Indian Rummy, Pool 101, for 2–15 players (more decks are added for bigger groups). Draw from the closed or open pile, then throw one card. Make sets and sequences – you need at least two sequences, one of them pure (no joker). Every card of the wild-joker rank, and the printed jokers, can stand in for any card. Declare when your whole hand is grouped. The others add the points of their unmatched cards (max 80); dropping costs 20 before your first draw, 40 later. Reach 101 and you're out – last one standing wins the pool. The host can pick a table size – empty seats are played by the computer (alone, you always get one).",
   chess:"Chess for 2–4 players – the host picks how many seats the board has. Seats nobody joins are played by the computer. 2 seats: classic chess (alone you can play the computer or pass-and-play). 3 seats: hexagon board, last king standing wins. 4 seats: cross board, points for captures and checkmates. A checkmated player is out (their pieces slowly fade away on the hexagon, turn grey on the cross board) and can step back through the moves with ◀ ▶ to see how it happened. The host chooses the board and piece colour set."
 };
 
@@ -1863,7 +1865,7 @@ function afterLeave(R,pid){
     if(act.length<2) abort(R,"A player left, so the game was stopped (Dots and Boxes needs at least 2 players).",pid);
     else if(g.ids[g.turn]===pid) dbNext(R);
   } else if(R.game==="ass"){
-    if(act.length<2) abort(R,"A player left, so the game was stopped (Ass needs at least 2 players).",pid);
+    if(act.length<1||(act.length<2&&!g.seats.some(s=>s.bot))) abort(R,"A player left, so the game was stopped (Ass needs at least 2 players).",pid);
     else asOut(R,pid);
   } else if(R.game==="rummy"){
     rmOut(R,pid);
@@ -2342,10 +2344,17 @@ const cardSort=(a,b)=>(cS(a)-cS(b))||(cR(a)-cR(b))||(a-b);
      led suit picks up all the cards of the trick, then leads.
    Empty your hand and you escape; the last player still holding cards is the Ass. Escapers score by order: first out gets
    one point less than the number of players, the next one less again, … the Ass gets nothing.                                */
+/* computer players for the card games: the host's "Table size" is filled up with them (a lone player always gets one) */
+const BOT_AV=["🤖","👾","🦾","🛸","🧠","🕹️","💾","🛰️","🎰","📟","🔋","🧩","🎲","💡"];
+const csBotCount=(R,humans)=>Math.max(0,Math.max(+R.settings.seats||0,2)-humans);
+function csFill(R,seats,base){
+  const k=csBotCount(R,seats.length);
+  for(let i=0;i<k;i++) seats.push(Object.assign(base(),{pid:null,bot:true,name:k===1?"Computer":"Computer "+(i+1),av:BOT_AV[i%BOT_AV.length]}));
+}
 function asDeal(R){
   const hum=R.players.filter(p=>!p.left);
   const seats=hum.map(p=>({pid:p.pid,name:p.name,av:p.av,hand:[],out:0,left:false}));
-  if(seats.length===1) seats.push({pid:null,bot:true,name:"Computer",av:"🤖",hand:[],out:0,left:false});   // alone: you play the computer
+  csFill(R,seats,()=>({hand:[],out:0,left:false}));
   const deck=shuffle(mkDecks(1,false)), st=Math.floor(Math.random()*seats.length);
   deck.forEach((c,i)=>seats[(st+i)%seats.length].hand.push(c));
   const lead=seats.findIndex(s=>s.hand.includes(14));     // 14 = A♠ of deck 0
@@ -2427,7 +2436,7 @@ function asTick(R,now){
   if(g.phase==="show"){ if(now>=g.until){ asNext(R); return true; } return false; }
   if(g.phase!=="play") return false;
   const s=g.seats[g.turn]; if(!s) return false;
-  if(s.bot){ if(now-g.tStart>1100){ asPlay(R,asBot(g)); return true; } return false; }
+  if(s.bot){ const fast=!g.seats.some(x=>!x.bot&&!x.left&&x.hand.length); if(now-g.tStart>(fast?350:1100)){ asPlay(R,asBot(g)); return true; } return false; }
   if((g.deadline&&now>g.deadline)||(gone(R,s.pid)&&now-g.tStart>8000)){ asPlay(R,asAuto(g)); return true; }
   return false;
 }
@@ -2562,7 +2571,7 @@ const rmAfter=(list,i)=>{ const k=list.find(j=>j>i); return k===undefined?list[0
 function rmDeal(R){
   const hum=R.players.filter(p=>!p.left);
   const seats=hum.map(p=>({pid:p.pid,name:p.name,av:p.av,score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null}));
-  if(seats.length===1) seats.push({pid:null,bot:true,name:"Computer",av:"🤖",score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null});
+  csFill(R,seats,()=>({score:0,elim:false,left:false,hand:[],drop:0,drew:false,miss:0,dpts:null,groups:null}));
   R.g={kind:"rm",phase:"turn",seats,
     limit:+R.settings.pool||101,dealNo:0,dealer:Math.floor(Math.random()*seats.length),turn:0,step:"draw",open:[],closed:[],wildC:null,wild:0,decks:2,
     lastDisc:null,lastDraw:null,deadline:0,tStart:0,until:0,winner:-1,how:"",poolOver:false,res:null};
@@ -2637,12 +2646,12 @@ function rmDealEnd(R,w,how){
     s.dpts=pts; s.score+=pts;
     if(s.score>=g.limit) s.elim=true;
   });
-  g.poolOver=rmLive(g).length<=1;
-  g.until=Date.now()+30000;
+  g.poolOver=rmLive(g).length<=1||!rmLive(g).some(i=>!g.seats[i].bot);
+  g.until=Date.now()+(g.poolOver&&!rmLive(g).some(i=>!g.seats[i].bot)?15000:30000);
 }
 function rmAfterResult(R){ const g=R.g; if(g.poolOver) rmEnd(R); else rmNewDeal(R); }
 function rmEnd(R){
-  const g=R.g, live=rmLive(g), w=live.length?live[0]:-1, pts={};
+  const g=R.g, live=rmLive(g).sort((a,b)=>g.seats[a].score-g.seats[b].score), w=live.length?live[0]:-1, pts={};
   if(w>=0&&g.seats[w].pid) pts[g.seats[w].pid]=1;
   addScore(R,pts);
   g.res={winner:w,pts}; g.phase="reveal"; g.deadline=0;
@@ -2687,7 +2696,7 @@ function rmOut(R,pid){
   const s=g.seats[i]; if(s.left) return;
   s.left=true; s.hand=[];
   if(rmLive(g).length<=1&&g.phase!=="result"){ rmEnd(R); return; }
-  if(g.phase==="result"){ g.poolOver=rmLive(g).length<=1; return; }
+  if(g.phase==="result"){ g.poolOver=rmLive(g).length<=1||!rmLive(g).some(i=>!g.seats[i].bot); return; }
   const ins=rmIn(g);
   if(ins.length<=1){ rmDealEnd(R,ins.length?ins[0]:-1,"drop"); return; }
   if(g.turn===i){ g.turn=rmAfter(ins,i); g.step="draw"; rmArm(R); }
@@ -4930,7 +4939,9 @@ function lobbyHTML(v,host){
   if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
   h+=avPickHTML(v);
   h+=mateLobbyHTML(v);
-  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")&&n===1?`<div class="msg info" style="margin-top:12px">🤖 <b>Just you?</b> You'll play against the computer.${NET.local?"":" As soon as a friend joins, it's people only."}</div>`:""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
+  h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")?(()=>{ const b=csBotCount(v,n), t=+v.settings.seats||0;
+   return b?`<div class="msg info" style="margin-top:12px">🤖 ${t?`Table of <b>${t}</b>: `:"<b>Just you?</b> "}${n} ${n===1?"person":"people"} + <b>${b} computer${b>1?"s":""}</b>.${NET.local?"":` Every friend who joins takes a computer's seat.`}</div>`
+     :t&&n>t?`<div class="msg info" style="margin-top:12px">👥 ${n} people are here – more than the table size of ${t}, so everyone plays and there are no computers.</div>`:""; })():""}<h3 style="margin-top:18px">⚙️ Room settings</h3>`;
   if(v.game==="chess") h+=`<div style="margin-top:10px"><span class="mut">Colour set chosen by the host:</span>${chThemePreviewHTML(st.theme,st.players)}</div>`;
   if(host){
     h+=`<div class="sgrid">${fields.map(f=>{
