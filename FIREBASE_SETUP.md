@@ -33,3 +33,13 @@ Until you finish step 3 the hub works exactly as before – nobody is asked to l
 
 ## Forgotten passwords (no e-mail needed)
 At registration each person picks a recovery question and answer. *Forgot password* asks for their e-mail and the answer, then lets them choose a new password. The answer is never stored: the password is kept encrypted under a key derived from it (`recovery/<email>`), so a **strong, hard-to-guess answer matters** – anyone who can guess it can take the account. Existing accounts (like the admin) can add a question under *📊 My activity → 🔐 Password recovery*. Removing an account also deletes its recovery record.
+
+## Realtime Database (online rooms)
+Online rooms send their game messages through the Firebase **Realtime Database** (direct phone-to-phone links fail on many mobile-data and office networks). One-time setup:
+1. Firebase console → **Build → Realtime Database → Create database**.
+2. Location: **Singapore (asia-southeast1)** – closest to India. (If you pick another location, copy the database URL shown at the top of the Data tab into `databaseURL` in `firebase-config.js`.)
+3. Start in **locked mode**, then open the **Rules** tab, replace everything with the contents of `database.rules.json` and press **Publish**.
+
+Until this is done (or whenever the database can't be reached) rooms automatically fall back to the old direct connection.
+Free (Spark) plan limits: 100 people connected at the same time, 1 GB stored, 10 GB downloaded per month – plenty for these games; rooms delete themselves when the host closes them.
+Voice chat still needs a direct connection, so on strict networks the mic may not connect – the game and the chat always work.

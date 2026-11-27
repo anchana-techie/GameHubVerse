@@ -9,6 +9,8 @@ window.GH_FIREBASE = {
     storageBucket: "gamehubverse-c88ab.firebasestorage.app",
     messagingSenderId: "59084208660",
     appId: "1:59084208660:web:8a9ad11793612e32ae4501",
-    measurementId: "G-BF8FZ9GJH2"
+    measurementId: "G-BF8FZ9GJH2",
+    // Realtime Database: carries the game messages of online rooms (see FIREBASE_SETUP.md). Must match the URL shown in the Firebase console.
+    databaseURL: "https://gamehubverse-c88ab-default-rtdb.asia-southeast1.firebasedatabase.app"
   }
 };

@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && data.child('host/uid').val() === auth.uid",
+        ".validate": "$code.length <= 8",
+        "host": {
+          ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid || data.child('on').val() === false || now - data.child('at').val() > 21600000)",
+          ".validate": "newData.child('uid').val() === auth.uid || (data.child('uid').val() === auth.uid)"
+        },
+        "conns": {
+          "$cid": {
+            ".write": "auth != null && (!newData.exists() || newData.child('uid').val() === auth.uid)"
+          }
+        },
+        "in": { "$cid": { ".write": "auth != null" } },
+        "out": { "$cid": { ".write": "auth != null" } }
+      }
+    }
+  }
+}

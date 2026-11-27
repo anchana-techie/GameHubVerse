@@ -1499,25 +1499,176 @@ function iceConfig(){
   return {config:{iceServers}};
 }
 
+
+/* ================= ROOM RELAY (Firebase Realtime Database) =================
+   Direct phone-to-phone links (PeerJS/WebRTC) fail on many mobile-data and office networks. Rooms therefore send their game
+   messages through the Realtime Database instead – it works wherever the player can sign in. The host still runs the game;
+   the database only carries messages:
+     rooms/<code>/host          {uid, at, on}   the host is here (on:false while its connection is gone)
+     rooms/<code>/conns/<cid>   {uid, at}       a player's link; removed by the server when that player's connection drops
+     rooms/<code>/in/<cid>/…    player -> host messages (deleted once the host has read them)
+     rooms/<code>/out/<cid>/s   the latest state for that player (overwritten, so a slow phone never replays old states)
+     rooms/<code>/out/<cid>/q/… other host -> player messages (deleted once read);  out/<cid>/end = the host closed this link
+   The objects below behave like PeerJS DataConnections (on/send/close/open/peer), so the host and guest code is shared.
+   If the Realtime Database isn't switched on (or can't be reached) rooms fall back to the old direct connection.            */
+const rtdbUrl=()=>String((window.GH_FIREBASE&&window.GH_FIREBASE.config&&window.GH_FIREBASE.config.databaseURL)||"").trim();
+let RDB=null, _rdbP=null, RL_FAIL=0;      // RL_FAIL: when the relay last failed – rooms then go direct for a few minutes without waiting
+const rlWait=(p,ms,why)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(why||"relay timeout")),ms))]);
+function relayReady(){
+  if(RDB) return Promise.resolve(true);
+  if(_rdbP) return _rdbP;
+  _rdbP=(async()=>{
+    if(!FB_ON||!rtdbUrl()||!ONLINE||Date.now()-RL_FAIL<5*60e3) return false;
+    for(let i=0;i<60&&!(AUTH.state==="in"&&AUTH.user);i++) await new Promise(r=>setTimeout(r,250));   // a refresh: wait for sign-in
+    if(!(AUTH.state==="in"&&AUTH.user)||typeof firebase==="undefined"||!firebase.apps.length) return false;
+    if(!(firebase.database)) { const ok=await loadScript(FB_SDK+"database-compat.js",12000); if(!ok||!firebase.database) return false; }
+    try{ RDB=firebase.app().database(rtdbUrl()); }catch(e){ console.warn("[relay]",e); return false; }
+    try{ await rlWait(RDB.ref("rooms/_ping").once("value"),7000,"relay unreachable"); }catch(e){ console.warn("[relay] not available – using direct connections:",e&&e.message); RDB=null; RL_FAIL=Date.now(); return false; }
+    return true;
+  })().then(ok=>{ _rdbP=null; return ok; },()=>{ _rdbP=null; return false; });
+  return _rdbP;
+}
+const rlPack=m=>({j:JSON.stringify(m)});
+const rlOpen=v=>{ try{ return v&&typeof v.j==="string"?JSON.parse(v.j):null; }catch(e){ return null; } };
+const rlTS=()=>firebase.database.ServerValue.TIMESTAMP;
+function rlEmitter(o){
+  o._h={}; o.on=function(ev,f){ (this._h[ev]=this._h[ev]||[]).push(f); return this; };
+  o.off=function(ev,f){ this._h[ev]=(this._h[ev]||[]).filter(x=>x!==f); return this; };
+  o.emit=function(ev,x){ (this._h[ev]||[]).slice().forEach(f=>{ try{ f(x); }catch(e){ console.error(e); } }); };
+  return o;
+}
+/* host side: one link per player */
+function rlHostConn(room,cid){
+  const inq=room.child("in/"+cid), out=room.child("out/"+cid);
+  const c=rlEmitter({peer:"rl-"+cid,open:true,_cid:cid,relay:true,
+    send(m){ if(!this.open||!m) return; (m.t==="state"?out.child("s").set(rlPack(m)):out.child("q").push(rlPack(m))).catch(()=>{}); },
+    close(){ if(!this.open) return; out.child("end").set(true).catch(()=>{}); this._drop(true); },
+    _drop(quiet){ if(!this.open) return; this.open=false; inq.off(); inq.remove().catch(()=>{}); if(!quiet) this.emit("close"); }
+  });
+  out.child("end").remove().catch(()=>{});
+  inq.on("child_added",snap=>{ const m=rlOpen(snap.val()); snap.ref.remove().catch(()=>{}); if(m&&c.open) c.emit("data",m); });
+  return c;
+}
+function rlHostListen(room){
+  const L=NET.rl;
+  L.conns=room.child("conns");
+  L.conns.on("child_added",snap=>{ const cid=snap.key; if(L.links[cid]&&L.links[cid].open) return; const c=rlHostConn(room,cid); L.links[cid]=c; hostOnConn(c); });
+  L.conns.on("child_removed",snap=>{ const c=L.links[snap.key]; if(c){ delete L.links[snap.key]; c._drop(); } });
+  L.infoRef=RDB.ref(".info/connected");
+  L.info=s=>{ if(s.val()!==true||!NET.rl||NET.rl!==L) return;
+    const h=room.child("host"); h.onDisconnect().update({on:false,offAt:rlTS()}); h.update({on:true,at:rlTS()}).catch(()=>{}); };
+  L.infoRef.on("value",L.info);
+}
+function rlHostStop(closing){
+  const L=NET.rl; if(!L) return; NET.rl=null;
+  try{ L.conns&&L.conns.off(); }catch(e){} try{ L.infoRef&&L.infoRef.off("value",L.info); }catch(e){}
+  Object.values(L.links).forEach(c=>{ c.open=false; try{ c._h={}; }catch(e){} });
+  const room=L.room; try{ room.child("host").onDisconnect().cancel(); }catch(e){}
+  setTimeout(()=>{ room.remove().catch(()=>{}); },closing?1500:0);       // gone from the database = closed for everyone
+}
+/* guest side */
+function rlGuestConn(code,cid){
+  const room=RDB.ref("rooms/"+code), me=room.child("conns/"+cid), inq=room.child("in/"+cid), out=room.child("out/"+cid), info=RDB.ref(".info/connected");
+  let offT=null, dead=false;
+  const c=rlEmitter({peer:"rl-"+cid,open:false,_cid:cid,relay:true,
+    send(m){ if(dead||!m) return; inq.push(rlPack(m)).catch(()=>{}); },
+    close(){ if(dead) return; this._end(true); try{ me.onDisconnect().cancel(); }catch(e){} me.remove().catch(()=>{}); inq.remove().catch(()=>{}); out.remove().catch(()=>{}); },
+    _end(quiet){ if(dead) return; dead=true; this.open=false; clearTimeout(offT);
+      try{ info.off("value",onInfo); out.child("s").off(); out.child("q").off(); out.child("end").off(); room.child("host").off(); }catch(e){}
+      if(!quiet) this.emit("close"); }
+  });
+  const onInfo=s=>{ if(dead||s.val()!==true) return;
+    me.onDisconnect().remove(); me.set({uid:AUTH.user.uid,at:rlTS()}).then(()=>{ if(!dead){ c.open=true; c.emit("open"); } }).catch(e=>{ console.warn("[relay] join",e); c.emit("fail",e); }); };
+  out.child("s").on("value",snap=>{ const m=rlOpen(snap.val()); if(m&&!dead) c.emit("data",m); });
+  out.child("q").on("child_added",snap=>{ const m=rlOpen(snap.val()); snap.ref.remove().catch(()=>{}); if(m&&!dead) c.emit("data",m); });
+  out.child("end").on("value",snap=>{ if(snap.val()===true&&!dead) c._end(); });
+  room.child("host").on("value",snap=>{
+    const h=snap.val(); clearTimeout(offT); if(dead) return;
+    if(!h){ if(c._seen){ c.emit("data",{t:"closed"}); } return; }
+    c._seen=true;
+    if(h.on===false) offT=setTimeout(()=>{ if(!dead) c._end(); },25000);              // host's connection gone for 25 s: give up
+  });
+  info.on("value",onInfo);
+  return c;
+}
+/* is there a relay room with this code? "relay" | "none" | "error" */
+async function rlProbe(code){
+  try{ const s=await rlWait(RDB.ref("rooms/"+code+"/host").once("value"),8000,"relay timeout"); return s.exists()?"relay":"none"; }
+  catch(e){ console.warn("[relay] probe",e&&e.message); return "error"; }
+}
+const rlCid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+function hostBegin(game,code,extra){
+  Object.assign(NET,{role:"host",code,conns:{},hostConn:null,leaving:false,settled:true,local:false},extra);
+  NET.R={code,game,phase:"lobby",hostPid:S.me.pid,round:0,scores:{},msg:null,custom:null,g:null,evId:0,evPending:[],ev:null,
+    settings:Object.assign({},DEFAULTS[game]),
+    players:[{pid:S.me.pid,name:S.me.name,av:S.me.av,connected:true,left:false}]};
+  S.busy=null; saveSession();
+  clearInterval(NET.timer); NET.timer=setInterval(hostTick,500);
+  pushState();
+  try{ mateAfterRoom(); }catch(e){}                  // a game request waiting for this room (from the My groups panel)
+}
+async function createRoomRelay(game,n){
+  n=n||0;
+  const code=genCode(), room=RDB.ref("rooms/"+code), uid=AUTH.user.uid;
+  let res;
+  try{ res=await rlWait(room.child("host").transaction(cur=>{ if(cur&&cur.on!==false&&Date.now()-(cur.at||0)<6*3600e3) return; return {uid,at:Date.now(),on:true}; }),10000); }
+  catch(e){ console.warn("[relay] create",e&&e.message); return createRoomPeer(game); }
+  if(!res||!res.committed){ if(n<5) return createRoomRelay(game,n+1); S.busy=null; toast("Could not create the room. Try again.","err"); return; }
+  room.update({conns:null,in:null,out:null}).catch(()=>{});      // leftovers of an old room with the same code
+  NET.rl={room,links:{}};
+  hostBegin(game,code,{peer:null,relay:true});
+  rlHostListen(room);
+}
+function joinRoomRelay(code,spec){
+  const cid=rlCid(), c=rlGuestConn(code,cid);
+  NET.settled=false; NET.leaving=false;
+  const back=()=>{ if(spec&&S.screen!=="room") S.screen="admin"; };
+  let failed=false;
+  const fail=t=>{ if(NET.settled||failed) return; failed=true; clearTimeout(to); c.close(); clearSession(); S.busy=null; NET.abortJoin=null; back(); toast(t,"err"); };
+  const to=setTimeout(()=>fail("The host didn't answer. Check the code, and ask the host to keep Game Hub open."),20000);
+  NET.abortJoin=()=>{ if(NET.settled) return; clearTimeout(to); c.close(); clearSession(); S.busy=null; NET.abortJoin=null; back(); render(); };
+  renderSys();
+  c.on("open",()=>{
+    if(NET.hostConn!==c) Object.assign(NET,{peer:null,relay:true,role:"guest",code,hostConn:c,conns:{},R:null,spec:!!spec});
+    c.send(spec?{t:"join",spectate:true}:{t:"join",pid:S.me.pid,name:S.me.name,av:S.me.av});      // also after a reconnect
+  });
+  c.on("fail",()=>fail("Couldn't join through Game Hub's server. Try again."));
+  c.on("data",m=>{ if(m&&m.t==="state") clearTimeout(to); guestOnMsg(m,fail); });
+  c.on("close",()=>{ if(NET.hostConn===c&&!NET.leaving) cleanup({type:"warn",text:"Lost connection to the host. You can rejoin with the room code if the room is still open."}); else if(!NET.settled) fail("Couldn't reach the room."); });
+}
+
+/* voice chat needs a direct link of its own: opened only when someone joins voice */
+function voicePeer(){
+  if(NET.peer) return Promise.resolve(NET.peer);
+  if(VC.peer&&VC.peer.open&&!VC.peer.destroyed) return Promise.resolve(VC.peer);
+  return loadPeerLib().then(ok=>new Promise((res,rej)=>{
+    if(!ok) return rej(new Error("nopeer"));
+    const p=new Peer(iceConfig()); let done=false;
+    const t=setTimeout(()=>{ if(done) return; done=true; try{ p.destroy(); }catch(e){} rej(new Error("nopeer")); },12000);
+    p.on("open",()=>{ if(done) return; done=true; clearTimeout(t); VC.peer=p; p.on("disconnected",()=>{ try{ p.reconnect(); }catch(e){} }); res(p); });
+    p.on("error",e=>{ if(done) return; done=true; clearTimeout(t); try{ p.destroy(); }catch(x){} rej(e); });
+  }));
+}
+
 function createRoom(game){
   if(isGuest()){ guestLock("Online rooms with friends need an account."); return; }
-  if(!needPeer(()=>createRoom(game))||!saveMe()) return;
+  if(!saveMe()) return;
+  if(!ONLINE){ toast("You're offline – online rooms need internet. Try the Offline mode page!","err"); return; }
+  S.busy="Creating room…"; render();
+  relayReady().then(ok=>ok?createRoomRelay(game):createRoomPeer(game));
+}
+function createRoomPeer(game){
+  if(!needPeer(()=>createRoomPeer(game))) return;
   S.busy="Creating room…"; render();
   const tryMake=n=>{
     const code=genCode(); let opened=false;
     const peer=new Peer("wfg-"+code,iceConfig());
     peer.on("open",()=>{
       opened=true;
-      Object.assign(NET,{peer,role:"host",code,conns:{},hostConn:null,leaving:false,settled:true,local:false});
-      NET.R={code,game,phase:"lobby",hostPid:S.me.pid,round:0,scores:{},msg:null,custom:null,g:null,evId:0,evPending:[],ev:null,
-        settings:Object.assign({},DEFAULTS[game]),
-        players:[{pid:S.me.pid,name:S.me.name,av:S.me.av,connected:true,left:false}]};
       peer.on("connection",hostOnConn);
       peer.on("disconnected",()=>{ try{ peer.reconnect(); }catch(e){} });
-      S.busy=null; saveSession();
-      clearInterval(NET.timer); NET.timer=setInterval(hostTick,500);
-      pushState();
-      try{ mateAfterRoom(); }catch(e){}                  // a game request waiting for this room (from the My groups panel)
+      hostBegin(game,code,{peer,relay:false});
     });
     peer.on("error",e=>{
       if(!opened){
@@ -1532,12 +1683,17 @@ function createRoom(game){
 
 function joinRoom(code,spec){
   if(isGuest()){ guestLock("Joining a friend's room needs an account."); return; }
-  if(!needPeer(()=>joinRoom(code,spec))) return;
   code=String(code||"").trim().toUpperCase();
   if(!spec&&!saveMe()) { clearSession(); return; }
   if(code.length<4){ toast("Enter the room code.","err"); return; }
   if(spec&&!AUTH.isAdmin) return;
   if(!spec&&S.screen!=="entry"){ S.screen="entry"; }
+  if(!ONLINE){ toast("You're offline – online rooms need internet. Try the Offline mode page!","err"); return; }
+  S.busy=(spec?"Opening room ":"Joining room ")+code+"…"; render();
+  relayReady().then(async ok=>{ const mode=ok?await rlProbe(code):"error"; if(!S.busy) return; if(mode==="relay") joinRoomRelay(code,spec); else joinRoomPeer(code,spec); });
+}
+function joinRoomPeer(code,spec){
+  if(!needPeer(()=>joinRoomPeer(code,spec))) return;
   S.busy=(spec?"Opening room ":"Joining room ")+code+"…"; render();
   const peer=new Peer(iceConfig());
   NET.settled=false; NET.leaving=false;
@@ -3636,7 +3792,9 @@ function cleanup(notice){
   try{ Object.values(NET.conns).concat(Object.values(NET.watchers)).forEach(c=>c.close()); }catch(e){}
   try{ NET.hostConn&&NET.hostConn.close(); }catch(e){}
   try{ NET.peer&&NET.peer.destroy(); }catch(e){}
-  Object.assign(NET,{peer:null,role:null,code:"",conns:{},hostConn:null,R:null,timer:null,leaving:false,settled:false,local:false,abortJoin:null,spec:false,watchers:{}});
+  try{ if(NET.rl) rlHostStop(true); }catch(e){}
+  try{ VC.peer&&VC.peer.destroy(); }catch(e){} VC.peer=null; VC.vp=null; VC.fails={};
+  Object.assign(NET,{peer:null,role:null,code:"",conns:{},hostConn:null,R:null,timer:null,leaving:false,settled:false,local:false,abortJoin:null,spec:false,watchers:{},relay:false,rl:null});
   clearSession();
   S=freshState(); if(notice) S.notice=notice;
   if(wasSpec&&AUTH.isAdmin) S.screen="admin";            // a watching admin goes back to the people list
@@ -3667,7 +3825,7 @@ function voiceAct(R,pid,m){
   const V=R.voice||(R.voice={on:true,st:{},hm:{}}), host=pid===R.hostPid, v=m&&m.v;
   if(v==="join"){
     if(!V.on||isLeft(R,pid)) return;
-    const peer=host?(NET.peer&&NET.peer.id):(NET.conns[pid]&&NET.conns[pid].peer);   // authenticated id of the connection
+    const peer=NET.relay?String(m.peer||"").slice(0,64):host?(NET.peer&&NET.peer.id):(NET.conns[pid]&&NET.conns[pid].peer);   // relay rooms: the voice link the player opened; direct rooms: the connection's own id
     if(peer) V.st[pid]={peer,mic:false};
   }
   else if(v==="leave") delete V.st[pid];
@@ -3681,13 +3839,16 @@ function voiceAct(R,pid,m){
 
 const VC={on:false,starting:false,stream:null,calls:{},aud:{},pend:{},an:{},ctx:null,mode:"open",mic:false,ptt:false,deaf:false,vol:1,open:false,key:"",tm:null,lv:null,joinAt:0};
 const voiceOK=()=>window.isSecureContext&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.RTCPeerConnection;
-const voiceShown=()=>S&&S.screen==="room"&&S.room&&S.room.voice&&NET.role&&!NET.local&&!NET.spec&&NET.peer;
+const voiceShown=()=>S&&S.screen==="room"&&S.room&&S.room.voice&&NET.role&&!NET.local&&!NET.spec&&(NET.peer||NET.relay);
 const voicePidOf=peerId=>{ const o=S.room.voice.ids; return Object.keys(o).find(k=>k!==S.room.me&&o[k]===peerId)||null; };
 
 async function voiceJoin(){
   const v=S.room; if(!v||VC.on||VC.starting||!v.voice.on) return;
   if(!voiceOK()){ toast("Voice chat needs a secure (https) page and a browser with microphone support.","err"); return; }
   VC.starting=true; voiceDock();
+  const vp=await voicePeer().catch(()=>null);
+  if(!vp){ VC.starting=false; voiceDock(); toast("Voice chat can't connect on this network – the game and the chat still work fine.","err"); return; }
+  VC.vp=vp;
   try{
     const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
     if(!voiceShown()||!S.room.voice.on){ st.getTracks().forEach(t=>t.stop()); throw "gone"; }
@@ -3695,10 +3856,10 @@ async function voiceJoin(){
     st.getAudioTracks().forEach(t=>{ t.enabled=false; });                               // muted until the player says otherwise
     try{ VC.ctx=new (window.AudioContext||window.webkitAudioContext)(); VC.ctx.resume(); }catch(e){ VC.ctx=null; }
     voiceWatch("me",st);
-    NET.peer.on("call",voiceIncoming);
+    VC.vp.on("call",voiceIncoming);
     clearInterval(VC.tm); VC.tm=setInterval(voiceReconcile,4000);
     clearInterval(VC.lv); VC.lv=setInterval(voiceLevels,150);
-    VC.joinAt=Date.now(); sendAct({a:"voice",v:"join"});
+    VC.joinAt=Date.now(); sendAct({a:"voice",v:"join",peer:VC.vp&&VC.vp.id});
   }catch(e){
     if(e!=="gone") toast(e&&e.name==="NotAllowedError"?"Microphone access was blocked. Allow it in your browser's site settings, then try again.":e&&e.name==="NotFoundError"?"No microphone was found on this device.":"Could not start the microphone.","err");
   }
@@ -3707,7 +3868,7 @@ async function voiceJoin(){
 function voiceStop(silent){
   const was=VC.on;
   clearInterval(VC.tm); clearInterval(VC.lv);
-  try{ NET.peer&&NET.peer.off("call",voiceIncoming); }catch(e){}
+  try{ VC.vp&&VC.vp.off("call",voiceIncoming); }catch(e){}
   Object.keys(VC.calls).forEach(k=>voiceDrop(k,VC.calls[k]));
   Object.values(VC.pend).forEach(c=>{ try{ c.close(); }catch(e){} });
   Object.keys(VC.an).forEach(k=>voiceUnwatch(k));
@@ -3733,7 +3894,9 @@ function voiceWire(call,pid){
   VC.calls[pid]=call;
   call.on("stream",rs=>{ if(VC.calls[pid]===call) voiceAttach(pid,rs); });
   call.on("close",()=>voiceDrop(pid,call)); call.on("error",()=>voiceDrop(pid,call));
-  call._t=setTimeout(()=>{ if(!VC.aud[pid]) voiceDrop(pid,call); },15000);              // never connected: the next reconcile retries
+  call._t=setTimeout(()=>{ if(VC.aud[pid]) return; voiceDrop(pid,call);              // never connected: the next reconcile retries
+    VC.fails=VC.fails||{}; VC.fails[pid]=(VC.fails[pid]||0)+1;
+    if(VC.fails[pid]===2){ const p=S.room&&S.room.players.find(x=>x.pid===pid); toast("Voice can't reach "+(p?p.name:"a player")+" – their network may block calls. The game and the chat still work.","info"); } },15000);
 }
 function voiceDrop(pid,call){
   if(call){ clearTimeout(call._t); try{ call.close(); }catch(e){} }
@@ -3760,7 +3923,7 @@ function voiceMicApply(){
 }
 function voiceAnnounce(){ sendAct({a:"voice",v:"mic",on:VC.mode==="open"?VC.mic:true}); }   // push-to-talk shows as "ready"; each press is not broadcast
 function voiceDial(pid,peerId){
-  let call; try{ call=NET.peer.call(peerId,VC.stream); }catch(e){ return; }
+  let call; try{ call=VC.vp.call(peerId,VC.stream); }catch(e){ return; }
   if(call) voiceWire(call,pid);
 }
 function voiceReconcile(){
@@ -3779,7 +3942,7 @@ function voiceSync(){
   const v=S.room, vo=v.voice;
   if(VC.on){
     if(!vo.on){ voiceStop(true); toast("The host turned voice chat off.","info"); return; }
-    if(!(v.me in vo.ids)&&Date.now()-VC.joinAt>3000){ VC.joinAt=Date.now(); sendAct({a:"voice",v:"join"}); }   // e.g. after a reconnect
+    if(!(v.me in vo.ids)&&Date.now()-VC.joinAt>3000){ VC.joinAt=Date.now(); sendAct({a:"voice",v:"join",peer:VC.vp&&VC.vp.id}); }   // e.g. after a reconnect
     if(vo.hm.includes(v.me)&&VC.mic) VC.mic=false;
     voiceMicApply(); voiceVol(); voiceReconcile();
   }
