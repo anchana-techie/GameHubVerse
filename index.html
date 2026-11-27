@@ -1075,6 +1075,17 @@
   }
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
+  /* ---- one room, many games ---- */
+  .gp-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 14px}
+  .gp-card{margin-top:12px}.gp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .gp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .gp-b{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);font:inherit;font-weight:700;cursor:pointer;text-align:left}
+  .gp-b small{font-weight:400;color:var(--muted);font-size:.75rem}
+  .gp-b:hover{border-color:var(--accent)}
+  .rb-card{margin-top:12px}.rb-top{border-color:#ffd25e!important;box-shadow:0 0 10px -3px #ffd25e}
+  .wp-card{margin-top:12px}
+  .wp-b{cursor:pointer;font:inherit;color:var(--text);opacity:.6}.wp-b.on{opacity:1;border-color:var(--ok,#46d6a4)}.wp-b:disabled{cursor:default}
+  .chip.bench{opacity:.7;border-style:dashed}
   /* ---- guests & login requests ---- */
   .guest-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;border-color:#3ddc9766}
   .guest-cta>div{display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1}
@@ -1754,16 +1765,17 @@ function hostOnMsg(conn,m){
     const pid=String(m.pid||""), name=String(m.name||"").trim().slice(0,16), av=EMOJIS.includes(m.av)?m.av:EMOJIS[0];
     const rej=why=>{ try{ conn.send({t:"reject",why}); }catch(e){} setTimeout(()=>{ try{ conn.close(); }catch(e){} },300); };
     if(!pid||!name) return rej("Invalid join request.");
-    let p=R.players.find(x=>x.pid===pid);
+    let p=R.players.find(x=>x.pid===pid)||(R.bench||[]).find(x=>x.pid===pid);
     if(p){
       if(p.left) return rej("You left this game. Join again from the lobby.");
       const old=NET.conns[pid]; if(old&&old!==conn){ old._pid=null; try{ old.close(); }catch(e){} }
       p.connected=true; p.offAt=0;
     } else {
-      if(R.phase!=="lobby") return rej("This game has already started. Ask the host to go back to the lobby.");
-      if(R.players.filter(x=>!x.left).length>=maxPlayers(R)) return rej("The room is full.");
-      if(R.players.some(x=>!x.left&&x.name.toLowerCase()===name.toLowerCase())) return rej("That name is already taken in this room.");
-      p={pid,name,av:freeAv(R,av,pid),connected:true,left:false}; R.players.push(p);
+      const inRoom=R.players.filter(x=>!x.left).concat(R.bench||[]);
+      if(inRoom.length>=ROOM_MAX) return rej("The room is full.");
+      if(inRoom.some(x=>x.name.toLowerCase()===name.toLowerCase())) return rej("That name is already taken in this room.");
+      p={pid,name,av:freeAv(R,av,pid),connected:true,left:false};
+      if(R.phase==="lobby") R.players.push(p); else (R.bench=R.bench||[]).push(p);      // a game is running: watch it, play the next one
     }
     conn._pid=pid; NET.conns[pid]=conn;
     try{ conn.send({t:"joined"}); }catch(e){}
@@ -1780,9 +1792,11 @@ function hostOnClose(conn){
   if(conn._watch){ if(NET.watchers[conn.peer]===conn) delete NET.watchers[conn.peer]; return; }
   const R=NET.R, pid=conn._pid; if(!R||!pid||NET.conns[pid]!==conn) return;
   if(R.phase==="lobby"){ removePlayer(R,pid); return; }
-  const p=R.players.find(x=>x.pid===pid); if(p){ p.connected=false; p.offAt=Date.now(); if(R.voice) delete R.voice.st[pid]; pushState(); }
+  const p=R.players.find(x=>x.pid===pid)||(R.bench||[]).find(x=>x.pid===pid); if(p){ p.connected=false; p.offAt=Date.now(); if(R.voice) delete R.voice.st[pid]; pushState(); }
 }
 function removePlayer(R,pid){
+  const bi=(R.bench||[]).findIndex(p=>p.pid===pid);
+  if(bi>=0){ R.bench.splice(bi,1); const c=NET.conns[pid]; delete NET.conns[pid]; if(c){ c._pid=null; setTimeout(()=>{ try{ c.close(); }catch(e){} },150); } if(R.voice){ delete R.voice.st[pid]; delete R.voice.hm[pid]; } pushState(); return; }
   const i=R.players.findIndex(p=>p.pid===pid); if(i<0||pid===R.hostPid) return;
   if(R.phase==="lobby") R.players.splice(i,1);
   else { R.players[i].left=true; R.players[i].connected=false; }
@@ -1795,6 +1809,7 @@ function removePlayer(R,pid){
 
 /* host removes a player from the room (lobby or mid-game). The player is told, their screen goes home, others see an airlock scene. */
 function kickPlayer(R,pid){
+  if(onBench(R,pid)){ const c=NET.conns[pid]; if(c&&c.open){ try{ c.send({t:"kicked"}); }catch(e){} } removePlayer(R,pid); return; }
   const p=R.players.find(x=>x.pid===pid&&!x.left); if(!p||pid===R.hostPid) return;
   const c=NET.conns[pid]; if(c&&c.open){ try{ c.send({t:"kicked"}); }catch(e){} }
   if(R.phase==="play"){
@@ -1810,6 +1825,7 @@ function viewFor(R,pid){
     now:Date.now(), ev:R.ev||null, deal:R.deal||0, code:R.code, game:R.game, phase:R.phase, hostPid:R.hostPid, me:pid,
     round:R.round, settings:R.settings, msg:R.msg, scores:R.scores, base:R.base||{}, hist:R.hist||[],
     players:R.players.map(p=>({pid:p.pid,name:p.name,av:p.av,connected:p.connected,left:p.left})),
+    bench:(R.bench||[]).map(p=>({pid:p.pid,name:p.name,av:p.av,connected:p.connected})), sit:R.sit||[], cap:maxPlayers(R), board:R.board||{}, played:R.played||[],
     voice:voiceView(R),
     fx:(R.fx||[]).filter(x=>Date.now()-x.at<6000), chat:(R.chat||[]).slice(-60),
     g:R.g?gameView(R,pid):null
@@ -1849,7 +1865,7 @@ function gameView(R,pid){
 function pushState(){
   const R=NET.R; if(!R) return;
   ejFlush(R);
-  R.players.forEach(p=>{
+  R.players.concat(R.bench||[]).forEach(p=>{
     if(p.pid===R.hostPid) return;
     const c=NET.conns[p.pid];
     if(c&&c.open){ try{ c.send({t:"state",s:viewFor(R,p.pid)}); }catch(e){} }
@@ -1896,7 +1912,7 @@ function emoAct(R,pid,m){
 }
 function rchatAct(R,pid,m){
   const t=String(m.text||"").replace(/\s+/g," ").trim().slice(0,300); if(!t) return;
-  const p=R.players.find(x=>x.pid===pid); if(!p||p.left) return;
+  const p=R.players.find(x=>x.pid===pid)||(R.bench||[]).find(x=>x.pid===pid); if(!p||p.left) return;
   const now=Date.now(); R._rcT=R._rcT||{};
   if(now-(R._rcT[pid]||0)<350) return; R._rcT[pid]=now;
   R.chatN=(R.chatN||0)+1; (R.chat=R.chat||[]).push({id:R.chatN,pid,name:p.name,av:p.av,text:t,at:now});
@@ -1907,7 +1923,11 @@ const gone=(R,pid)=>{ const p=R.players.find(x=>x.pid===pid); return !p||p.left|
 
 function doAct(R,pid,m){
   const host=pid===R.hostPid;
+  if(onBench(R,pid)&&!["rchat","voice"].includes(m.a)) return;          // watching this game
   switch(m.a){
+    case "setgame": if(host&&(R.phase==="lobby"||R.phase==="end")&&ROOM_GAMES.includes(m.g)&&m.g!==R.game) roomSwitch(R,m.g); return;
+    case "sit": if(host&&R.phase==="lobby"){ const t=String(m.pid||""); if(t===R.hostPid||!R.players.some(p=>p.pid===t)) return;
+      R.sit=(R.sit||[]).filter(x=>x!==t&&R.players.some(p=>p.pid===x)); if(m.on) R.sit.push(t); } return;
     case "settings": if(host&&R.phase==="lobby") setSetting(R,m.k,m.v); return;
     case "kick": if(host) kickPlayer(R,String(m.pid||"")); return;
     case "voice": voiceAct(R,pid,m); return;
@@ -1918,9 +1938,11 @@ function doAct(R,pid,m){
     case "newgame":
       // Same room, same settings, straight into a fresh game. Scores keep adding up; the finished game is logged in R.hist.
       if(host&&R.phase==="end"){
+        benchBack(R);
         R.players=R.players.filter(p=>!p.left&&(p.connected||p.pid===R.hostPid));
-        const act=R.players.filter(p=>!p.left);
+        const plan=benchPlan(R), act=plan.play;
         if(act.length<MINP[R.game]) return tell(R,R.hostPid,`Need at least ${MINP[R.game]} player(s) to start a new game (${act.length} in the room).`);
+        benchApply(R,plan);
         const base=R.base||{}, d={}; Object.keys(R.scores).forEach(k=>{ d[k]=(R.scores[k]||0)-(base[k]||0); });
         (R.hist=R.hist||[]).push({n:R.hist.length+1,pts:d,names:Object.fromEntries(R.players.map(p=>[p.pid,p.name]))});
         R.base=Object.assign({},R.scores); R.round=1; R.msg=null; R.phase="play"; deal(R);
@@ -1930,6 +1952,7 @@ function doAct(R,pid,m){
       // Host leaves the running game (or the final screen) but everyone stays in the room.
       if(host&&R.phase!=="lobby"){
         const wasPlaying=R.phase==="play";
+        benchBack(R);
         R.phase="lobby"; R.g=null; R.round=0; R.scores={}; R.base={}; R.hist=[];
         R.msg=wasPlaying?"The host exited the game. You are back in the lobby – the room is still open and the host can change settings.":null;
         R.players=R.players.filter(p=>!p.left&&(p.connected||p.pid===R.hostPid));
@@ -1937,7 +1960,7 @@ function doAct(R,pid,m){
       return;
     case "next":
       if(host&&R.phase==="play"&&R.g&&R.g.phase==="reveal"&&R.game!=="Scribblio"){
-        if(R.round>=R.settings.rounds) R.phase="end";
+        if(R.round>=R.settings.rounds){ R.phase="end"; roomTally(R); }
         else { R.round++; deal(R); }
       }
       return;
@@ -1957,15 +1980,49 @@ function doAct(R,pid,m){
 const maxPlayers=R=>R.game==="chess"?(+R.settings.players||2):R.game==="ludo"?(+R.settings.board||4):MAXP[R.game];
 function setSetting(R,k,v){
   const f=SETTINGS[R.game].find(x=>x.k===k); if(!f) return;
-  if(R.game==="chess"&&k==="players"){ const n=R.players.filter(p=>!p.left).length; if(+v<n) return tell(R,R.hostPid,`${n} people are already in the room – kick someone first to use fewer seats.`); }
-  if(R.game==="ludo"&&k==="board"){ const n=R.players.filter(p=>!p.left).length; if(+v<n) return tell(R,R.hostPid,`${n} people are already in the room – kick someone first to use the smaller board.`); }
   const opts=(typeof f.o==="function"?f.o(MAXP[R.game]):f.o).map(o=>Array.isArray(o)?o[0]:o);
   const hit=opts.find(o=>String(o)===String(v)); if(hit===undefined) return;
   R.settings[k]=hit;
 }
+
+/* ================= ONE ROOM, MANY GAMES =================
+   The host can switch the room to another game in the lobby or on the results screen; everybody stays connected.
+   - R.board / R.played: the room leaderboard (games won tonight) – kept across switches until the room closes.
+   - R.sit: who the host chose to sit out; R.bench: people watching the current game (a game's own player limit, or they
+     joined while it was running). Watchers see the game live (with no secrets – their view is that of a non-player), can
+     chat, and are back in for the next game.                                                                              */
+const ROOM_MAX=30, ROOM_GAMES=["number","spy","raja","Scribblio","chess","dots","ludo","rps","ass","rummy"];
+const onBench=(R,pid)=>(R.bench||[]).some(b=>b.pid===pid);
+function benchPlan(R){
+  const cap=maxPlayers(R), all=R.players.filter(p=>!p.left), sit=new Set((R.sit||[]).filter(x=>x!==R.hostPid));
+  const host=all.filter(p=>p.pid===R.hostPid), rest=all.filter(p=>p.pid!==R.hostPid&&!sit.has(p.pid));
+  const play=host.concat(rest).slice(0,cap), inPlay=new Set(play.map(p=>p.pid));
+  return {cap,play,bench:all.filter(p=>!inPlay.has(p.pid))};
+}
+function benchApply(R,plan){
+  const out=new Set(plan.bench.map(p=>p.pid));
+  R.bench=(R.bench||[]).concat(plan.bench); R.players=R.players.filter(p=>!out.has(p.pid));
+}
+function benchBack(R){
+  (R.bench||[]).forEach(b=>{ if(!b.left&&!R.players.some(p=>p.pid===b.pid)) R.players.push(b); });
+  R.bench=[];
+}
+function roomTally(R){
+  const base=R.base||{}, rows=R.players.filter(p=>!p.left).map(p=>[p,(R.scores[p.pid]||0)-(base[p.pid]||0)]), max=Math.max(0,...rows.map(r=>r[1]));
+  const win=max>0?rows.filter(r=>r[1]===max).map(r=>r[0]):[], B=R.board=R.board||{};
+  rows.forEach(([p])=>{ const b=B[p.pid]=B[p.pid]||{name:p.name,av:p.av,wins:0,played:0}; b.name=p.name; b.av=p.av; b.played++; });
+  win.forEach(p=>{ B[p.pid].wins++; });
+  (R.played=R.played||[]).push({game:R.game,win:win.map(p=>p.name)}); if(R.played.length>40) R.played.shift();
+}
+function roomSwitch(R,game){
+  benchBack(R);
+  R.players=R.players.filter(p=>!p.left&&(p.connected||p.pid===R.hostPid));
+  Object.assign(R,{game,settings:Object.assign({},DEFAULTS[game]),phase:"lobby",g:null,round:0,scores:{},base:{},hist:[],custom:null,sit:[],
+    msg:"🎮 The host switched this room to "+GTITLE[game]+". Everyone is still here – pick your emoji and get ready!"});
+}
 function startGame(R,m){
-  const act=R.players.filter(p=>!p.left);
-  if(act.length<MINP[R.game]) return tell(R,R.hostPid,`Need at least ${MINP[R.game]} player(s) to start (${act.length} in the room).`);
+  const plan=benchPlan(R), act=plan.play;
+  if(act.length<MINP[R.game]) return tell(R,R.hostPid,`Need at least ${MINP[R.game]} player(s) to start (${act.length} playing).`);
   if(R.game==="spy"){
     const st=R.settings;
     if(st.src==="custom"){
@@ -1987,12 +2044,14 @@ function startGame(R,m){
     if(words.length<need) return tell(R,R.hostPid,`Please enter at least ${need} custom word${need>1?"s":""}, separated by commas (you entered ${words.length}).`);
     R.custom={words};
   }
+  benchApply(R,plan);
   R.round=1; R.scores={}; R.base={}; R.hist=[]; R.msg=null; R.phase="play"; deal(R);
 }
 function deal(R){ R.deal=(R.deal||Date.now())+1; if(R.game==="chess") chDeal(R); else if(R.game==="spy") spyDeal(R); else if(R.game==="number") numDeal(R); else if(R.game==="Scribblio") skDeal(R); else if(R.game==="dots") dbDeal(R); else if(R.game==="ludo") luDeal(R); else if(R.game==="rps") rpsDeal(R); else if(R.game==="ass") asDeal(R); else if(R.game==="rummy") rmDeal(R); else rrDeal(R); }
 function abort(R,msg,leaver){
   // "too few players" scene: the player who left is ejected (unless the host kicked them – that scene is already queued), then the room is shown
   ejPush(R,{none:true,eb:"NOT ENOUGH PLAYERS",h:"Less players than required.",s:"Taking you to the room…",tone:"bad",T:7000});
+  benchBack(R);
   R.phase="lobby"; R.g=null; R.msg=msg; R.round=0; R.scores={};
   R.players=R.players.filter(p=>!p.left);
 }
@@ -2952,7 +3011,7 @@ function skNextTurn(R){
   while(pid===null){
     g.qi++;
     if(g.qi>=g.queue.length){
-      if(R.round>=R.settings.rounds){ R.phase="end"; return; }
+      if(R.round>=R.settings.rounds){ R.phase="end"; roomTally(R); return; }
       R.round++; g.queue=R.players.filter(p=>!p.left).map(p=>p.pid); g.qi=0;
       skSys(g,`🎨 Round ${R.round} of ${R.settings.rounds}`);
     }
@@ -3818,7 +3877,7 @@ function copyLink(){
    - The host can mute anyone or switch voice off for the room; every browser enforces it on the receiving side too. */
 function voiceView(R){
   const V=R.voice||{on:true,st:{},hm:{}}, ids={}, mic={};
-  if(V.on) R.players.forEach(p=>{ const s=V.st[p.pid]; if(s&&!p.left&&p.connected){ ids[p.pid]=s.peer; mic[p.pid]=s.mic?1:0; } });
+  if(V.on) R.players.concat(R.bench||[]).forEach(p=>{ const s=V.st[p.pid]; if(s&&!p.left&&p.connected){ ids[p.pid]=s.peer; mic[p.pid]=s.mic?1:0; } });
   return {on:V.on, ids, mic, hm:Object.keys(V.hm).filter(k=>V.hm[k]&&ids[k])};
 }
 function voiceAct(R,pid,m){
@@ -5082,9 +5141,10 @@ function roomBodyHTML(v,host){
   let h="";
   h+=`<div class="card2 roomcard ${v.phase==="play"&&["ludo","chess","ass","rummy"].includes(v.game)?"in-board":""}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
     ${NET.local?`<div><div class="mut" style="font-size:.8rem">Offline game</div><div class="code" style="font-size:1.2rem;letter-spacing:.04em">📴 This device only</div></div>`:`<div><div class="mut" style="font-size:.8rem">Room code</div><div class="code">${esc(v.code)}</div></div>`}
-    <div class="scoreboard" style="margin:0">${v.players.map(p=>`<span class="chip ${p.connected?"":"off"} ${p.left?"gone":""}">${p.av} ${esc(p.name)}${p.pid===v.hostPid?" 👑":""}${p.pid===v.me&&!NET.spec?" (you)":""}${p.left?" · left":!p.connected?" · offline":""}${kickBtn(v,p)}</span>`).join("")}</div></div>`;
+    <div class="scoreboard" style="margin:0">${v.players.map(p=>`<span class="chip ${p.connected?"":"off"} ${p.left?"gone":""}">${p.av} ${esc(p.name)}${p.pid===v.hostPid?" 👑":""}${p.pid===v.me&&!NET.spec?" (you)":""}${p.left?" · left":!p.connected?" · offline":""}${kickBtn(v,p)}</span>`).join("")}${(v.bench||[]).map(p=>`<span class="chip bench ${p.connected?"":"off"}">👀 ${p.av} ${esc(p.name)}${p.pid===v.me?" (you)":""}${kickBtn(v,Object.assign({left:false},p))}</span>`).join("")}</div></div>`;
   if(v.phase==="lobby") return h+lobbyHTML(v,host);
   if(v.phase==="end") return h+endHTML(v,host);
+  if((v.bench||[]).some(b=>b.pid===v.me)) h+=`<div class="msg info">👀 You're <b>watching</b> this game – chat away, you're in for the next one.</div>`;
   return h+(v.game==="spy"?spyGameHTML(v):v.game==="number"?numGameHTML(v):v.game==="Scribblio"?"":v.game==="chess"?chessGameHTML(v):v.game==="dots"?dbGameHTML(v):v.game==="ludo"?luGameHTML(v):v.game==="rps"?rpsGameHTML(v):v.game==="ass"?asGameHTML(v):v.game==="rummy"?rmGameHTML(v):rrGameHTML(v));
 }
 /* lobby: everyone picks their emoji; ones other players already have are greyed out */
@@ -5099,8 +5159,10 @@ const kickBtn=(v,p)=>v.me===v.hostPid&&p.pid!==v.hostPid&&!p.left&&!NET.local?`<
 function lobbyHTML(v,host){
   const st=v.settings, n=v.players.filter(p=>!p.left).length, fields=SETTINGS[v.game].filter(f=>!f.when||f.when(n,st));
   let h="";
-  if(v.msg) h+=`<div class="msg warn">${esc(v.msg)}</div>`;
+  if(v.msg) h+=`<div class="msg ${/^🎮/.test(v.msg)?"ok":"warn"}">${esc(v.msg)}</div>`;
+  h+=gameBarHTML(v,host);
   h+=avPickHTML(v);
+  h+=whoPlaysHTML(v,host)+roomBoardHTML(v);
   h+=mateLobbyHTML(v);
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")?(()=>{ const b=csBotCount(v,n), t=+v.settings.seats||0;
    return b?`<div class="msg info" style="margin-top:12px">🤖 ${t?`Table of <b>${t}</b>: `:"<b>Just you?</b> "}${n} ${n===1?"person":"people"} + <b>${b} computer${b>1?"s":""}</b>.${NET.local?"":` Every friend who joins takes a computer's seat.`}</div>`
@@ -5122,7 +5184,7 @@ function lobbyHTML(v,host){
       h+=`<label>Your words (separated by commas)</label><input type="text" id="skWords" data-keep maxlength="600" autocomplete="off" placeholder="e.g. rocket, giraffe, pizza, bicycle, ice cream" value="${esc(S.ui.skWords||"")}">
         <div class="mut" style="font-size:.82rem;margin-top:6px">${st.wordChoice>1?"Add at least 3 words – the drawer picks one of 3. ":""}Words are used in random order and not repeated until the list is used up.</div>`;
     }
-    const need=MINP[v.game], ok=n>=need;
+    const need=MINP[v.game], nPlay=Math.min(n-new Set((v.sit||[]).filter(x=>x!==v.hostPid&&v.players.some(p=>p.pid===x&&!p.left))).size,v.cap||n), ok=nPlay>=need;
     h+=`<button class="btn green block" style="margin-top:18px" data-a="start" ${ok?"":"disabled"}>▶ Start game</button>
       <div class="mut" style="font-size:.85rem;margin-top:6px">${ok?(NET.local?"Offline game – only you, on this device.":`${n} player${n>1?"s":""} in the room. Others can still join with the code until you start.`):`Need at least ${need} players to start (${n} in the room). Share the code or invite link!`}</div>`;
   } else {
@@ -5148,9 +5210,11 @@ function endHTML(v,host){
     h+=`<h3 style="margin:18px 0 6px">📊 Series total (${hist.length+1} games)</h3><div class="scoreboard">${tot.map(([p,t])=>`<span class="chip">${p.av} ${esc(p.name)}: <b>${t}</b></span>`).join("")}</div>`;
     h+=`<div class="mut" style="margin-top:8px;font-size:.85rem">Earlier games: ${hist.map(x=>{ const e=Object.entries(x.pts).sort((a,b)=>b[1]-a[1]); const top=e[0]&&e[0][1]>0?esc((x.names&&x.names[e[0][0]])||"?")+" ("+e[0][1]+")":"no points"; return "#"+x.n+" "+top; }).join(" · ")}</div>`;
   }
-  h+=host?`<button class="btn green block" style="margin-top:14px" data-a="act" data-x="newgame">🎮 New game – same room, scores carry on</button>
-    <button class="btn secondary block" style="margin-top:8px" data-a="act" data-x="tolobby">⚙️ Back to lobby (change settings)</button>`
-    :`<div class="msg info" style="margin-top:14px">⏳ Waiting for the host to go back to the lobby…</div>`;
+  h+=roomBoardHTML(v);
+  h+=host?(S.ui.pickGame?gamePickHTML(v):`<button class="btn green block" style="margin-top:14px" data-a="act" data-x="newgame">🔁 Play ${GTITLE[v.game]} again – scores carry on</button>
+    ${NET.local?"":`<button class="btn block" style="margin-top:8px" data-a="pickGame">🎮 Play a different game – everyone stays</button>`}
+    <button class="btn secondary block" style="margin-top:8px" data-a="act" data-x="tolobby">⚙️ Back to lobby (change settings)</button>`)
+    :`<div class="msg info" style="margin-top:14px">⏳ Waiting for the host – they can play again or pick another game, and you stay in the room.</div>`;
   return h;
 }
 
@@ -5282,11 +5346,11 @@ function numGameHTML(v){
 /* ---- Raja Rani ---- */
 function rrGameHTML(v){
   const g=v.g, st=v.settings, me=v.me, host=me===v.hostPid;
-  const r=RR_ROLES[g.myRole], isPolice=r.key==="police";
+  const r=RR_ROLES[g.myRole]||{key:"",pts:0,watch:true}, isPolice=r.key==="police";      // no role = watching this game
   let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${st.rounds}</span><span class="chip">${
     g.phase==="roles"?"🎭 Read your role":g.phase==="guess"?"🚓 Police is guessing":g.phase==="locked"?"🔒 Guess locked":"🔓 Reveal"}</span>${timerHTML(g.phase==="guess"?g.deadline:0)}</div>`;
   if(g.phase!=="reveal"){
-    h+=`<div class="msg info" style="margin-top:12px">You are the <span class="pink" style="font-size:1.2rem">${esc(rrLabel(r))}</span> – worth <span class="pink">${r.pts}</span> points.${r.hint?`<div style="margin-top:6px">${esc(r.hint)}</div>`:""}</div>`;
+    if(!r.watch) h+=`<div class="msg info" style="margin-top:12px">You are the <span class="pink" style="font-size:1.2rem">${esc(rrLabel(r))}</span> – worth <span class="pink">${r.pts}</span> points.${r.hint?`<div style="margin-top:6px">${esc(r.hint)}</div>`:""}</div>`;
     const roles=RR_ROLES.slice(0,g.ids.length).slice().sort((a,b)=>b.pts-a.pts);
     h+=`<div class="mut" style="font-size:.85rem"><b>Roles this round:</b> ${roles.map(x=>`${esc(rrLabel(x))} (${x.pts})`).join(" · ")}</div>`;
   }
@@ -5743,6 +5807,37 @@ function rmGroupSel(){
   const u=S.ui.rmG, sel=S.ui.rmSel||[]; if(!u||sel.length<2) return;
   const set=new Set(sel); u.groups=u.groups.map(a=>a.filter(c=>!set.has(c))).filter(a=>a.length);
   u.groups.push(sel.slice().sort(cardSort)); S.ui.rmSel=[]; render();
+}
+
+/* ---- one room, many games: the host's game picker, who plays, the room leaderboard ---- */
+function gamePickHTML(v){
+  const n=v.players.filter(p=>!p.left).length+(v.bench||[]).length;
+  return `<div class="card2 gp-card"><div class="gp-h"><b>🎮 Pick the next game</b><button class="btn secondary" data-a="pickGame">Cancel</button></div>
+    <div class="gp-grid">${ROOM_GAMES.filter(g=>g!==v.game).map(g=>{ const mx=MAXP[g], few=n<MINP[g];
+      return `<button type="button" class="gp-b" data-a="setgame" data-g="${g}"><span>${GTITLE[g]}</span><small>${few?`needs ${MINP[g]}+ players`:n>mx?`${mx} play, ${n-mx} watch`:`${MINP[g]}–${mx} players`}</small></button>`; }).join("")}</div>
+    <div class="mut" style="font-size:.8rem;margin-top:8px">Everyone stays in the room. Scores start fresh for the new game; the room leaderboard keeps counting.</div></div>`;
+}
+function gameBarHTML(v,host){
+  if(NET.local) return "";
+  if(host&&S.ui.pickGame) return gamePickHTML(v);
+  return `<div class="card2 gp-bar"><span>Now playing: <b>${GTITLE[v.game]}</b></span>${host?`<button class="btn secondary" data-a="pickGame">🔄 Change game</button>`:`<span class="mut" style="font-size:.82rem">The host can switch games – you stay in the room.</span>`}</div>`;
+}
+function roomBoardHTML(v){
+  const B=v.board||{}, ids=Object.keys(B); if(!(v.played||[]).length||!ids.length) return "";
+  const rows=ids.map(k=>[k,B[k]]).sort((a,b)=>b[1].wins-a[1].wins||a[1].name.localeCompare(b[1].name));
+  return `<div class="card2 rb-card"><h3 style="margin:0 0 8px">🏆 Room leaderboard</h3><div class="scoreboard" style="margin:0">${rows.map(([k,b],i)=>`<span class="chip${i===0&&b.wins?" rb-top":""}">${i===0&&b.wins?"👑 ":""}${esc(b.av)} ${esc(b.name)}: <b>${b.wins}</b> win${b.wins===1?"":"s"}</span>`).join("")}</div>
+    <div class="mut" style="font-size:.8rem;margin-top:8px">Played here: ${v.played.map(x=>`${GTITLE[x.game]}${x.win.length?` – ${esc(x.win.join(", "))}`:""}`).join(" · ")}</div></div>`;
+}
+function whoPlaysHTML(v,host){
+  const cap=v.cap||MAXP[v.game], all=v.players.filter(p=>!p.left), sit=new Set((v.sit||[]).filter(x=>x!==v.hostPid));
+  const order=all.filter(p=>p.pid===v.hostPid).concat(all.filter(p=>p.pid!==v.hostPid&&!sit.has(p.pid)));
+  const play=new Set(order.slice(0,cap).map(p=>p.pid));
+  if(all.length<=cap&&!sit.size) return "";
+  if(!host){ return play.has(v.me)?"":`<div class="msg info" style="margin-top:12px">👀 You'll <b>watch</b> this game (${GTITLE[v.game]} takes up to ${cap}). You're back in for the next one.</div>`; }
+  return `<div class="card2 wp-card"><h3 style="margin:0 0 4px">👥 Who plays? <span class="mut" style="font-size:.85rem;font-weight:400">${[...play].length}/${cap} seats</span></h3>
+    <div class="mut" style="font-size:.82rem;margin-bottom:8px">${all.length>cap?`${GTITLE[v.game]} takes up to ${cap} players – the others watch live and play the next game. `:""}Tap a name to switch between playing and watching.</div>
+    <div class="scoreboard" style="margin:0">${all.map(p=>{ const on=play.has(p.pid), me=p.pid===v.hostPid;
+      return `<button type="button" class="chip wp-b${on?" on":""}" ${me?"disabled":""} data-a="sitTog" data-pid="${esc(p.pid)}" data-on="${on?1:0}">${on?"🎮":"👀"} ${esc(p.av)} ${esc(p.name)}${me?" (host)":""}</button>`; }).join("")}</div></div>`;
 }
 
 function mainHTML(){
@@ -6477,7 +6572,10 @@ function onAppClick(e){
     case "skundo": if(skCanDraw()){ skEndStroke(); skApply({k:"undo"}); skSend({k:"undo"}); } break;
     case "skclear": if(skCanDraw()){ skEndStroke(); skApply({k:"clear"}); skSend({k:"clear"}); } break;
     case "start": sendAct({a:"start",civ:S.ui.spyCiv,spyW:S.ui.spyW,words:S.ui.skWords}); break;
-    case "act": sendAct({a:t.dataset.x}); break;
+    case "act": S.ui.pickGame=false; sendAct({a:t.dataset.x}); break;
+    case "pickGame": S.ui.pickGame=!S.ui.pickGame; render(); break;
+    case "setgame": S.ui.pickGame=false; sendAct({a:"setgame",g:t.dataset.g}); break;
+    case "sitTog": sendAct({a:"sit",pid:t.dataset.pid,on:t.dataset.on==="1"}); break;
     case "clue": doClue(); break;
     case "callvote": sendAct({a:"callvote"}); break;
     case "guess": doGuess(); break;
@@ -7403,7 +7501,7 @@ function admClearLive(code){
 let PR_ROOM="";
 function prRoom(v){
   if(!prActive()) return;
-  const R=NET.R, info=v&&R&&NET.role==="host"&&!NET.local&&!NET.spec?{code:R.code,game:R.game,phase:R.phase,n:R.players.filter(p=>!p.left).length,max:maxPlayers(R),host:String(S.me.name||"").slice(0,20)}:null;
+  const R=NET.R, info=v&&R&&NET.role==="host"&&!NET.local&&!NET.spec?{code:R.code,game:R.game,phase:R.phase,n:R.players.filter(p=>!p.left).length+(R.bench||[]).length,max:ROOM_MAX,host:String(S.me.name||"").slice(0,20)}:null;
   const key=info?JSON.stringify(info):"";
   if(key===PR_ROOM) return; PR_ROOM=key;
   const me=mateMe(), FV=firebase.firestore.FieldValue;
@@ -7422,10 +7520,10 @@ function openRooms(){
 function openRoomsHTML(){
   const list=openRooms(); if(!list.length) return "";
   return `<h3 class="home-h" style="margin-top:6px">🟢 Open rooms in your groups</h3><div class="or-list">${list.map(r=>{
-    const wait=r.phase==="lobby", full=r.n>=r.max, can=wait&&!full;
+    const wait=r.phase==="lobby", full=r.n>=r.max, can=!full;
     return `<div class="or-row"><div class="or-main"><b>${GTITLE[r.game]}</b><span class="pr-st">${esc(r.name)}'s room · ${r.n}/${r.max} players</span></div>
-      <span class="or-st ${can?"wait":full&&wait?"full":"play"}">${can?"waiting":wait?"full":"playing"}</span>
-      <button type="button" class="btn ${can?"green":"secondary"} or-join" data-a="joinOpen" data-code="${esc(r.code)}" ${can?"":"disabled"} title="${can?"Join this room":wait?"The room is full":"You can join when this game ends"}">Join</button></div>`; }).join("")}</div>`;
+      <span class="or-st ${full?"full":wait?"wait":"play"}">${full?"full":wait?"waiting":"playing"}</span>
+      <button type="button" class="btn ${can?"green":"secondary"} or-join" data-a="joinOpen" data-code="${esc(r.code)}" ${can?"":"disabled"} title="${can?(wait?"Join this room":"Join and watch – you play the next game"):"The room is full"}">${wait||full?"Join":"Watch"}</button></div>`; }).join("")}</div>`;
 }
 function joinOpenRoom(code){
   if(!/^[A-Z0-9]{4,8}$/.test(String(code||""))) return;
