@@ -1075,6 +1075,14 @@
   }
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
+  /* ---- Number Game pass & play ---- */
+  .pp-card{margin-top:12px}.pp-list{display:flex;flex-direction:column;gap:6px}
+  .pp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--border)}
+  .pp-row .btn{padding:4px 10px}
+  .pp-add{display:flex;gap:8px;margin-top:10px}.pp-add input{flex:1;min-width:0;margin:0}.pp-add .btn{flex:none}
+  .pp-turn{margin-top:12px;font-size:1.1rem;display:flex;flex-direction:column;gap:4px;animation:ppIn .35s ease-out}
+  .pp-turn span{font-size:.9rem;font-weight:400}
+  @keyframes ppIn{from{transform:scale(.96);opacity:.4}to{transform:none;opacity:1}}
   /* ---- one room, many games ---- */
   .gp-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 14px}
   .gp-card{margin-top:12px}.gp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
@@ -1925,6 +1933,15 @@ function doAct(R,pid,m){
   const host=pid===R.hostPid;
   if(onBench(R,pid)&&!["rchat","voice"].includes(m.a)) return;          // watching this game
   switch(m.a){
+    case "ppAdd": if(NET.local&&R.settings.pp&&R.phase==="lobby"){
+        const nm=String(m.name||"").trim().slice(0,16), act=R.players.filter(p=>!p.left);
+        if(!nm) return tell(R,pid,"Type a name first.");
+        if(act.length>=MAXP[R.game]) return tell(R,pid,`Up to ${MAXP[R.game]} players.`);
+        if(act.some(p=>p.name.toLowerCase()===nm.toLowerCase())) return tell(R,pid,"That name is already in the game.");
+        const np="pp-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+        R.players.push({pid:np,name:nm,av:freeAv(R,"",np),connected:true,left:false,pp:true});
+      } return;
+    case "ppDel": if(NET.local&&R.settings.pp&&R.phase==="lobby"){ const i=R.players.findIndex(p=>p.pid===m.pid&&p.pp); if(i>=0) R.players.splice(i,1); } return;
     case "setgame": if(host&&(R.phase==="lobby"||R.phase==="end")&&ROOM_GAMES.includes(m.g)&&m.g!==R.game) roomSwitch(R,m.g); return;
     case "sit": if(host&&R.phase==="lobby"){ const t=String(m.pid||""); if(t===R.hostPid||!R.players.some(p=>p.pid===t)) return;
       R.sit=(R.sit||[]).filter(x=>x!==t&&R.players.some(p=>p.pid===x)); if(m.on) R.sit.push(t); } return;
@@ -2237,6 +2254,7 @@ function numAct(R,pid,m){
     g.res={winner:null,pts:{}}; g.phase="reveal"; g.deadline=0; return;
   }
   if(m.a!=="guess"||g.phase!=="play") return;
+  if(NET.local&&R.settings.pp&&pid===R.hostPid) pid=g.ids[g.turn];      // pass & play: the phone guesses for whoever's turn it is
   if(g.ids[g.turn]!==pid) return tell(R,pid,"It's not your turn.");
   const guess=String(m.guess||"").trim();
   if(!/^\d+$/.test(guess)||guess.length!==g.digits) return tell(R,pid,`Enter exactly ${g.digits} digits.`);
@@ -5163,6 +5181,7 @@ function lobbyHTML(v,host){
   h+=gameBarHTML(v,host);
   h+=avPickHTML(v);
   h+=whoPlaysHTML(v,host)+roomBoardHTML(v);
+  if(NET.local&&st.pp) h+=ppLobbyHTML(v);
   h+=mateLobbyHTML(v);
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")?(()=>{ const b=csBotCount(v,n), t=+v.settings.seats||0;
    return b?`<div class="msg info" style="margin-top:12px">🤖 ${t?`Table of <b>${t}</b>: `:"<b>Just you?</b> "}${n} ${n===1?"person":"people"} + <b>${b} computer${b>1?"s":""}</b>.${NET.local?"":` Every friend who joins takes a computer's seat.`}</div>`
@@ -5310,12 +5329,14 @@ function spyGameHTML(v){
 
 /* ---- Number ---- */
 function numGameHTML(v){
-  const g=v.g, st=v.settings, me=v.me, host=me===v.hostPid, cur=g.ids[g.turn], d=g.digits;
+  const g=v.g, st=v.settings, host=v.me===v.hostPid, cur=g.ids[g.turn], d=g.digits, pp=NET.local&&!!st.pp, me=pp&&g.phase==="play"?cur:v.me;
   let h=`<div class="scoreboard"><span class="chip">Round ${v.round}/${st.rounds}</span><span class="chip">${d} digits</span>${timerHTML(g.phase==="play"?g.deadline:0)}</div>`;
   h+=`<div class="scoreboard">${g.ids.map(p=>`<span class="chip ${p===cur&&g.phase==="play"?"active":""} ${pObj(v,p).left?"gone":""}">${pAv(v,p)} ${esc(pName(v,p))} · ${g.attempts[p]}${st.maxAttempts?"/"+st.maxAttempts:""}</span>`).join("")}</div>`;
   if(g.phase==="play"){
     if(cur===me){
-      h+=`<div class="msg ok" style="margin-top:12px">${pAv(v,me)} <b>Your turn!</b></div>
+      h+=pp?`<div class="msg ok pp-turn">📱 Pass the phone to ${pAv(v,cur)} <b>${esc(pName(v,cur))}</b><span>${esc(pName(v,cur))}, it's your turn!</span></div>`
+        :`<div class="msg ok" style="margin-top:12px">${pAv(v,me)} <b>Your turn!</b></div>`;
+      h+=`
         <label>Enter ${d}-digit guess</label>
         <div class="guess-row"><input type="text" id="guess" data-keep inputmode="numeric" maxlength="${d}" autocomplete="off">
         <button class="btn" data-a="guess">Check Result</button></div>`;
@@ -5334,7 +5355,7 @@ function numGameHTML(v){
         ?`<tr class="to"><td>${pAv(v,x.pid)} ${esc(pName(v,x.pid))}</td><td colspan="2">⏱ ran out of time</td></tr>`
         :`<tr><td>${pAv(v,x.pid)} ${esc(pName(v,x.pid))}</td><td class="gn">${esc(x.guess)}</td><td><span class="np">${x.N}N</span> <span class="np p">${x.P}P</span></td></tr>`).join("")
     }</tbody></table>`:`<div class="mut">No guesses yet</div>`}`;
-  h+=`<hr><h3>🎨 Number Coloring Panel <span class="mut" style="font-size:.8rem;font-weight:400">(just for you)</span></h3><div class="colors">${
+  h+=`<hr><h3>🎨 Number Coloring Panel <span class="mut" style="font-size:.8rem;font-weight:400">(${pp?"shared on this phone":"just for you"})</span></h3><div class="colors">${
     [...Array(10).keys()].map(i=>`<div class="cell"><label>${i}</label>
       <select data-color="${i}">${Object.keys(COLORS).map(c=>`<option ${S.colors[i]===c?"selected":""}>${c}</option>`).join("")}</select>
       <select data-pos="${i}" style="margin-top:6px"><option value="">Pos: –</option>${
@@ -5839,6 +5860,17 @@ function whoPlaysHTML(v,host){
     <div class="scoreboard" style="margin:0">${all.map(p=>{ const on=play.has(p.pid), me=p.pid===v.hostPid;
       return `<button type="button" class="chip wp-b${on?" on":""}" ${me?"disabled":""} data-a="sitTog" data-pid="${esc(p.pid)}" data-on="${on?1:0}">${on?"🎮":"👀"} ${esc(p.av)} ${esc(p.name)}${me?" (host)":""}</button>`; }).join("")}</div></div>`;
 }
+
+/* Number Game pass & play: the people sharing this phone */
+function ppLobbyHTML(v){
+  const act=v.players.filter(p=>!p.left), full=act.length>=MAXP[v.game];
+  return `<div class="card2 pp-card"><h3 style="margin:0 0 4px">📱 Players on this phone <span class="mut" style="font-size:.85rem;font-weight:400">${act.length}/${MAXP[v.game]}</span></h3>
+    <div class="mut" style="font-size:.82rem;margin-bottom:8px">Add everyone who's playing. You take turns in this order – the app tells you whose turn it is.</div>
+    <div class="pp-list">${act.map((p,i)=>`<div class="pp-row"><span>${i+1}. ${esc(p.av)} <b>${esc(p.name)}</b>${p.pid===v.hostPid?' <span class="mut">(you)</span>':""}</span>${p.pp?`<button class="btn secondary" data-a="ppDel" data-pid="${esc(p.pid)}" aria-label="Remove ${esc(p.name)}">✖</button>`:""}</div>`).join("")}</div>
+    ${full?"":`<div class="pp-add"><input type="text" id="ppName" data-keep maxlength="16" autocomplete="off" placeholder="Next player's name" value="${esc(S.ui.ppName||"")}"><button class="btn" data-a="ppAdd">➕ Add</button></div>`}
+    ${act.length<2?`<div class="msg info" style="margin-top:10px">Add at least one more name to play together – or start now to play solo.</div>`:""}</div>`;
+}
+function ppAdd(){ const n=String(S.ui.ppName||"").trim(); if(!n) return toast("Type a name first.","err"); S.ui.ppName=""; sendAct({a:"ppAdd",name:n}); }
 
 function mainHTML(){
   const gate=authGate(); if(gate) return gate;
@@ -6461,7 +6493,7 @@ function doGuess(){
   const t=String(S.ui.guess||"").trim();
   S.ui.guess=""; sendAct({a:"guess",guess:t});
 }
-document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target&&e.target.id==="botIn"){ e.preventDefault(); botAdd(); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target&&e.target.id==="botIn"){ e.preventDefault(); botAdd(); } if(e.key==="Enter"&&e.target&&e.target.id==="ppName"){ e.preventDefault(); ppAdd(); } });
 function onAppClick(e){
   const t=e.target.closest("[data-a]"); if(!t||t.disabled) return;
   switch(t.dataset.a){
@@ -6579,6 +6611,8 @@ function onAppClick(e){
     case "clue": doClue(); break;
     case "callvote": sendAct({a:"callvote"}); break;
     case "guess": doGuess(); break;
+    case "ppAdd": ppAdd(); break;
+    case "ppDel": sendAct({a:"ppDel",pid:t.dataset.pid}); break;
     case "vote":
       if(!S.ui.voteSel) return toast("Pick a player first.","err");
       sendAct({a:"vote",target:S.ui.voteSel}); break;
@@ -7241,6 +7275,7 @@ const OFF_YES=[
   {ico:"♟️",name:"Chess vs the computer",d:"Easy, Medium or Hard, choose your colour, with clocks and move hints.",g:"chess"},
   {ico:"♟️",name:"Chess – pass & play",d:"Two sides, one device. Hand the screen to a friend sitting next to you.",g:"chess",solo:"local"},
   {ico:"🎯",name:"Number Game – solo",d:"Crack the secret number on your own. Rounds, difficulty and timers all work.",g:"number"},
+  {ico:"📱",name:"Number Game – pass & play",d:"2–10 players, one phone. Add everyone's names and pass the phone round – same secret number, take turns guessing.",g:"number",solo:"pp"},
   {ico:"🏁",name:"Ludo vs the computer",d:"Choose the 4- or 6-colour board, play against computer colours.",g:"ludo"},
   {ico:"✊",name:"Rock Paper Scissors vs the computer",d:"First to 2, best of 3 – or change the target in the settings.",g:"rps"},
   {ico:"🫏",name:"Ass vs the computer",d:"Kazhutha one-on-one: follow suit or cut, and don't be the one left holding cards.",g:"ass"},
@@ -7284,6 +7319,7 @@ function createLocalRoom(game,solo){
   NET.R={code:"LOCAL",game,phase:"lobby",hostPid:S.me.pid,round:0,scores:{},msg:null,custom:null,g:null,evId:0,evPending:[],ev:null,
     settings:Object.assign({},DEFAULTS[game]),players:[{pid:S.me.pid,name:S.me.name,av:S.me.av,connected:true,left:false}]};
   if(game==="chess"&&solo==="local") NET.R.settings.solo="local";
+  if(game==="number"&&solo==="pp") NET.R.settings.pp=1;           // Number Game pass & play: more players on this phone
   clearInterval(NET.timer); NET.timer=setInterval(hostTick,500);
   clearHash(); pushState();
 }

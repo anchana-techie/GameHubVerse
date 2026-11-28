@@ -186,3 +186,6 @@ Game messages travel through the Firebase **Realtime Database** (`rooms/<code>`)
 ## 🔄 One room, many games
 The host can switch the room to another game without anyone leaving: **🔄 Change game** in the lobby, or **🎮 Play a different game** on the results screen (only between games, never mid-game). Everyone stays connected and keeps their emoji; each game starts with fresh scores, while the **🏆 Room leaderboard** counts game wins across everything played in the room until it closes.
 If more people are in the room than the game allows (Chess 4, Ludo 4–6, RPS 10, Scribblio 12 …), the host taps names under **👥 Who plays?** – the rest **watch** the game live (no secrets are sent to watchers), can chat, and are back in for the next game. People who join while a game is running also watch and play the next one; open rooms in your groups show **Watch** for a running game. A room holds up to 30 people.
+
+## 📱 Number Game – pass & play
+On the Offline mode page (and for guests) pick **Number Game – pass & play**: add everyone's names in the lobby (2–10 players on one phone), and the game tells you whose turn it is ("📱 Pass the phone to Raj"). Same secret number, guesses go in the history under each player's name, and the usual points, rounds and timers apply.
