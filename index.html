@@ -1076,7 +1076,8 @@
   @keyframes rpsPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
   @media(prefers-reduced-motion:reduce){.lu-fl,.lu-glow,.lu-burst,.lu-fade,.rps-hand{animation:none!important}}
   /* ---- Number Game pass & play ---- */
-  .pp-card{margin-top:12px}.pp-list{display:flex;flex-direction:column;gap:6px}
+  .pp-card{margin-top:12px}
+  .pp-offer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pp-offer>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:180px}.pp-list{display:flex;flex-direction:column;gap:6px}
   .pp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--border)}
   .pp-row .btn{padding:4px 10px}
   .pp-add{display:flex;gap:8px;margin-top:10px}.pp-add input{flex:1;min-width:0;margin:0}.pp-add .btn{flex:none}
@@ -1941,6 +1942,7 @@ function doAct(R,pid,m){
         const np="pp-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
         R.players.push({pid:np,name:nm,av:freeAv(R,"",np),connected:true,left:false,pp:true});
       } return;
+    case "ppOn": if(NET.local&&R.game==="number"&&R.phase==="lobby"&&host) R.settings.pp=1; return;
     case "ppDel": if(NET.local&&R.settings.pp&&R.phase==="lobby"){ const i=R.players.findIndex(p=>p.pid===m.pid&&p.pp); if(i>=0) R.players.splice(i,1); } return;
     case "setgame": if(host&&(R.phase==="lobby"||R.phase==="end")&&ROOM_GAMES.includes(m.g)&&m.g!==R.game) roomSwitch(R,m.g); return;
     case "sit": if(host&&R.phase==="lobby"){ const t=String(m.pid||""); if(t===R.hostPid||!R.players.some(p=>p.pid===t)) return;
@@ -5182,6 +5184,7 @@ function lobbyHTML(v,host){
   h+=avPickHTML(v);
   h+=whoPlaysHTML(v,host)+roomBoardHTML(v);
   if(NET.local&&st.pp) h+=ppLobbyHTML(v);
+  else if(NET.local&&v.game==="number") h+=`<div class="card2 pp-card pp-offer"><div><b>📱 Playing with friends on this phone?</b><span class="mut">Add their names and pass the phone round.</span></div><button class="btn" data-a="ppOn">➕ Add players</button></div>`;
   h+=mateLobbyHTML(v);
   h+=`<p class="mut" style="margin:14px 0 0">${esc(BLURB[v.game])}</p>${v.game==="chess"?`<div class="msg info" style="margin-top:12px">♟️ <b>${st.players==3?"3 seats – hexagon board, last king standing":st.players==4?"4 seats – cross board, points for captures and checkmates":"2 seats – classic 8×8 chess"}</b> · ${n} human${n===1?"":"s"}${st.players>n?` + ${st.players-n} computer${st.players-n===1?"":"s"}`:""}<br><span class="mut">The host picks the number of players. Seats nobody joins are played by the computer.</span></div>`:""}${v.game==="ludo"?`<div class="msg info" style="margin-top:12px">🏁 <b>${[5,6].includes(+st.board)?st.board+"-colour board":"4-colour board"}</b> · ${n} human${n===1?"":"s"}${st.fill!=="empty"&&st.board>n?` + ${st.board-n} computer${st.board-n===1?"":"s"}`:""}<br><span class="mut">Up to ${st.board} players can join. ${st.fill!=="empty"?"Colours nobody sits on are played by the computer.":"Colours nobody sits on stay empty."}</span></div>`:""}${(v.game==="ass"||v.game==="rummy")?(()=>{ const b=csBotCount(v,n), t=+v.settings.seats||0;
    return b?`<div class="msg info" style="margin-top:12px">🤖 ${t?`Table of <b>${t}</b>: `:"<b>Just you?</b> "}${n} ${n===1?"person":"people"} + <b>${b} computer${b>1?"s":""}</b>.${NET.local?"":` Every friend who joins takes a computer's seat.`}</div>`
@@ -6612,6 +6615,7 @@ function onAppClick(e){
     case "callvote": sendAct({a:"callvote"}); break;
     case "guess": doGuess(); break;
     case "ppAdd": ppAdd(); break;
+    case "ppOn": sendAct({a:"ppOn"}); break;
     case "ppDel": sendAct({a:"ppDel",pid:t.dataset.pid}); break;
     case "vote":
       if(!S.ui.voteSel) return toast("Pick a player first.","err");
